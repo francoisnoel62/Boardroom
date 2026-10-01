@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+test('the local candidate runs its own Node and native SQLite from a Unicode path with an empty PATH', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom package '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const candidate = join(root, 'paquet François avec espaces');
+  const packager = fileURLToPath(new URL('../scripts/package.mjs', import.meta.url));
+  const built = spawnSync(process.execPath, [packager, '--output', candidate], { encoding: 'utf8' });
+  assert.equal(built.status, 0, built.stderr);
+  const runtime = join(candidate, 'runtime', process.platform === 'win32' ? 'node.exe' : 'node');
+  const cli = join(candidate, 'dist', 'cli.js');
+  const data = join(root, 'durable data é');
+  const env = { ...process.env, PATH: '', NODE_PATH: '', NODE_OPTIONS: '' };
+  const run = (...args: string[]) => execFileSync(runtime, [cli, ...args, '--data-dir', data], { encoding: 'utf8', cwd: root, env });
+  assert.match(run('demo', '--next'), /Product Owner/);
+  assert.match(run('demo', '--next'), /Lead Developer/);
+  assert.match(run('evidence'), /Team: two engineers/);
+  const exported = JSON.parse(run('export', '--output', join(root, 'output'), '--json'));
+  assert.match(readFileSync(exported.plan, 'utf8'), /Recorded example/);
+  assert.equal(JSON.parse(run('doctor', '--json')).checkpointReopen, 'verified');
+  assert.match(run('demo', '--terminal'), /INSUFFICIENT_EVIDENCE/);
+  const manifest = JSON.parse(readFileSync(join(candidate, 'manifest.json'), 'utf8'));
+  assert.equal(manifest.runtime, process.version);
+  assert.equal(manifest.platform, process.platform);
+  assert.match(readFileSync(join(candidate, 'README.md'), 'utf8'), /Try the local example/);
+  assert.match(readFileSync(join(candidate, 'docs', 'architecture.md'), 'utf8'), /Public boundaries/);
+});

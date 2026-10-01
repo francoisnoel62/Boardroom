@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="598" viewBox="0 0 1120 598" role="img" aria-labelledby="title desc"><title id="title">BOARDROOM recorded example</title><desc id="desc">Actual CLI transcript from a fictional scripted fixture. A sourced staffing objection reduces the launch scope; insufficient evidence remains visible.</desc><rect width="1120" height="598" rx="12" fill="#101826"/><rect width="1120" height="48" rx="12" fill="#202d41"/><text x="28" y="31" font-family="monospace" font-size="16" fill="#d6e3fa">BOARDROOM · local recorded example · CLI text capture</text><g font-family="Consolas,monospace" font-size="16"><text x="28" y="86" fill="#e3e9f5">BOARDROOM | Recorded example — scripted fictional fixture; no model calls.</text>
+<text x="28" y="110" fill="#e3e9f5"></text>
+<text x="28" y="134" fill="#a7c8ff">[proposal] Product Owner | Fictional model A — scripted fixture</text>
+<text x="28" y="158" fill="#e3e9f5">Proposal v1: launch five integrations and self-service billing in four weeks.</text>
+<text x="28" y="182" fill="#e3e9f5"></text>
+<text x="28" y="206" fill="#a7c8ff">[objection] Lead Developer | Fictional model B — scripted fixture</text>
+<text x="28" y="230" fill="#e3e9f5">Two engineers cannot credibly deliver that scope in four weeks. Start with one integration and a</text>
+<text x="28" y="254" fill="#e3e9f5">supervised pilot.</text>
+<text x="28" y="278" fill="#e3e9f5">Evidence: context.md:4-4</text>
+<text x="28" y="302" fill="#e3e9f5"></text>
+<text x="28" y="326" fill="#a7c8ff">[objection] Marketing Manager | Fictional model C — scripted fixture</text>
+<text x="28" y="350" fill="#e3e9f5">The acquisition channel is unvalidated. Invite five design partners before funding a public launch.</text>
+<text x="28" y="374" fill="#e3e9f5">Evidence: context.md:6-6</text>
+<text x="28" y="398" fill="#e3e9f5"></text>
+<text x="28" y="422" fill="#a7c8ff">[revision] Product Owner | Fictional model A — scripted fixture</text>
+<text x="28" y="446" fill="#e3e9f5">Proposal v2: one integration, supervised onboarding, and five design partners. Defer self-service</text>
+<text x="28" y="470" fill="#e3e9f5">billing and the public launch.</text>
+<text x="28" y="494" fill="#e3e9f5"></text>
+<text x="28" y="518" fill="#a7c8ff">[final-views] Marketing Manager | Fictional model C — scripted fixture</text>
+<text x="28" y="542" fill="#e3e9f5">Final views on v2: Product Owner APPROVED; Lead Developer APPROVED; Marketing Manager</text>
+<text x="28" y="566" fill="#e3e9f5">INSUFFICIENT_EVIDENCE. Willingness to pay remains untested. Human decision: pending.</text></g></svg>
