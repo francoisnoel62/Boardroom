@@ -17,7 +17,8 @@ export const EvidenceSchema = z.object({
   originalPath: z.string(),
   sha256: z.string().regex(/^[a-f0-9]{64}$/),
   revision: z.number().int().positive(),
-  extraction: z.literal('utf8-text'),
+  extraction: z.enum(['utf8-text', 'pdfjs-text', 'mammoth-blocks']),
+  extractionSha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
 });
 
 export type Evidence = z.infer<typeof EvidenceSchema>;
