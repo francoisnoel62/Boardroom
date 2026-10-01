@@ -1,6 +1,6 @@
 # Local recorded-example architecture
 
-Status: recorded-workflow and PDF/DOCX increments of Plan 01, 2026-10-01. The complete milestone and public release are not accepted yet.
+Status: recorded workflow, PDF/DOCX, and durable-history increments of Plan 01, 2026-10-01. The complete milestone and public release are not accepted yet.
 
 ## Public boundaries
 
@@ -10,12 +10,24 @@ The approved plan defines the seams: application commands, the terminal/CLI, and
 
 ## Durable data
 
-- `domain.sqlite`: versioned, schema-validated project, evidence, and recorded-meeting records; WAL with a finite busy timeout. Writes are short synchronous statements. The current recording is stored in the meeting record, so updating bundled assets does not rewrite an existing recording.
+- `domain.sqlite`: versioned, schema-validated project, evidence, recorded-meeting, and export-operation records, plus an append-only event journal; WAL with a finite busy timeout. Playback position and its event commit in one immediate transaction. First recording creation also serializes so concurrent initial readers cannot reset progress. The current recording is stored in the meeting record, so updating bundled assets does not rewrite an existing recording.
 - `snapshots/<sha256>`: original bytes saved with exclusive creation. Document evidence adds a separate content-addressed, schema-validated extraction JSON. Citation resolution validates both original and extraction snapshot hashes. Text references use saved line ranges; PDFs use physical pages and DOCX uses saved text blocks. Invalid UTF-8 is rejected by the plain-text extractor.
 - `checkpoints.sqlite`: the separate technical probe uses the official `SqliteSaver`; a minimal graph increments a count and reopens its saved state. It is not the replay engine or a live meeting.
-- Export directories: unique `boardroom-recorded-*` directories containing exclusively created `plan.md` and `memo.md`. Exports include saved evidence identity and preserve disagreement and the pending human decision.
+- Export directories: unique `boardroom-recorded-<operation-id>` directories containing exclusively created `plan.md` and `memo.md`. Exports include saved evidence identity and preserve disagreement and the pending human decision.
 
-There is no network/human wait inside a SQLite transaction. Document parsing finishes before a short immediate transaction rechecks evidence identity and allocates its revision. Concurrent captures of identical bytes reuse one durable identity; they do not leave competing revision-1 records. A full asynchronous write coordinator, durable action receipts, migrations beyond this initial schema, and the live-domain contracts remain outstanding.
+There is no network/human wait inside a SQLite transaction. Document parsing finishes before a short immediate transaction rechecks evidence identity and allocates its revision. Concurrent captures of identical bytes reuse one durable identity; they do not leave competing revision-1 records. Export filesystem writes run outside SQLite transactions. A full asynchronous write coordinator, a general migration runner, and the live-domain contracts remain outstanding.
+
+## Playback journal and export receipts
+
+`history(projectId)` returns events and operation receipts from one SQLite read snapshot. Events use a version-1 envelope with a global sequence, timestamp, and project scope. Playback entries reference the saved meeting/message and resulting position; export entries reference the operation ID. They omit source and transcript bodies. The journal covers playback and exports in this increment; it does not claim to audit every project or evidence command.
+
+`prepareRecordedExport` saves intent and planned paths before any output creation. It returns a process-local execution handle; the ordinary `exportRecordedExample` command immediately uses that handle. An immediate transaction claims a single attempt before filesystem writes. The same handle cannot execute again after success or failure, and no handle is reconstructed from an old ID on restart.
+
+The export operation starts as `unconfirmed`. Starting, completing, or failing an attempt saves its operation state and event together. A completed receipt contains both paths and hashes of bytes written; a caught filesystem failure records its code and the writes that finished, without deleting partial files. If execution or receipt persistence is interrupted, the durable intent remains unconfirmed. That state also describes an active operation, so inspection never assumes it has crashed or changes its state. SQLite and filesystem writes are not one atomic commit; uncertain outcomes require directory inspection rather than automatic replay.
+
+The event table is added without rewriting existing records or snapshots. Data from the PR 2 candidate was reopened on Windows: position 2 and the saved citation survived, the next message advanced to position 3, and only the new event was journaled. Prior playback/export events are not invented. This is an additive compatibility check, not a general upgrade/rollback system.
+
+Tests kill a real process after durable export intent and before output writes. They also run four simultaneous first readers and inspect history while another process exports. Crash points inside file writes, disk-full/power-loss behavior, recovery reconciliation, and general command/MCP receipts still need qualification. Receipt hashes describe bytes written at the time; they do not certify that the user has left those files unchanged.
 
 ## Dependency and runtime decision
 
@@ -35,7 +47,7 @@ Initial targets: Windows x64, Linux x64, and macOS arm64. Other architectures ar
 
 The workflow uses the currently documented v7 actions and the documented macOS arm64 runner label: [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [upload-artifact](https://github.com/actions/upload-artifact), and [GitHub-hosted runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). Artifact permission/executable-mode preservation on Unix remains part of distribution qualification.
 
-The recorded workflow has passed [PR 1's remote CI](https://github.com/francoisnoel62/Boardroom/pull/1/checks) on all three targets. The document increment has local Windows x64 evidence; its follow-up CI must qualify the added extraction dependencies on each target. Empty-PATH process tests show that the candidate invokes its own Node; they do not substitute for a clean-machine installation test. No paid infrastructure or provider account is needed for the present tests.
+The recorded workflow and document increment passed [PR 1's remote CI](https://github.com/francoisnoel62/Boardroom/pull/1/checks) and [PR 2's remote CI](https://github.com/francoisnoel62/Boardroom/pull/2/checks) on all three targets. The durable-history increment has its own [PR 3 matrix](https://github.com/francoisnoel62/Boardroom/pull/3/checks). Empty-PATH process tests show that the candidate invokes its own Node; they do not substitute for a clean-machine installation test. No paid infrastructure or provider account is needed for the present tests.
 
 ## Protection and provenance limits
 

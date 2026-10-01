@@ -5,8 +5,34 @@ import { fileURLToPath } from 'node:url';
 import { mkdtempSync, rmSync, readFileSync, copyFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Boardroom } from '../src/application.ts';
 
 const cli = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
+
+test('history inspects durable playback and export outcomes without executing pending intent', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom history CLI '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const data = join(root, 'data');
+  const run = (...args: string[]) => execFileSync(process.execPath, [cli, ...args, '--data-dir', data], { encoding: 'utf8' });
+  run('demo', '--next');
+  const exported = JSON.parse(run('export', '--output', join(root, 'exports'), '--json'));
+  const app = new Boardroom(data);
+  try { app.prepareRecordedExport(join(root, 'pending')); }
+  finally { app.close(); }
+  const history = JSON.parse(run('history', '--json'));
+  assert.deepEqual(history.events.map((event: { type: string }) => event.type), [
+    'recorded.message', 'export.prepared', 'export.started', 'export.completed', 'export.prepared',
+  ]);
+  assert.equal(history.operations[0].id, exported.operationId);
+  assert.equal(history.operations[0].status, 'completed');
+  assert.equal(history.operations[1].status, 'unconfirmed');
+  const display = run('history');
+  assert.match(display, /recorded.message/);
+  assert.match(display, /unconfirmed/);
+  assert.match(display, /Inspect.*before.*new export/);
+  assert.match(display, new RegExp(exported.operationId));
+  assert.deepEqual(JSON.parse(run('history', '--json')), history);
+});
 
 test('launching BOARDROOM describes the recorded local mode and blocked capabilities', () => {
   const output = execFileSync(process.execPath, [cli, '--help'], { encoding: 'utf8' });

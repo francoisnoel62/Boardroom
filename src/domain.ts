@@ -44,3 +44,34 @@ export const RecordedMeetingSchema = FixtureSchema.extend({
 });
 
 export type RecordedMeeting = z.infer<typeof RecordedMeetingSchema>;
+
+const EventEnvelope = z.object({
+  schemaVersion: z.literal(1), sequence: z.number().int().positive(),
+  projectId: z.string(), occurredAt: z.iso.datetime(),
+});
+
+export const EventSchema = z.discriminatedUnion('type', [
+  EventEnvelope.extend({
+    type: z.literal('recorded.message'), meetingId: z.string(),
+    messageId: z.string(), position: z.number().int().positive(),
+  }),
+  EventEnvelope.extend({ type: z.literal('export.prepared'), operationId: z.string() }),
+  EventEnvelope.extend({ type: z.literal('export.started'), operationId: z.string() }),
+  EventEnvelope.extend({ type: z.literal('export.completed'), operationId: z.string() }),
+  EventEnvelope.extend({ type: z.literal('export.failed'), operationId: z.string() }),
+]);
+
+export type DomainEvent = z.infer<typeof EventSchema>;
+type WithoutSequence<T> = T extends unknown ? Omit<T, 'sequence'> : never;
+export type EventInput = WithoutSequence<DomainEvent>;
+
+export const ExportOperationSchema = z.object({
+  schemaVersion: z.literal(1), id: z.string().uuid(), projectId: z.string(), meetingId: z.string(),
+  type: z.literal('recorded.export'), status: z.enum(['unconfirmed', 'completed', 'failed']),
+  createdAt: z.iso.datetime(), startedAt: z.iso.datetime().optional(), finishedAt: z.iso.datetime().optional(),
+  directory: z.string(), plan: z.string(), memo: z.string(),
+  errorCode: z.string().optional(),
+  receipts: z.array(z.object({ path: z.string(), sha256: z.string().regex(/^[a-f0-9]{64}$/) })),
+});
+
+export type ExportOperation = z.infer<typeof ExportOperationSchema>;

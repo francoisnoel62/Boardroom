@@ -18,6 +18,7 @@ Usage:
   boardroom evidence --id <id> --page <n>           Inspect a saved PDF page
   boardroom evidence --id <id> --block <n>          Inspect a saved DOCX block
   boardroom export --output <directory>  Create a new plan and decision memo
+  boardroom history [--json]             Inspect playback events and export receipts
   boardroom status                      Show local capabilities
   boardroom doctor [--json]              Run separate local storage probes
 
@@ -44,7 +45,7 @@ try {
   if (values.help || !command) {
     console.log(help);
   } else {
-    if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document'].includes(command) || positionals.length !== 1) {
+    if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history'].includes(command) || positionals.length !== 1) {
       throw new Error('Unknown command. Run boardroom --help.');
     }
     if (command === 'export' && !values.output) throw new Error('Export requires --output <directory>.');
@@ -98,7 +99,25 @@ try {
         if (result.extraction.status === 'failed') process.exitCode = 2;
       } else if (command === 'export') {
         const result = app.exportRecordedExample(values.output!);
-        console.log(values.json ? JSON.stringify(result) : `Recorded example exported to:\n${result.plan}\n${result.memo}\nHuman decision: pending.`);
+        console.log(values.json ? JSON.stringify(result) : `Recorded example export: ${result.operationId}\n${result.plan}\n${result.memo}\nHuman decision: pending.`);
+      } else if (command === 'history') {
+        const history = app.history(app.openDemo().id);
+        if (values.json) { console.log(JSON.stringify(history)); }
+        else {
+          const events = history.events.map(event => {
+            const detail = event.type === 'recorded.message'
+              ? `${event.messageId} | position ${event.position}` : event.operationId;
+            return `#${event.sequence} ${event.occurredAt} | ${event.type} | ${detail}`;
+          });
+          const operations = history.operations.map(operation => [
+            `${operation.id} | ${operation.status}${operation.errorCode ? ` (${operation.errorCode})` : ''}`,
+            `Directory: ${operation.directory}`,
+            ...operation.receipts.map(receipt => `${receipt.path} | SHA-256: ${receipt.sha256}`),
+            ...(operation.status === 'unconfirmed'
+              ? ['Outcome unconfirmed. Inspect the directory before requesting a new export; no automatic retry.'] : []),
+          ].join('\n'));
+          console.log(['Recorded example | saved history', ...events, 'Exports:', ...operations].join('\n'));
+        }
       } else if (command === 'doctor') {
         // Product telemetry is opt-in; inherited development tracing flags grant no consent.
         process.env.LANGSMITH_TRACING = 'false';
