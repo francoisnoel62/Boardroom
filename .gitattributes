@@ -1,4 +1,4 @@
 * text=auto
-*.pdf -text
-*.docx -text
+*.pdf binary
+*.docx binary
 *.svg text eol=lf
