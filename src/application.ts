@@ -107,8 +107,8 @@ export class Boardroom {
     });
     return this.deliberationLoading;
   }
-  async analyseMeeting(project: string, id: string, store: SecretStore) {
-    return (await this.deliberationService()).analyse(project, id, store);
+  async analyseMeeting(project: string, id: string, store: SecretStore, emit?: (adviser: string, text: string) => void) {
+    return (await this.deliberationService()).analyse(project, id, store, emit);
   }
   async inspectAnalyses(project: string, id: string) { return (await this.deliberationService()).inspect(project, id); }
   private debateService() {
@@ -117,7 +117,7 @@ export class Boardroom {
     });
     return this.debateLoading;
   }
-  async debateMeeting(project: string, id: string, store: SecretStore) { return (await this.debateService()).debate(project, id, store); }
+  async debateMeeting(project: string, id: string, store: SecretStore, emit?: (adviser: string, text: string) => void) { return (await this.debateService()).debate(project, id, store, emit); }
   async inspectDebate(project: string, id: string) { return (await this.debateService()).inspect(project, id); }
   private decisionService() {
     this.decisionLoading ??= import('./live-decision.ts').then(({ LiveDecision }) => {
@@ -125,7 +125,7 @@ export class Boardroom {
     });
     return this.decisionLoading;
   }
-  async collectFinalViews(project: string, id: string, version: number, store: SecretStore) { return (await this.decisionService()).collect(project, id, version, store); }
+  async collectFinalViews(project: string, id: string, version: number, store: SecretStore, emit?: (adviser: string, text: string) => void) { return (await this.decisionService()).collect(project, id, version, store, emit); }
   async inspectFinalViews(project: string, id: string) { return (await this.decisionService()).inspectViews(project, id); }
   async recordHumanDecision(project: string, id: string, input: HumanDecisionInput) { return (await this.decisionService()).record(project, id, input); }
   async inspectLiveDecision(project: string, id: string) { return (await this.decisionService()).inspect(project, id); }
@@ -188,8 +188,9 @@ export class Boardroom {
   /** All credentials and initial reservations succeed before any request can leave this process. */
   async callStructuredBatch<T>(project: string, id: string,
     requests: { input: CallInput; output: { text: string; schema: z.ZodType<T>; validate?: (value: T) => boolean } }[],
-    store: SecretStore, completed: (index: number, result: { value?: T; receipts: CallReceipt[] }) => void) {
-    const runners = await Promise.all(requests.map(request => this.prepareStructured(project, id, request.input, request.output, store)));
+    store: SecretStore, completed: (index: number, result: { value?: T; receipts: CallReceipt[] }) => void, emit?: (adviser: string, text: string) => void) {
+    const runners = await Promise.all(requests.map(request => this.prepareStructured(project, id, request.input, request.output, store,
+      emit ? text => emit(request.input.adviserId, text) : undefined)));
     const handles = this.db.transaction(() => requests.map(request => this.reserveCall(project, id, request.input))).immediate();
     await Promise.all(runners.map(async (run, index) => {
       let result: { value?: T; receipts: CallReceipt[] };

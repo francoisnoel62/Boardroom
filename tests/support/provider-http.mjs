@@ -17,5 +17,17 @@ globalThis.fetch = async (url, init) => {
     status: 'completed', model: body.model, usage: { input_tokens: 100, output_tokens: 10 },
     output: [{ type: 'message', content: [{ type: 'output_text', text }] }],
   } }];
-  return new Response(events.map(event => `data: ${JSON.stringify(event)}\n\n`).join(''), { headers: { 'Content-Type': 'text/event-stream' } });
+  const frames = events.map(event => `data: ${JSON.stringify(event)}\n\n`);
+  const delay = Number(process.env.TEST_STREAM_DELAY_MS ?? 0);
+  if (delay > 0 && (!process.env.TEST_DELAY_PHASE || process.env.TEST_DELAY_PHASE === phase)) {
+    const bytes = new TextEncoder();
+    let timer;
+    return new Response(new ReadableStream({ start(controller) {
+      controller.enqueue(bytes.encode(frames[0]));
+      const abort = () => { clearTimeout(timer); controller.error(new Error('Test stream aborted.')); };
+      init.signal.addEventListener('abort', abort, { once: true });
+      timer = setTimeout(() => { init.signal.removeEventListener('abort', abort); controller.enqueue(bytes.encode(frames.slice(1).join(''))); controller.close(); }, delay);
+    }, cancel() { clearTimeout(timer); } }), { headers: { 'Content-Type': 'text/event-stream' } });
+  }
+  return new Response(frames.join(''), { headers: { 'Content-Type': 'text/event-stream' } });
 };

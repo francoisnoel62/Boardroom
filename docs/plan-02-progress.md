@@ -1,5 +1,11 @@
 # Plan 02 implementation evidence
 
+## Increment 9 — interactive live terminal
+
+Observed red cycles: `live` was unknown; stream tail truncation hid its provisional identity; a 44×18 visible viewport lost the header/draft; an unfunded framing displayed generic phase completion. Each is covered by real PTY/VT assertions and its corresponding fix. The refusal now exposes failed/execution-refused state and zero ceiling, with no HTTP and no receipt. A full terminal journey edits a Unicode question, selects passages, approves framing, runs independent analyses and a sourced revision, collects three views, defers and reads both exported files.
+
+Five PTY scenarios pass with real graphs, SQLite and files, replacing HTTP only. They additionally cover simultaneous streams, multiline paste retained across resize, grapheme deletion, long history, both Ctrl+C/Escape with terminal restoration and unknown billing held, explicit conclusion, invalid/missing view beside INSUFFICIENT_EVIDENCE, and partial exports. A fixture input/Enter race and a post-quit assertion were corrected in the test driver without weakening public observations. No paid call or Hotelix change. Full local and remote results are recorded in the PR.
+
 ## Increment 5 — PO framing behind explicit human approval
 
 Observed red cycles: an analysis reservation succeeded before human agreement; approval API absent; compiled CLI framing command unknown; superseded in-flight analysis timed out instead of cancelling; a response between cancellation polls was still accepted; filtered trace omitted the approved version. Their tests passed after adding the domain approval gate, real graph/CLI, version invalidation at polling/settlement and bounded trace version metadata. A further controller regression reproduced acceptance after a monotonic deadline when the timer callback had not run; settlement now refuses that output while retaining known metering and actual elapsed time.

@@ -47,7 +47,7 @@ export class LiveDecision {
       states, outcomes: state?.outcomes ?? [], views, advisers };
   }
   async inspectViews(project: string, id: string) { return this.viewSnapshot(project, id); }
-  async collect(project: string, id: string, version: number, store: SecretStore) {
+  async collect(project: string, id: string, version: number, store: SecretStore, emit?: (adviser: string, text: string) => void) {
     const meeting = this.app.getMeeting(project, id), proposal = this.proposals(id).at(-1);
     if (!proposal || !this.current(project, id, version)) throw new PublicError('Final views require the explicit current approved proposal version.');
     const key = `${id}:${version}`;
@@ -89,7 +89,7 @@ export class LiveDecision {
         state.outcomes.push({ adviserId: adviser.id, status: accepted ? 'completed' : result.receipts.some(c => ['running', 'uncertain'].includes(c.status)) ? 'uncertain' : 'failed', callIds: result.receipts.map(c => c.id) });
         this.save('views-state', key, state);
         this.append({ schemaVersion: 1, type: 'view.settled', projectId: project, meetingId: id, version, adviserId: adviser.id, occurredAt: new Date().toISOString() });
-      }).immediate()); return {};
+      }).immediate(), emit); return {};
     }).addEdge(START, 'views').addEdge('views', END).compile({ checkpointer: this.saver });
     try { await graph.invoke({ projectId: project, meetingId: id, proposalVersion: version }, { configurable: { thread_id: `views:${key}` } }); }
     catch { /* Saved results remain visible; no implicit replay. */ }

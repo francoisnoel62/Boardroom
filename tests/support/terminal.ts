@@ -47,6 +47,7 @@ export function openTerminal(t: TestContext, args: string[], options: {
     resize: (cols: number, rows: number) => { screen.resize(cols, rows); process.resize(cols, rows); },
     raw: () => raw,
     snapshot: text,
+    viewport: () => Array.from({ length: screen.rows }, (_, index) => screen.buffer.active.getLine(screen.buffer.active.viewportY + index)?.translateToString(true) ?? '').join('\n'),
     recording: () => recording,
     async waitFor(pattern: RegExp | ((text: string) => boolean), timeoutMs = 10000) {
       const deadline = Date.now() + timeoutMs;
