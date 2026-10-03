@@ -43,6 +43,7 @@ Each behavior below was introduced after executing its failing test. Run the res
 | Multiline paste | Submission retained CRLF rather than normalized LF | Bracketed paste stays one draft, normalizes newlines, and restores paste mode on exit |
 | Window resize | Current dimensions were absent | Narrower/wider PTY windows update dimensions and preserve an editable Unicode draft |
 | Pasted controls | ANSI bytes changed the displayed draft's styling | Control bytes are removed and do not cancel or issue terminal commands |
+| Interactive TTY in CI | Candidate PTY stayed blank with `CI=true`; reproduced locally | Explicit interactive rendering keeps input and sample updates visible in a real TTY |
 
 The package copy initially failed using Node's recursive `cpSync` on this Windows environment. Copying files and directories individually resolved the observed failure; the same package E2E then passed. This is not a claim that all Windows environments have that issue.
 
@@ -69,6 +70,8 @@ The README transcript is captured from the compiled CLI with a fresh local demon
 `terminal-check` runs a fictional sample in an actual terminal, using the existing Ink runtime. Scratch input is in memory only. Seven new CLI/PTY tests cover TTY refusal, input during updates, Unicode backspace, multiline paste, narrower/wider resize, pasted control bytes, and Escape/Ctrl+C cancellation. The candidate journey also exercises the probe through its copied Node with empty PATH and checks unchanged project history.
 
 Local result: **34 tests passed**, none skipped, including the bundled-runtime PTY journey; type checking passed. This extends the 27-test PR 3 baseline. The GitHub Actions matrix runs the same suite on Windows x64, Linux x64, and macOS arm64; its result must be checked independently.
+
+The first remote run exposed Ink's default noninteractive rendering when `CI=true`, even inside a real PTY. Extending the existing input test with that environment reproduced the blank screen locally. Explicit interactive rendering at the TTY-only command boundary makes the same seven terminal tests pass, including ongoing updates after typing. The bundled-runtime journey also passes locally with `CI=true`, empty PATH, and unchanged project history. The candidate test retains the CI environment rather than disabling it.
 
 The test driver is Microsoft `node-pty` 1.2.0-beta.15, with system ConPTY on Windows, plus `@xterm/headless` 6.0.0 to interpret actual VT output. The earlier stable driver retained Windows workers after exit; the selected beta completed the same cleanup checks. No production dependency or provider access was added. This proof concerns the documented sample and window sizes; it does not qualify every terminal, IME, editing operation, or real provider stream. Remote results are tracked on [PR 4](https://github.com/francoisnoel62/Boardroom/pull/4/checks).
 

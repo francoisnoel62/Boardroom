@@ -88,10 +88,10 @@ test('Escape and Ctrl+C cancel the stream, restore the cursor and exit without p
   }
 });
 
-test('typing and submitting scratch input stays responsive during a fictional stream', { timeout: 20000 }, async (t) => {
+test('typing during a fictional stream stays responsive in a real TTY even with CI set', { timeout: 20000 }, async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'Boardroom live terminal '));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const terminal = openTerminal(t, [cli, 'terminal-check', '--data-dir', join(root, 'data')]);
+  const terminal = openTerminal(t, [cli, 'terminal-check', '--data-dir', join(root, 'data')], { env: { CI: 'true' } });
   await terminal.waitFor(/Technical validation — fictional stream/);
   await terminal.waitFor(/Stream tick: [1-9]/);
   terminal.write('pilot');

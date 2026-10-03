@@ -43,7 +43,7 @@ export async function runTerminalValidation(): Promise<void> {
   let remainingDraft = '';
   const view = render(<TerminalValidation onCancel={(accepted, draft) => {
     lastAccepted = accepted; remainingDraft = draft;
-  }} />, { patchConsole: false, exitOnCtrlC: false });
+  }} />, { patchConsole: false, exitOnCtrlC: false, interactive: true });
   await view.waitUntilExit();
   console.log(`Stream cancelled.\nLast accepted input: ${JSON.stringify(lastAccepted)}\nUnsubmitted draft: ${JSON.stringify(remainingDraft)}`);
   process.exitCode = 130;
