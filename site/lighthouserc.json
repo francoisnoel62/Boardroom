@@ -6,7 +6,8 @@
         "http://localhost/",
         "http://localhost/engineering/",
         "http://localhost/docs/",
-        "http://localhost/docs/quickstart/"
+        "http://localhost/docs/quickstart/",
+        "http://localhost/download/"
       ],
       "numberOfRuns": 3,
       "settings": {

@@ -10,8 +10,8 @@ const testSources = readdirSync(resolve(repo, 'tests'))
   .map(name => readFileSync(resolve(repo, 'tests', name), 'utf8'));
 
 test('the application test count is read from the test files themselves', () => {
-  // The CI log of the application workflow reports "tests 48" for this suite.
-  assert.equal(countTests(testSources), 48);
+  // The CI log of the application workflow reports the same "tests" total for this suite (52 once the installer tests were added).
+  assert.equal(countTests(testSources), 52);
 });
 
 test('only top-level test declarations are counted', () => {

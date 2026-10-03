@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'site/**'
+      - 'scripts/**'
       - 'src/**'
       - 'tests/**'
       - 'assets/**'
@@ -14,6 +15,7 @@ on:
   pull_request:
     paths:
       - 'site/**'
+      - 'scripts/**'
       - 'src/**'
       - 'tests/**'
       - 'assets/**'
@@ -49,6 +51,9 @@ jobs:
       - name: Data contracts (fixture, claims, roadmap)
         run: npm run test:unit
       - run: npm run build
+        env:
+          # Raises the GitHub Releases API rate limit for the /download page.
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Built site (links, metadata, editorial rules, no third parties)
         run: npm run test:build
       - run: npx playwright install --with-deps chromium

@@ -48,6 +48,8 @@ jobs:
           path: |
             scripts/clean-ci-node.ps1
             scripts/clean-ci-node.sh
+            scripts/install.sh
+            scripts/install.ps1
             qualification/Dockerfile
 
   installed:
@@ -106,6 +108,34 @@ jobs:
             -v "$PWD/Boardroom clean François/candidate:/candidate:ro" -v "$PWD/evidence:/evidence" \
             -e BOARDROOM_INSTALLATION_MODE=clean -e BOARDROOM_NO_NODE_PROOF=/evidence/no-node.json -e BOARDROOM_QUALIFICATION_OUTPUT=/evidence \
             boardroom-no-node /bin/sh -c 'set -eu; ! command -v node; printf "{\"schemaVersion\":1,\"strategy\":\"fresh-ubuntu-image-no-node-offline\",\"systemNodeVisible\":false,\"absentPaths\":[\"/usr/bin/node\",\"/usr/local/bin/node\"]}" > /evidence/no-node.json; /candidate/runtime/node --test /candidate/qualification/installed.test.mjs'
+      # The published installers, run against a local release directory holding this candidate.
+      - name: Install the candidate with install.sh and run doctor
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          platform=$([ "$RUNNER_OS" = macOS ] && echo macos || echo linux)
+          mkdir -p installer-release
+          cp incoming/boardroom.tar.gz "installer-release/boardroom-0.0.0-ci-$platform-${{ matrix.arch }}.tar.gz"
+          (cd installer-release && shasum -a 256 *.tar.gz > SHA256SUMS)
+          BOARDROOM_DOWNLOAD_BASE="file://$PWD/installer-release" BOARDROOM_VERSION=0.0.0-ci \
+            BOARDROOM_INSTALL_DIR="$PWD/installed by script" BOARDROOM_BIN_DIR="$PWD/installer-bin" sh tools/scripts/install.sh
+          "$PWD/installer-bin/boardroom" doctor --json --data-dir "$PWD/installer-data"
+      - name: Install the candidate with install.ps1 and run doctor
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force installer-release | Out-Null
+          Copy-Item incoming/boardroom.tar.gz 'installer-release/boardroom-0.0.0-ci-windows-x64.tar.gz'
+          $hash = (Get-FileHash 'installer-release/boardroom-0.0.0-ci-windows-x64.tar.gz' -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -Path installer-release/SHA256SUMS -Value "$hash  boardroom-0.0.0-ci-windows-x64.tar.gz"
+          $env:BOARDROOM_DOWNLOAD_BASE = ([Uri](Resolve-Path installer-release).Path).AbsoluteUri
+          $env:BOARDROOM_VERSION = '0.0.0-ci'
+          $env:BOARDROOM_INSTALL_DIR = Join-Path $PWD 'installed by script'
+          $env:BOARDROOM_BIN_DIR = Join-Path $PWD 'installer-bin'
+          $env:BOARDROOM_NO_MODIFY_PATH = '1'
+          & ./tools/scripts/install.ps1
+          & (Join-Path $PWD 'installer-bin/boardroom.cmd') doctor --json --data-dir (Join-Path $PWD 'installer-data')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v7
         if: always()
         with:

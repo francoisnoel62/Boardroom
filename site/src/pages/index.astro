@@ -10,6 +10,7 @@ import Terminal from '../components/Terminal.astro';
 import Verdict from '../components/Verdict.astro';
 import { captureTitle, exportedMemo, exportedPlan, sourceHash, sourceLines, story, terminalScreen } from '../data/demo.ts';
 import { phaseLabel, repository, sourceUrl } from '../data/labels.ts';
+import { releaseInfo } from '../data/release-source.ts';
 import { publicStatus, roadmap } from '../data/roadmap.ts';
 import Site from '../layouts/Site.astro';
 
@@ -33,6 +34,7 @@ const stepTitle = (phase: keyof typeof phaseLabel, text: string) => {
   return version ? `${phaseLabel[phase]} ${version}` : phaseLabel[phase];
 };
 const citedBy = new Map(story.steps.flatMap(step => step.evidence ? [[step.evidence.firstLine, step.role] as const] : []));
+const release = await releaseInfo();
 const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanDecision.slice(1);
 ---
 <Site
@@ -354,10 +356,12 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
         <details>
           <summary>Can I download it?</summary>
           <div class="answer">
-            <p>
-              Not as a published release yet. You can <a href="/docs/quickstart/">build it from source</a> today; the
-              project's CI produces a packaged candidate for each qualified platform.
-            </p>
+            {release.state === 'published'
+              ? <p>Yes: version {release.release.version} is on the <a href="/download/">download page</a>, with checksums and one-line installers.</p>
+              : <p>
+                  Not as a published release yet. You can <a href="/docs/quickstart/">build it from source</a> today; the
+                  project's CI produces a packaged candidate for each qualified platform.
+                </p>}
           </div>
         </details>
         <details>

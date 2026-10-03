@@ -9,6 +9,8 @@ export default defineConfig({
   // The public domain is pending a decision (plan: SITE-VITRINE-ET-DOCUMENTATION.md, D3).
   site: process.env.SITE_URL,
   trailingSlash: 'always',
+  // Tests build a fixture release into a separate directory.
+  outDir: process.env.SITE_OUT_DIR ?? './dist',
   vite: {
     // The site reads the product's own fixtures and exports from the repository root.
     server: { fs: { allow: ['..'] } },

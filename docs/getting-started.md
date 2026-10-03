@@ -150,7 +150,7 @@ npm test
 
 Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](plan-01-progress.md) records the observed failures and passing behaviors.
 
-A GitHub Actions workflow runs 48 deterministic integration/E2E tests and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) records the observed results, optional blocks and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
+A GitHub Actions workflow runs 52 deterministic integration/E2E tests, including the installers against a local release, and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) records the observed results, optional blocks and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
 
 ## Next milestones
 

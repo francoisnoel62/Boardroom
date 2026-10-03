@@ -92,5 +92,5 @@ test('the FAQ answers cost, license and data questions honestly', async ({ page 
 });
 
 test('the engineering section shows figures derived from the repository', async ({ page }) => {
-  await expect(page.locator('#engineering [data-stat="tests"] [data-value]')).toHaveText('48');
+  await expect(page.locator('#engineering [data-stat="tests"] [data-value]')).toHaveText('52');
 });

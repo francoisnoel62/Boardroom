@@ -1,6 +1,9 @@
 ---
 import { repository, sourceUrl } from '../data/labels.ts';
+import { releaseInfo } from '../data/release-source.ts';
 import Wordmark from './Wordmark.astro';
+
+const release = await releaseInfo();
 ---
 <footer class="site-footer">
   <div class="container grid">
@@ -29,6 +32,7 @@ import Wordmark from './Wordmark.astro';
       <div>
         <h2>Project</h2>
         <ul>
+          <li><a href="/download/">Release status</a></li>
           <li><a href={repository} rel="noopener">Source on GitHub</a></li>
           <li><a href={sourceUrl('boardroom-plans/BOARDROOM_V1_SPEC.md')} rel="noopener">Product specification</a></li>
           <li><a href="/design/">Design system</a></li>
@@ -37,7 +41,10 @@ import Wordmark from './Wordmark.astro';
     </nav>
   </div>
   <div class="container small">
-    <p>No release has been published yet. The project license is awaiting a decision.</p>
+    <p>
+      {release.state === 'published' ? `Latest release: ${release.release.version}.` : 'No release has been published yet.'}{' '}
+      The project license is awaiting a decision.
+    </p>
     <p>The recorded example is a scripted, fictional illustration.</p>
   </div>
 </footer>

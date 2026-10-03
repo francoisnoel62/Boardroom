@@ -9,7 +9,7 @@ test('the engineering page is reachable from the main navigation', async ({ page
 
 test('figures are derived from the repository', async ({ page }) => {
   await page.goto('/engineering/');
-  await expect(page.locator('[data-stat="tests"] [data-value]')).toHaveText('48');
+  await expect(page.locator('[data-stat="tests"] [data-value]')).toHaveText('52');
   await expect(page.locator('[data-stat="platforms"] [data-value]')).toHaveText('3');
   await expect(page.locator('[data-stat="platforms"]')).toContainText('Windows x64, Linux x64, macOS arm64');
 });

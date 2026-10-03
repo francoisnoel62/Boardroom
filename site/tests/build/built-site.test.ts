@@ -87,3 +87,9 @@ test('no page calls Boardroom open source without showing that the license is st
     }
   }
 });
+
+test('the installers served by the site are byte-for-byte the repository scripts', () => {
+  for (const name of ['install.sh', 'install.ps1']) {
+    assert.equal(readFileSync(join(dist, name), 'utf8'), readFileSync(resolve(dist, '../../scripts', name), 'utf8'), name);
+  }
+});

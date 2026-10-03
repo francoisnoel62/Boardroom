@@ -1,7 +1,11 @@
 ---
 import { repository } from '../data/labels.ts';
+import { releaseInfo } from '../data/release-source.ts';
 import ThemeToggle from './ThemeToggle.astro';
 import Wordmark from './Wordmark.astro';
+
+// A Download link appears only once a release is actually published.
+const published = (await releaseInfo()).state === 'published';
 ---
 <header class="site-header">
   <div class="container bar">
@@ -13,6 +17,7 @@ import Wordmark from './Wordmark.astro';
         <li class="section-link"><a href="/#roadmap">Roadmap</a></li>
         <li><a href="/engineering/">Engineering</a></li>
         <li><a href="/docs/">Docs</a></li>
+        {published && <li><a href="/download/">Download</a></li>}
         <li class="wide-link"><a href={repository} rel="noopener">GitHub</a></li>
       </ul>
     </nav>
