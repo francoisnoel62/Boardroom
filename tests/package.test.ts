@@ -32,6 +32,8 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(history.operations[0].receipts.length, 2);
   const diagnostics = JSON.parse(run('doctor', '--json'));
   assert.equal(diagnostics.checkpointReopen, 'verified');
+  assert.equal(diagnostics.optionalProbes.embeddings.status, 'blocked');
+  assert.equal(diagnostics.optionalProbes.providerStreaming.status, 'blocked');
   assert.deepEqual(diagnostics.pdfDocx, { pdf: 'verified', docx: 'verified' });
   const pdf = JSON.parse(run('document', '--source', join(candidate, 'assets', 'validation', 'launch.pdf'), '--allow-source', '--json'));
   const docx = JSON.parse(run('document', '--source', join(candidate, 'assets', 'validation', 'launch.docx'), '--allow-source', '--json'));
@@ -43,6 +45,12 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(decision.context.version, 1);
   assert.deepEqual(decision.views.map((view: { stance: string }) => view.stance), ['APPROVED', 'APPROVED', 'INSUFFICIENT_EVIDENCE']);
   assert.equal(decision.humanDecision, 'pending');
+  const trace = JSON.parse(run('trace', '--output', join(root, 'traces'), '--json'));
+  assert.ok(!readFileSync(trace.path, 'utf8').includes(data));
+  const isolation = JSON.parse(run('isolation-check', '--output', join(root, 'isolation'), '--json'));
+  const report = JSON.parse(readFileSync(isolation.path, 'utf8'));
+  assert.equal(report.baseline.outsideCopyWrite, 'allowed');
+  assert.equal(report.product.commands, 'unavailable');
   const terminal = openTerminal(t, [cli, 'terminal-check', '--data-dir', data], { executable: runtime, cwd: root, env });
   await terminal.waitFor(/Stream tick: [1-9]/);
   terminal.write('\x1b[200~Capacity:\r\ncafé 😀\x1b[201~');

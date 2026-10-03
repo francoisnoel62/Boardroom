@@ -96,6 +96,10 @@ The screen is labeled **Technical validation — fictional stream**. Input stays
 
 ## What happens to your data
 
+For separate technical evidence, `trace --output <directory>` creates a new local JSON file with allowlisted event metadata: sequence, type, time, playback position or export-operation ID. It excludes paths, source/transcript bodies and receipts. Nothing is uploaded. `isolation-check --output <directory>` measures fixed fictional temporary targets and loopback networking, then writes a report; it accepts no arbitrary command or MCP endpoint. Both commands support `--json`.
+
+`doctor --json` explains optional blocks. No embedding runtime/model assets or provider/cloud-trace account is configured in this build. FTS5 and local filtered traces remain available; real streaming must be validated in Plan 02. See the [technical qualification report](docs/technical-qualification.md).
+
 - Playback reads only the bundled fictional source. Source ingestion through the application service requires explicit authorization for the chosen file and project.
 - Saved citations point to a SHA-256 identified revision. Editing the original does not change that snapshot; inspection warns if the original has changed or disappeared.
 - Each export creates a new directory and two UTF-8 Markdown files. Existing plans and sources are preserved.

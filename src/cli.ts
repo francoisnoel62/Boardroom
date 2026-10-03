@@ -20,9 +20,11 @@ Usage:
   boardroom export --output <directory>  Create a new plan and decision memo
   boardroom history [--json]             Inspect playback events and export receipts
   boardroom decision [--json]            Inspect saved context, proposals and adviser views
+  boardroom trace --output <directory>   Export a filtered local technical trace
   boardroom status                      Show local capabilities
   boardroom doctor [--json]              Run separate local storage probes
   boardroom terminal-check              Try input during a fictional stream (TTY only)
+  boardroom isolation-check --output <directory>  Measure fixed temporary protection probes
 
 Options: --data-dir <directory>, --terminal (Ink rendering), --json, --help
 `;
@@ -52,11 +54,18 @@ try {
     }
     const { runTerminalValidation } = await import('./terminal-validation.tsx');
     await runTerminalValidation();
+  } else if (command === 'isolation-check' && positionals.length === 1) {
+    if (!values.output) throw new Error('Isolation validation requires --output <directory>.');
+    const { exportIsolationReport } = await import('./isolation-validation.ts');
+    const path = await exportIsolationReport(values.output);
+    console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
+      : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision'].includes(command) || positionals.length !== 1) {
+    if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new Error('Unknown command. Run boardroom --help.');
     }
     if (command === 'export' && !values.output) throw new Error('Export requires --output <directory>.');
+    if (command === 'trace' && !values.output) throw new Error('Trace export requires --output <directory>.');
     if (command === 'document' && !values.source) throw new Error('Document extraction requires --source <file>.');
     if (command === 'document' && !values['allow-source']) throw new Error('Document reading requires explicit source consent: add --allow-source for this file.');
     if (command === 'evidence' && values.id && ((values.page !== undefined) === (values.block !== undefined))) {
@@ -108,6 +117,9 @@ try {
       } else if (command === 'export') {
         const result = app.exportRecordedExample(values.output!);
         console.log(values.json ? JSON.stringify(result) : `Recorded example export: ${result.operationId}\n${result.plan}\n${result.memo}\nHuman decision: pending.`);
+      } else if (command === 'trace') {
+        const path = app.exportFilteredTrace(app.openDemo().id, values.output!);
+        console.log(values.json ? JSON.stringify({ mode: 'local-filtered-trace', path }) : `Local filtered trace: ${path}\nCloud telemetry: off.`);
       } else if (command === 'decision') {
         const decision = app.recordedDecision(app.openDemo().id);
         console.log(values.json ? JSON.stringify(decision) : [
@@ -139,7 +151,7 @@ try {
         // Product telemetry is opt-in; inherited development tracing flags grant no consent.
         process.env.LANGSMITH_TRACING = 'false';
         process.env.LANGCHAIN_TRACING_V2 = 'false';
-        const { StorageProbe } = await import('./technical-validation.ts');
+        const { StorageProbe, optionalProbeResults } = await import('./technical-validation.ts');
         let probe = new StorageProbe(app.dataDirectory);
         let fts5: boolean;
         try {
@@ -164,6 +176,7 @@ try {
           liveProviders: 'unavailable',
           pdfDocx: { pdf: pdfVerified ? 'verified' : 'failed', docx: docxVerified ? 'verified' : 'failed' },
           embeddings: 'unavailable',
+          optionalProbes: optionalProbeResults(),
           commandsMcp: 'unavailable', cloudTelemetry: 'off',
         };
         console.log(values.json ? JSON.stringify(result) : JSON.stringify(result, null, 2));
