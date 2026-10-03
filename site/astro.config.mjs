@@ -7,7 +7,8 @@ const repository = 'https://github.com/francoisnoel62/Boardroom';
 
 export default defineConfig({
   // The public domain is pending a decision (plan: SITE-VITRINE-ET-DOCUMENTATION.md, D3).
-  site: process.env.SITE_URL,
+  // SITE_URL wins; on Vercel, canonical URLs and the sitemap point at the production deployment.
+  site: process.env.SITE_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined),
   trailingSlash: 'always',
   // Tests build a fixture release into a separate directory.
   outDir: process.env.SITE_OUT_DIR ?? './dist',

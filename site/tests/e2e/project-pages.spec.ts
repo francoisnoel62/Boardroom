@@ -50,6 +50,8 @@ test('the privacy page states what the site stores and that nothing tracks visit
   await page.goto('/privacy/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Privacy');
   await expect(page.getByText('This site sets no cookies')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Hosting' })).toContainText('Vercel');
+  await expect(page.getByRole('region', { name: 'Hosting' })).toContainText('No Vercel Web Analytics or Speed Insights');
   for (const key of ['starlight-theme', 'starlight-synced-tabs__os', 'sl-sidebar-state']) {
     await expect(page.locator('[data-storage-key]', { hasText: key })).toBeVisible();
   }

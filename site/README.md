@@ -102,7 +102,7 @@ Corrections found by those checks rather than by review: the first CI run failed
 - **Plain CSS with tokens instead of Tailwind.** Starlight ships its own cascade layers; a few bespoke components are clearer and lighter as scoped Astro styles over `src/styles/tokens.css`. Reversible if the component count grows.
 - **Fonts.** Instrument Serif (titles) and Inter (marketing text) are self-hosted, OFL-licensed, latin subsets only, and preloaded on marketing pages. Inter uses `font-display: optional`, so text never waits for or reflows after a late font. The documentation body and all code use the reader's system fonts: in CI's simulated mobile run, the docs' LCP sat at 1.81 s and 1.96 s with Inter and JetBrains Mono, above the 1.8 s budget, and dropping those downloads removed the slow case locally. The serif italic was dropped too: a fourth font file for three short questions.
 - **Theme** follows the visitor's system preference, and the toggle shares Starlight's `starlight-theme` key so the site and docs stay in step.
-- **Project decisions D1–D5** (3 October 2026): Apache-2.0; no developer preview before the public beta, so the first public download comes with Plan 09; no deployment yet; no audience measurement, so `/privacy/` describes a site that measures nothing.
+- **Project decisions D1–D5** (3 October 2026): Apache-2.0; no developer preview before the public beta, so the first public download comes with Plan 09; hosting on Vercel (D4, decided the same day; no custom domain yet) through the root `vercel.json`, which builds this package from a clean clone; no audience measurement, so `/privacy/` names the host and describes a site that measures nothing.
 - **Every doc page declares `status`** (`available`, `preview`, `planned`, `vision`), rendered under its title.
 
 ## Known gaps
@@ -116,5 +116,6 @@ Corrections found by those checks rather than by review: the first CI run failed
 ## Known warnings
 
 - `MODULE_LEVEL_DIRECTIVE "use astro:head-inject"` comes from Astro's MDX output under Rolldown, not from this code.
-- Sitemap and canonical URLs are skipped until `SITE_URL` is set (domain decision pending).
+- Sitemap and canonical URLs are skipped unless `SITE_URL` or Vercel's `VERCEL_PROJECT_PRODUCTION_URL` is set, so local and CI builds have none.
+- On Vercel, `/download/` and `/changelog/` read GitHub Releases without a token; if the shared build IP is rate-limited they show "unavailable". A read-only `GITHUB_TOKEN` environment variable in the Vercel project avoids it.
 - `npm audit` reports `http-cache-semantics` (cross-user disclosure in a shared HTTP cache) through Astro. A static build run by one user does not use a shared cache; revisit when Astro updates the dependency.
