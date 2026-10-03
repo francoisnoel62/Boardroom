@@ -43,7 +43,7 @@ Changing a fixture or an export changes the site; an unsupported fixture version
 | Accessibility | part of `test:e2e` | No serious/critical axe violation (WCAG 2.2 AA) on every page, both themes; reduced motion honoured |
 | Lighthouse | `npm run lighthouse` | Median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
 
-Observed locally on 2026-10-03 (Node 22.22, Chromium 141): 18 unit tests, 5 built-site checks and 54 end-to-end tests pass. Lighthouse (simulated mobile, median of 3) scored 99–100 for performance and 100 for accessibility, best practices and SEO on `/`, `/docs/` and `/docs/quickstart/`; median LCP was 1.67 s, 1.51 s and 1.22 s, with CLS 0 and TBT 0.
+Observed locally on 2026-10-03 (Node 22.22, Chromium 141): 18 unit tests, 5 built-site checks and 54 end-to-end tests pass. Lighthouse (simulated mobile, median of 3) scored 100 in all four categories on `/`, `/docs/` and `/docs/quickstart/`, with median LCP of 1.52 s, 1.06 s and 1.06 s, CLS 0 and TBT 0. GitHub's runners measure slower than this container, so CI is the reference for the budgets.
 
 ## Red → green record
 
@@ -59,12 +59,12 @@ Observed locally on 2026-10-03 (Node 22.22, Chromium 141): 18 unit tests, 5 buil
 | Built site | No build output existed | Links, metadata, editorial and third-party checks pass on `dist/` |
 | Pages | No page or preview server existed | 54 end-to-end and accessibility tests pass on desktop and mobile |
 
-Corrections found by those checks rather than by review: a misplaced `@import` silently dropped two fonts (and briefly flattered an LCP measurement), global utility classes overrode component colours (fixed by layering `site.css`), and two test selectors were wrong about the search box role and the scope of the “no download” rule.
+Corrections found by those checks rather than by review: the first CI run failed the docs' LCP budget on GitHub's runners although it passed locally (fixed by the font decision below), a misplaced `@import` silently dropped two fonts (and briefly flattered an LCP measurement), global utility classes overrode component colours (fixed by layering `site.css`), and two test selectors were wrong about the search box role and the scope of the “no download” rule.
 
 ## Decisions taken in this phase
 
 - **Plain CSS with tokens instead of Tailwind.** Starlight ships its own cascade layers; a few bespoke components are clearer and lighter as scoped Astro styles over `src/styles/tokens.css`. Reversible if the component count grows.
-- **Fonts are self-hosted and OFL-licensed** (Instrument Serif, Inter, JetBrains Mono), latin subsets only. Inter and JetBrains Mono use `font-display: optional`, so text never waits for or reflows after a late font; only the display serif swaps in, and marketing pages preload it with Inter. The serif italic was dropped: it cost a fourth font file for three short questions. Measured on the home page, these choices moved the median mobile LCP from about 1.83 s to 1.67 s.
+- **Fonts.** Instrument Serif (titles) and Inter (marketing text) are self-hosted, OFL-licensed, latin subsets only, and preloaded on marketing pages. Inter uses `font-display: optional`, so text never waits for or reflows after a late font. The documentation body and all code use the reader's system fonts: in CI's simulated mobile run, the docs' LCP sat at 1.81 s and 1.96 s with Inter and JetBrains Mono, above the 1.8 s budget, and dropping those downloads removed the slow case locally. The serif italic was dropped too: a fourth font file for three short questions.
 - **Theme** follows the visitor's system preference, and the toggle shares Starlight's `starlight-theme` key so the site and docs stay in step.
 - **Every doc page declares `status`** (`available`, `preview`, `planned`, `vision`), rendered under its title.
 

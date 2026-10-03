@@ -364,7 +364,8 @@ Les couleurs de verdict sont aussi codées par un libellé et une icône (jamais
 
 - **Display** : un serif éditorial (Instrument Serif ou Newsreader) pour les titres, dans la lignée du Georgia de l'illustration.
 - **Texte et interface** : Inter ou Geist.
-- **Code et terminal** : JetBrains Mono ou Geist Mono.
+- **Code et terminal** : police monospace du système (SF Mono, Cascadia Mono/Consolas, DejaVu Sans Mono). Retenu en phase 1 à la place de JetBrains Mono : la capture se lit comme dans le terminal du visiteur, et aucune police de code ne retarde le premier rendu.
+- **Documentation** : texte en police système, titres en serif de marque. En CI, Inter et JetBrains Mono faisaient dépasser le budget LCP de la documentation (1,81 s et 1,96 s en mobile simulé).
 - Polices auto-hébergées en WOFF2 sous-ensemblées (aucun appel à un CDN de polices, par cohérence avec la confidentialité), display préchargée.
 
 ### 9.4 Composants signature

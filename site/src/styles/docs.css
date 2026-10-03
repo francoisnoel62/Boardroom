@@ -1,7 +1,11 @@
-/* Maps the BOARDROOM tokens onto Starlight's theme variables. */
+/*
+ * Maps the BOARDROOM tokens onto Starlight's theme variables.
+ * Documentation body text uses the reader's system font: measured on simulated mobile, skipping the
+ * Inter download removed most of the docs' LCP cost. Page titles keep the brand serif.
+ */
 :root,
 :root[data-theme='dark'] {
-  --sl-font: var(--font-sans);
+  --sl-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --sl-font-mono: var(--font-mono);
 
   --sl-color-accent-low: #273619;
