@@ -45,6 +45,28 @@ export const RecordedMeetingSchema = FixtureSchema.extend({
 
 export type RecordedMeeting = z.infer<typeof RecordedMeetingSchema>;
 
+export const ContextSchema = z.object({
+  schemaVersion: z.literal(1), version: z.number().int().positive(),
+  sources: z.array(z.object({ evidenceId: z.string(), revision: z.number().int().positive() })).min(1),
+});
+export const ProposalSchema = z.object({
+  schemaVersion: z.literal(1), version: z.number().int().positive(),
+  contextVersion: z.number().int().positive(), messageId: z.string(), text: z.string().min(1),
+});
+export const AdviserViewSchema = z.object({
+  schemaVersion: z.literal(1), role: z.enum(['Product Owner', 'Lead Developer', 'Marketing Manager']),
+  model: z.string(), contextVersion: z.number().int().positive(), proposalVersion: z.number().int().positive(),
+  stance: z.enum(['APPROVED', 'REJECTED', 'INSUFFICIENT_EVIDENCE']), statement: z.string().min(1),
+});
+export const RecordedDecisionSchema = z.object({
+  schemaVersion: z.literal(1), mode: z.literal('recorded'), projectId: z.string(), meetingId: z.string(),
+  context: ContextSchema, proposals: z.array(ProposalSchema).min(1), views: z.array(AdviserViewSchema),
+  humanDecision: z.literal('pending'),
+}).refine(value => value.proposals.every(proposal => proposal.contextVersion === value.context.version)
+  && value.views.every(view => view.contextVersion === value.context.version
+    && value.proposals.some(proposal => proposal.version === view.proposalVersion)),
+  'A proposal or adviser view references an unavailable version.');
+
 const EventEnvelope = z.object({
   schemaVersion: z.literal(1), sequence: z.number().int().positive(),
   projectId: z.string(), occurredAt: z.iso.datetime(),

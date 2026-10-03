@@ -6,6 +6,29 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { Boardroom } from '../src/application.ts';
 
+test('saved context, proposal versions and adviser views reopen without deciding for the human', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom contracts '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  let app = new Boardroom(root);
+  const project = app.openDemo();
+  const decision = app.recordedDecision(project.id);
+  assert.equal(decision.schemaVersion, 1);
+  assert.equal(decision.context.version, 1);
+  assert.equal(decision.context.sources[0].revision, 1);
+  assert.deepEqual(decision.proposals.map(proposal => proposal.version), [1, 2]);
+  assert.match(decision.proposals[0].text, /five integrations/);
+  assert.match(decision.proposals[1].text, /one integration/);
+  assert.deepEqual(decision.views.map(view => view.stance), ['APPROVED', 'APPROVED', 'INSUFFICIENT_EVIDENCE']);
+  assert.ok(decision.views.every(view => view.contextVersion === 1 && view.proposalVersion === 2));
+  assert.equal(decision.humanDecision, 'pending');
+  assert.throws(() => app.recordedDecision('another-project'), /outside this project/);
+  app.nextRecordedMessage();
+  app.close();
+  app = new Boardroom(root);
+  try { assert.deepEqual(app.recordedDecision(project.id), decision); }
+  finally { app.close(); }
+});
+
 test('recorded discussion resumes from the next message and keeps the sourced objection', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'Boardroom replay é '));
   t.after(() => rmSync(root, { recursive: true, force: true }));

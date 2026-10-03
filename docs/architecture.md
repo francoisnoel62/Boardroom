@@ -19,6 +19,8 @@ There is no network/human wait inside a SQLite transaction. Document parsing fin
 
 ## Playback journal and export receipts
 
+`recordedDecision(projectId)` and the `decision` CLI project the saved recording through version-1 context, proposal, and adviser-view schemas. Views must reference an available proposal and the same context version. The fixed recording's explicitly labeled final-view format supplies its stances; this adapter is not a parser for model output. Previous candidates' saved recordings remain readable, without replacing their transcript with newer bundled assets. Export-operation records are the minimal action contract for this milestone; executable command/MCP contracts remain for later tool activation. These projections do not implement live context editing or incident reconciliation.
+
 `history(projectId)` returns events and operation receipts from one SQLite read snapshot. Events use a version-1 envelope with a global sequence, timestamp, and project scope. Playback entries reference the saved meeting/message and resulting position; export entries reference the operation ID. They omit source and transcript bodies. The journal covers playback and exports in this increment; it does not claim to audit every project or evidence command.
 
 `prepareRecordedExport` saves intent and planned paths before any output creation. It returns a process-local execution handle; the ordinary `exportRecordedExample` command immediately uses that handle. An immediate transaction claims a single attempt before filesystem writes. The same handle cannot execute again after success or failure, and no handle is reconstructed from an old ID on restart.

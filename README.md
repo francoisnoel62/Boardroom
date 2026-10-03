@@ -35,6 +35,7 @@ node dist/cli.js demo --data-dir .boardroom/example
 node dist/cli.js evidence --line 4 --data-dir .boardroom/example
 node dist/cli.js export --output .boardroom/exports --data-dir .boardroom/example
 node dist/cli.js history --data-dir .boardroom/example
+node dist/cli.js decision --data-dir .boardroom/example
 ```
 
 Run `demo --next` to read one intervention at a time. Repeating `demo` resumes from the saved position; after the last message it reports `Recording complete`. Use a new `--data-dir` for a fresh example.
@@ -99,6 +100,7 @@ The screen is labeled **Technical validation — fictional stream**. Input stays
 - Saved citations point to a SHA-256 identified revision. Editing the original does not change that snapshot; inspection warns if the original has changed or disappeared.
 - Each export creates a new directory and two UTF-8 Markdown files. Existing plans and sources are preserved.
 - `history` shows saved playback events and export outcomes. Each export has a stable ID and receipts containing the paths and SHA-256 hashes of files successfully written. Add `--json` for structured history.
+- `decision` inspects the saved context and both proposal versions. Each adviser view references its context/proposal versions; two approvals preserve the remaining `INSUFFICIENT_EVIDENCE` and the pending human decision. Add `--json` for versioned records.
 - An export without a saved outcome remains `unconfirmed`, including while it is running. Inspect its directory before requesting a new export. Reopening or reading history never retries it. A failed export may leave partial files; its receipt records the writes that finished.
 - Playback makes no provider calls. Commands, MCP, live meetings, and cloud telemetry are unavailable in this build.
 - Local files and SQLite databases are readable by the machine owner. Hashes help identify revisions; they are not protection against a malicious machine owner.

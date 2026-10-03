@@ -3,7 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
-import { EvidenceSchema, EventSchema, ExportOperationSchema, FixtureSchema, ProjectSchema, RecordedMeetingSchema, type Project, type Evidence, type RecordedMeeting, type EventInput } from './domain.ts';
+import { EvidenceSchema, EventSchema, ExportOperationSchema, FixtureSchema, ProjectSchema, RecordedMeetingSchema, RecordedDecisionSchema, type Project, type Evidence, type RecordedMeeting, type EventInput } from './domain.ts';
 import { DocumentLocatorSchema, ExtractionSchema, extractDocument, type DocumentLocator } from './extraction.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
@@ -195,6 +195,31 @@ export class Boardroom {
       this.save('meeting', meeting.id, meeting);
       return meeting;
     }).immediate();
+  }
+
+  /** Versioned projection of the saved fixture, including recordings created by earlier candidates. */
+  recordedDecision(projectId: string) {
+    const meeting = this.openRecordedExample();
+    if (meeting.projectId !== projectId) throw new Error('Recording is outside this project.');
+    const evidence = EvidenceSchema.parse(this.load('evidence', meeting.evidenceId));
+    const final = meeting.messages.find(message => message.phase === 'final-views');
+    if (!final) throw new Error('The saved recording has no final views.');
+    const roles = ['Product Owner', 'Lead Developer', 'Marketing Manager'] as const;
+    return RecordedDecisionSchema.parse({
+      schemaVersion: 1, mode: meeting.mode, projectId, meetingId: meeting.id,
+      context: { schemaVersion: 1, version: meeting.contextVersion,
+        sources: [{ evidenceId: evidence.id, revision: evidence.revision }] },
+      proposals: meeting.messages.filter(message => message.phase === 'proposal' || message.phase === 'revision')
+        .map((message, index) => ({ schemaVersion: 1, version: index + 1,
+          contextVersion: meeting.contextVersion, messageId: message.id, text: message.text })),
+      // This adapter reads the fixed recorded format; it never infers a stance from generated prose.
+      views: roles.map(role => ({ schemaVersion: 1, role,
+        model: meeting.messages.find(message => message.role === role)?.model,
+        contextVersion: meeting.contextVersion, proposalVersion: meeting.proposalVersion,
+        stance: new RegExp(`${role} (APPROVED|REJECTED|INSUFFICIENT_EVIDENCE)(?:[;.])`).exec(final.text)?.[1],
+        statement: final.text })),
+      humanDecision: meeting.humanDecision,
+    });
   }
 
   nextRecordedMessage() {
