@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
-import { publicStatus, roadmap, statusFromPlanFile } from '../../src/data/roadmap.ts';
+import { acceptedOnFromPlanFile, milestones, planFileName, publicStatus, roadmap, statusFromPlanFile } from '../../src/data/roadmap.ts';
 
 const plans = resolve(import.meta.dirname, '../../../boardroom-plans');
 const planFile = (id: string) => {
@@ -32,4 +32,24 @@ test('the first plan that is not accepted is presented as next, later ones as pl
   assert.deepEqual(roadmap.map(publicStatus), [
     'Accepted with reservations', 'Next', 'Planned', 'Planned', 'Planned', 'Planned', 'Planned', 'Planned', 'Planned',
   ]);
+});
+
+test('each plan links to its own plan file', () => {
+  for (const plan of roadmap) assert.ok(existsSync(resolve(plans, planFileName(plan.id))), `plan ${plan.id}`);
+});
+
+test('an acceptance date is read from the plan status line', () => {
+  assert.equal(acceptedOnFromPlanFile('Statut : accepté avec réserves le 3 octobre 2026 ; parcours.'), '2026-10-03');
+  assert.equal(acceptedOnFromPlanFile('Statut : accepté le 21 janvier 2027.'), '2027-01-21');
+  assert.equal(acceptedOnFromPlanFile('Statut : à réaliser.'), undefined);
+});
+
+test('milestones are the accepted plans, dated and backed by their acceptance record', () => {
+  const repo = resolve(plans, '..');
+  const accepted = roadmap.filter(plan => plan.status !== 'planned');
+  assert.deepEqual(milestones.map(item => item.id), accepted.map(plan => plan.id));
+  for (const item of milestones) {
+    assert.equal(item.acceptedOn, acceptedOnFromPlanFile(planFile(item.id)), `plan ${item.id} date`);
+    assert.ok(item.evidence && existsSync(resolve(repo, item.evidence)), `plan ${item.id} acceptance record`);
+  }
 });

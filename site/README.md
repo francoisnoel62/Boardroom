@@ -35,6 +35,10 @@ The site never retypes product facts. It reads them from the repository at build
 | JSON output reference | The application's Zod schemas in `src/domain.ts`, converted with `z.toJSONSchema` |
 | Release status, packages and checksums | GitHub Releases at build time (`BOARDROOM_RELEASES_FIXTURE` for tests); drafts are never shown |
 | `/install.sh`, `/install.ps1` | `scripts/install.sh` and `scripts/install.ps1`, served byte for byte |
+| Changelog | Published releases from GitHub Releases; milestones are the accepted plans, dated from their `Statut` line |
+| Brand palette and downloadable marks | `src/data/brand.ts`, checked against `src/styles/tokens.css`; the marks are drawn from that palette |
+| Field notes | `src/content/notes/*.md`, each citing at least two repository documents that must exist |
+| `/docs/<page>.md` | The same MDX pages, with generated tables rendered as Markdown |
 
 Changing a fixture or an export changes the site; an unsupported fixture version, a citation outside its source or a final view without a verdict fails the build instead of being guessed.
 
@@ -44,15 +48,15 @@ Changing a fixture or an export changes the site; an unsupported fixture version
 | :--- | :--- | :--- |
 | Types and content schema | `npm run check` | Pages, components and every doc page's required `status` |
 | Data contracts | `npm run test:unit` | Fixture projection, claims registry, roadmap honesty |
-| Built site | `npm run test:build` | Internal links/anchors, `lang`/title/description, no superlatives, no third-party requests, no “open source” without the pending-license claim |
+| Built site | `npm run test:build` | Internal links/anchors, `lang`/title/description, no superlatives, no third-party requests, no “open source” without the license claim, every browser storage key named on `/privacy/`, no cookies, brand downloads equal to the palette marks |
 | End-to-end | `npm run test:e2e` | Story, evidence, verdicts, statuses, theme, search, no horizontal scroll — desktop and mobile |
 | Accessibility | part of `test:e2e` | No serious/critical axe violation (WCAG 2.2 AA) on every page, both themes; reduced motion honoured |
 | Installers | `node --test tests/install.test.ts` (application suite) and the `installed` CI job | Checksum refusal, missing package, unqualified platform, and a real candidate installed from a local release then `doctor --json`, on all three platforms |
 | Release fixture | part of `test:build` | A published release shows packages, checksums, pinned installers and attestation verification; the header, footer and FAQ follow the release state |
 | Documented commands | `node site/scripts/doc-commands.mjs --repo . --candidate release/candidate` (in the application CI) | Every command in a `doc-test` block runs against the checkout and the packaged candidate on Windows, Linux and macOS |
-| Lighthouse | `npm run lighthouse` | `/`, `/engineering/`, `/docs/`, `/docs/quickstart/`, median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
+| Lighthouse | `npm run lighthouse` | `/`, `/engineering/`, `/docs/`, `/docs/quickstart/`, `/download/`, `/brand/` and a field note, median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
 
-Observed locally on 2026-10-03 after phase 4 (Node 22.22, Chromium 141): 38 unit tests, 8 built-site checks (including a fixture release build) and 124 end-to-end tests pass, and the five Lighthouse pages meet their budgets. The application's 53 tests include the five installer tests. GitHub's runners measure slower than this container, so CI is the reference for the budgets.
+Observed locally on 2026-10-03 after phase 5 (Node 22.22, Chromium 141): 54 unit tests, 10 built-site checks (including a fixture release build) and 171 end-to-end tests pass, and the seven Lighthouse pages meet their budgets. The application's 53 tests include the five installer tests. GitHub's runners measure slower than this container, so CI is the reference for the budgets.
 
 ## Red → green record
 
@@ -83,6 +87,13 @@ Observed locally on 2026-10-03 after phase 4 (Node 22.22, Chromium 141): 38 unit
 | Release data | `src/data/release.ts` was absent | Asset naming contract, drafts ignored, no-release and unknown states, visitor platform detection |
 | Release-aware pages | `/download/` and `/welcome/` were absent | Honest no-release page; with a release, OS-recommended packages and pinned installers; the footer stopped claiming “no release” once one exists |
 | FAQ and engineering page | Neither existed | Cost, license and data answers; `/engineering/` with figures, decisions, evidence links and stated limits |
+| License decided (D1) | The license claim was still “Planned · Plan 09” and no `LICENSE` existed | Apache-2.0 `LICENSE` and `NOTICE` at the root and in every candidate package; the claim is available, backed by both files |
+| Docs as Markdown | `src/data/markdown.ts` was absent | Every docs page at `/docs/<page>.md` with its status and generated tables; copy and view actions; a prefilled feedback link |
+| Roadmap and milestones | `acceptedOnFromPlanFile` and `milestones` were not exported | `/roadmap/` links each plan file; accepted plans are dated from their status line and backed by their acceptance record |
+| Release history | `publishedReleases` was not exported | `/changelog/` lists published releases newest first, never drafts, with an honest no-release state |
+| Brand kit | `src/data/brand.ts` was absent | Descriptions within 50 and 150 words, palette equal to the tokens, self-contained SVG marks in four variants |
+| Privacy and security | `/privacy/`, `/security/` and `SECURITY.md` were absent | Every storage key the build uses is named; one private reporting route on the page and in the policy; limits stated |
+| Field notes | No notes collection existed | Two articles, each citing documents that exist; sources listed at the end |
 
 Corrections found by those checks rather than by review: the first CI run failed the docs' LCP budget on GitHub's runners although it passed locally (fixed by the font decision below), a misplaced `@import` silently dropped two fonts (and briefly flattered an LCP measurement), global utility classes overrode component colours (fixed by layering `site.css`), an Engineering link hidden on phones (the recruiter path) became always visible, and four test selectors were wrong about the search box role, the scope of the “no download” rule, repeated claims and repeated evidence links.
 
@@ -91,11 +102,15 @@ Corrections found by those checks rather than by review: the first CI run failed
 - **Plain CSS with tokens instead of Tailwind.** Starlight ships its own cascade layers; a few bespoke components are clearer and lighter as scoped Astro styles over `src/styles/tokens.css`. Reversible if the component count grows.
 - **Fonts.** Instrument Serif (titles) and Inter (marketing text) are self-hosted, OFL-licensed, latin subsets only, and preloaded on marketing pages. Inter uses `font-display: optional`, so text never waits for or reflows after a late font. The documentation body and all code use the reader's system fonts: in CI's simulated mobile run, the docs' LCP sat at 1.81 s and 1.96 s with Inter and JetBrains Mono, above the 1.8 s budget, and dropping those downloads removed the slow case locally. The serif italic was dropped too: a fourth font file for three short questions.
 - **Theme** follows the visitor's system preference, and the toggle shares Starlight's `starlight-theme` key so the site and docs stay in step.
+- **Project decisions D1–D5** (3 October 2026): Apache-2.0; no developer preview before the public beta, so the first public download comes with Plan 09; no deployment yet; no audience measurement, so `/privacy/` describes a site that measures nothing.
 - **Every doc page declares `status`** (`available`, `preview`, `planned`, `vision`), rendered under its title.
 
 ## Known gaps
 
 - `install.ps1` was exercised here with PowerShell 7 on Linux; Windows PowerShell 5.1 runs it in the application CI on Windows.
+- Private vulnerability reporting must be enabled in the repository settings (Settings → Code security) for the reporting link on `/security/` and in `SECURITY.md` to open a form.
+- The 30-second test and the external founder/recruiter review have not been run; the protocol is in [`boardroom-plans/KIT-REVUE-EXTERNE-SITE.md`](../boardroom-plans/KIT-REVUE-EXTERNE-SITE.md).
+- Open Graph images, “Open in an AI assistant” links and versioned docs wait for a public URL (D3/D4) and a first release.
 - The release workflow runs only when a tag is pushed and has not run yet. The major version of `actions/attest-build-provenance` (v3) could not be checked from this environment; confirm it before the first tag.
 
 ## Known warnings

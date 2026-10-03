@@ -7,7 +7,9 @@
         "http://localhost/engineering/",
         "http://localhost/docs/",
         "http://localhost/docs/quickstart/",
-        "http://localhost/download/"
+        "http://localhost/download/",
+        "http://localhost/brand/",
+        "http://localhost/field-notes/why-boardroom-ships-its-own-node-runtime/"
       ],
       "numberOfRuns": 3,
       "settings": {

@@ -69,6 +69,20 @@ export function releaseState(api: unknown): ReleaseState {
   };
 }
 
+export interface ReleaseSummary { tag: string; title: string; prerelease: boolean; publishedAt: string; url: string }
+
+/** Every published release, newest first as GitHub returns them; drafts are never listed. */
+export function publishedReleases(api: unknown): ReleaseSummary[] {
+  if (!Array.isArray(api)) return [];
+  return (api as ApiRelease[]).filter(release => !release.draft).map(release => ({
+    tag: release.tag_name,
+    title: release.name ?? release.tag_name,
+    prerelease: release.prerelease,
+    publishedAt: release.published_at ?? '',
+    url: release.html_url,
+  }));
+}
+
 /** Desktop platform of the visitor, or undefined when no package applies (phones, tablets). */
 export function detectPlatform(userAgent: string, clientHintPlatform: string | undefined): Platform | undefined {
   const hint = clientHintPlatform?.toLowerCase();

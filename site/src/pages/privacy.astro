@@ -1,0 +1,110 @@
+---
+import { repository } from '../data/labels.ts';
+import Page from '../layouts/Page.astro';
+
+const storage = [
+  { key: 'starlight-theme', where: 'Local storage', purpose: 'Your light or dark theme choice, so the next page opens in it.' },
+  { key: 'starlight-synced-tabs__os', where: 'Local storage', purpose: 'The operating system tab you picked in the documentation, so other pages show the same one.' },
+  { key: 'sl-sidebar-state', where: 'Session storage', purpose: 'Which documentation sidebar groups are open, until you close the tab.' },
+];
+---
+<Page
+  title="Privacy — Boardroom"
+  description="What the BOARDROOM website stores in your browser, what it does not collect, and where the application keeps your data."
+  eyebrow="Privacy"
+  heading="Privacy"
+  lede="This site sets no cookies, loads nothing from third parties and measures no audience. Here is exactly what it keeps in your browser, and why."
+>
+  <section aria-labelledby="stored-title">
+    <h2 id="stored-title">What your browser keeps</h2>
+    <p>Three small preferences stay in your browser. They are never sent anywhere, and clearing this site's data removes them.</p>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Browser storage used by this site">
+      <table>
+        <thead><tr><th scope="col">Key</th><th scope="col">Where</th><th scope="col">Purpose</th></tr></thead>
+        <tbody>
+          {storage.map(item => (
+            <tr><td><code data-storage-key>{item.key}</code></td><td>{item.where}</td><td>{item.purpose}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="not-title">
+    <h2 id="not-title">What this site does not do</h2>
+    <ul>
+      <li>No cookies, no analytics, no advertising pixels, no session recording.</li>
+      <li>No fonts, scripts or styles loaded from another domain: everything is served with the pages.</li>
+      <li>Documentation search runs in your browser against an index published with the site; your queries are not sent anywhere.</li>
+      <li>Release information is read from GitHub when the site is built, not by your browser.</li>
+    </ul>
+    <p>The site's tests check the first two points on every build.</p>
+  </section>
+
+  <section aria-labelledby="links-title">
+    <h2 id="links-title">Links to GitHub</h2>
+    <p>
+      Source, issues and feedback links lead to GitHub, where <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub's privacy statement</a>
+      applies. A “Was this page helpful?” link only prefills an issue; nothing is sent until you submit it on GitHub.
+    </p>
+  </section>
+
+  <section aria-labelledby="hosting-title">
+    <h2 id="hosting-title">Hosting</h2>
+    <p>
+      The site is not deployed yet. When a host is chosen, this page will name it and say which request logs it keeps and for
+      how long, before the site goes online.
+    </p>
+  </section>
+
+  <section aria-labelledby="app-title">
+    <h2 id="app-title">The application</h2>
+    <p>
+      Boardroom itself has no account and no Boardroom server: your projects, sources and exports stay in a local data
+      directory that you own. <a href="/docs/your-data/">Where your data lives</a>.
+    </p>
+    <p>Changes to this page are public in <a href={`${repository}/commits/main/site/src/pages/privacy.astro`} rel="noopener">its history</a>.</p>
+  </section>
+</Page>
+
+<style>
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step--1);
+  }
+
+  th,
+  td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  th {
+    background: var(--surface-1);
+    color: var(--text-strong);
+  }
+
+  td code {
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 34rem) {
+    td code {
+      white-space: normal;
+    }
+  }
+</style>

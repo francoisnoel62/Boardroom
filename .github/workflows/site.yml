@@ -11,6 +11,9 @@ on:
       - 'docs/**'
       - 'boardroom-plans/**'
       - 'README.md'
+      - 'SECURITY.md'
+      - 'LICENSE'
+      - 'package.json'
       - '.github/workflows/**'
   pull_request:
     paths:
@@ -22,6 +25,9 @@ on:
       - 'docs/**'
       - 'boardroom-plans/**'
       - 'README.md'
+      - 'SECURITY.md'
+      - 'LICENSE'
+      - 'package.json'
       - '.github/workflows/**'
   workflow_dispatch:
 

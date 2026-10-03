@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { detectPlatform, parseAssetName, releaseState } from '../../src/data/release.ts';
+import { detectPlatform, parseAssetName, publishedReleases, releaseState } from '../../src/data/release.ts';
 
 const published = {
   tag_name: 'v0.1.0',
@@ -60,4 +60,15 @@ test('the visitor platform is detected from client hints first, then the user ag
   assert.equal(detectPlatform('Mozilla/5.0 (X11; Linux x86_64)', undefined), 'linux');
   assert.equal(detectPlatform('Mozilla/5.0 (Linux; Android 15; Pixel 7)', 'Android'), undefined);
   assert.equal(detectPlatform('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', undefined), undefined);
+});
+
+test('the release history lists published releases newest first and never drafts', () => {
+  const older = { ...published, tag_name: 'v0.0.9', name: null, published_at: '2026-10-20T10:00:00Z', prerelease: false };
+  const draft = { ...published, tag_name: 'v0.2.0', draft: true };
+  assert.deepEqual(publishedReleases([draft, published, older]), [
+    { tag: 'v0.1.0', title: 'BOARDROOM 0.1.0 — developer preview', prerelease: true, publishedAt: '2026-11-02T10:00:00Z', url: published.html_url },
+    { tag: 'v0.0.9', title: 'v0.0.9', prerelease: false, publishedAt: '2026-10-20T10:00:00Z', url: published.html_url },
+  ]);
+  assert.deepEqual(publishedReleases([]), []);
+  assert.deepEqual(publishedReleases({ message: 'API rate limit exceeded' }), []);
 });

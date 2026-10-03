@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import test from 'node:test';
+import { markFiles, markSvg } from '../../src/data/brand.ts';
 
 const dist = resolve(import.meta.dirname, '../../dist');
 
@@ -11,6 +12,13 @@ function htmlFiles(directory: string): string[] {
   return readdirSync(directory).flatMap(name => {
     const path = join(directory, name);
     return statSync(path).isDirectory() ? htmlFiles(path) : path.endsWith('.html') ? [path] : [];
+  });
+}
+
+function scripts(directory: string): string[] {
+  return readdirSync(directory).flatMap(name => {
+    const path = join(directory, name);
+    return statSync(path).isDirectory() ? scripts(path) : path.endsWith('.js') ? [path] : [];
   });
 }
 
@@ -79,7 +87,7 @@ test('no page loads a third-party script, stylesheet or font', () => {
   }
 });
 
-test('no page calls Boardroom open source without showing that the license is still pending', () => {
+test('no page calls Boardroom open source without its license claim', () => {
   for (const file of pages) {
     const html = readFileSync(file, 'utf8');
     if (/open[- ]source/i.test(textOf(html).replace(/<[^>]*>/g, ''))) {
@@ -91,5 +99,29 @@ test('no page calls Boardroom open source without showing that the license is st
 test('the installers served by the site are byte-for-byte the repository scripts', () => {
   for (const name of ['install.sh', 'install.ps1']) {
     assert.equal(readFileSync(join(dist, name), 'utf8'), readFileSync(resolve(dist, '../../scripts', name), 'utf8'), name);
+  }
+});
+
+test('the privacy page names every browser storage key the site uses', () => {
+  const privacy = readFileSync(join(dist, 'privacy/index.html'), 'utf8');
+  const sources = [...pages, ...scripts(dist)].map(file => readFileSync(file, 'utf8'));
+  const keys = new Set<string>();
+  for (const source of sources) {
+    for (const match of source.matchAll(/(?:local|session)Storage/g)) {
+      const around = source.slice(Math.max(0, match.index - 300), match.index + 300);
+      for (const [key] of around.matchAll(/\b(?:starlight|sl|boardroom|pagefind)-[\w-]+/g)) keys.add(key);
+    }
+  }
+  // Custom element names sit next to storage calls too; they are not storage keys.
+  const all = sources.join('\n');
+  for (const key of keys) if (new RegExp(`<${key}[\\s>]|define\\(['"\`]${key}['"\`]`).test(all)) keys.delete(key);
+  assert.ok(keys.has('starlight-theme'), 'the theme key is detected');
+  for (const key of keys) assert.ok(privacy.includes(key), `/privacy/ does not mention ${key}`);
+  assert.equal(/document\.cookie/.test(all), false, 'no script reads or writes cookies');
+});
+
+test('the brand downloads are the marks drawn from the published palette', () => {
+  for (const mark of markFiles) {
+    assert.equal(readFileSync(join(dist, 'brand', mark.file), 'utf8'), markSvg(mark.theme, { background: mark.background }), mark.file);
   }
 });

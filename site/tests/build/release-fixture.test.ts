@@ -36,4 +36,10 @@ test('with a published release, /download offers verified packages and pinned in
   assert.match(home, /<a[^>]+href="\/download\/"[^>]*>Download<\/a>/, 'the header offers Download once a release exists');
   assert.match(home, /Latest release: 0\.1\.0-dev\.1\./, 'the footer follows the release state');
   assert.doesNotMatch(home, /No release has been published yet/);
+
+  const changelog = readFileSync(join(out, 'changelog/index.html'), 'utf8');
+  assert.match(changelog, /data-releases="published"/);
+  assert.match(changelog, /data-release="v0\.1\.0-dev\.1"/);
+  assert.match(changelog, /datetime="2026-11-02"/);
+  assert.doesNotMatch(changelog, /v0\.2\.0/, 'drafts are never listed');
 });

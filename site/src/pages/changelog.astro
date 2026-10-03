@@ -1,0 +1,102 @@
+---
+import { sourceUrl } from '../data/labels.ts';
+import { releaseHistory, releaseInfo } from '../data/release-source.ts';
+import { milestones, publicStatus, roadmap } from '../data/roadmap.ts';
+import Page from '../layouts/Page.astro';
+
+const [info, releases] = await Promise.all([releaseInfo(), releaseHistory()]);
+const state = releases.length > 0 ? 'published' : info.state === 'unknown' ? 'unknown' : 'none';
+const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const statusOf = (id: string) => publicStatus(roadmap.find(plan => plan.id === id)!, roadmap.findIndex(plan => plan.id === id), roadmap);
+---
+<Page
+  title="Changelog — Boardroom"
+  description="Every published BOARDROOM release, read from GitHub Releases at build time, and the product milestones accepted so far."
+  eyebrow="Changelog"
+  heading="Changelog"
+  lede="Releases are read from GitHub Releases each time the site is built; milestones are the delivery plans accepted so far. Nothing is listed here before it exists."
+>
+  <section aria-labelledby="releases-title" data-releases={state}>
+    <h2 id="releases-title">Releases</h2>
+    {state === 'none' && (
+      <div class="panel">
+        <p><strong>No release has been published yet.</strong></p>
+        <p>
+          The first public release is planned with the public beta (Plan 09). Each release will be listed here with its
+          notes, its packages and their checksums. Until then, Boardroom can be <a href="/docs/install/">built from source</a>.
+        </p>
+      </div>
+    )}
+    {state === 'unknown' && (
+      <div class="panel">
+        <p><strong>Release information was unavailable when this page was built.</strong></p>
+        <p>See the <a href="https://github.com/francoisnoel62/Boardroom/releases" rel="noopener">releases on GitHub</a>.</p>
+      </div>
+    )}
+    {state === 'published' && (
+      <ol class="entries">
+        {releases.map(release => (
+          <li class="entry" data-release={release.tag}>
+            <time datetime={release.publishedAt.slice(0, 10)}>{day(release.publishedAt)}</time>
+            <div>
+              <h3><a href={release.url} rel="noopener">{release.title}</a></h3>
+              <p class="mono-label">{release.tag}{release.prerelease && ' · prerelease'}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    )}
+  </section>
+
+  <section aria-labelledby="milestones-title">
+    <h2 id="milestones-title">Milestones</h2>
+    <ol class="entries">
+      {[...milestones].reverse().map(plan => (
+        <li class="entry" data-milestone={plan.id}>
+          <time datetime={plan.acceptedOn}>{day(plan.acceptedOn!)}</time>
+          <div>
+            <h3>Plan {plan.id} — {plan.title}</h3>
+            <p>{plan.outcome}</p>
+            <p class="mono-label">{statusOf(plan.id)} · <a href={sourceUrl(plan.evidence!)} rel="noopener">Acceptance record</a></p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p>What comes next is on the <a href="/roadmap/">roadmap</a>.</p>
+  </section>
+</Page>
+
+<style>
+  .entries {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+
+  .entry > div {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  time {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 34rem) {
+    .entry {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-2);
+    }
+  }
+</style>
