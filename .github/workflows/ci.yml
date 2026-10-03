@@ -1,4 +1,4 @@
-name: Local recorded workflow
+name: Local decision workflow
 
 on:
   push:
@@ -59,6 +59,7 @@ jobs:
             scripts/clean-ci-node.ps1
             scripts/clean-ci-node.sh
             qualification/Dockerfile
+            tests/support/provider-http.mjs
 
   installed:
     needs: verify
@@ -99,6 +100,7 @@ jobs:
           $env:BOARDROOM_NO_NODE_PROOF = $proof
           $env:BOARDROOM_QUALIFICATION_OUTPUT = Join-Path $PWD 'evidence'
           $env:BOARDROOM_REQUIRE_HOST_VAULT = 'true'
+          $env:BOARDROOM_QUALIFICATION_HTTP_HOOK = Join-Path $PWD 'tools/tests/support/provider-http.mjs'
           & './Boardroom clean François/candidate/runtime/node.exe' --test './Boardroom clean François/candidate/qualification/installed.test.mjs'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Qualify macOS without installed application Node
@@ -106,7 +108,7 @@ jobs:
         shell: bash
         run: |
           bash tools/scripts/clean-ci-node.sh "$PWD/evidence/no-node.json"
-          BOARDROOM_REQUIRE_HOST_VAULT=true BOARDROOM_INSTALLATION_MODE=clean BOARDROOM_NO_NODE_PROOF="$PWD/evidence/no-node.json" BOARDROOM_QUALIFICATION_OUTPUT="$PWD/evidence" \
+          BOARDROOM_QUALIFICATION_HTTP_HOOK="$PWD/tools/tests/support/provider-http.mjs" BOARDROOM_REQUIRE_HOST_VAULT=true BOARDROOM_INSTALLATION_MODE=clean BOARDROOM_NO_NODE_PROOF="$PWD/evidence/no-node.json" BOARDROOM_QUALIFICATION_OUTPUT="$PWD/evidence" \
             './Boardroom clean François/candidate/runtime/node' --test './Boardroom clean François/candidate/qualification/installed.test.mjs'
       - name: Qualify Linux in an offline image containing no Node
         if: runner.os == 'Linux'
@@ -114,8 +116,8 @@ jobs:
         run: |
           docker build -t boardroom-no-node tools/qualification
           docker run --rm --network none --user "$(id -u):$(id -g)" \
-            -v "$PWD/Boardroom clean François/candidate:/candidate:ro" -v "$PWD/evidence:/evidence" \
-            -e BOARDROOM_INSTALLATION_MODE=clean -e BOARDROOM_NO_NODE_PROOF=/evidence/no-node.json -e BOARDROOM_QUALIFICATION_OUTPUT=/evidence \
+            -v "$PWD/Boardroom clean François/candidate:/candidate:ro" -v "$PWD/evidence:/evidence" -v "$PWD/tools:/tools:ro" \
+            -e BOARDROOM_QUALIFICATION_HTTP_HOOK=/tools/tests/support/provider-http.mjs -e BOARDROOM_INSTALLATION_MODE=clean -e BOARDROOM_NO_NODE_PROOF=/evidence/no-node.json -e BOARDROOM_QUALIFICATION_OUTPUT=/evidence \
             boardroom-no-node /bin/sh -c 'set -eu; ! command -v node; printf "{\"schemaVersion\":1,\"strategy\":\"fresh-ubuntu-image-no-node-offline\",\"systemNodeVisible\":false,\"absentPaths\":[\"/usr/bin/node\",\"/usr/local/bin/node\"]}" > /evidence/no-node.json; /candidate/runtime/node --test /candidate/qualification/installed.test.mjs'
       - uses: actions/upload-artifact@v7
         if: always()

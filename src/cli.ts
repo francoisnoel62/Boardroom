@@ -14,7 +14,7 @@ delete process.env.BOARDROOM_SESSION_KEYS;
 const help = `BOARDROOM — local decision workspace
 
 Recorded example: available without an account
-Live meetings: unavailable (full decision workflow)
+Live meetings: available (explicit paid access; real-account qualification pending)
 PO framing: available with explicit paid access and human approval
 Commands and MCP: unavailable
 Cloud telemetry: off
@@ -415,7 +415,7 @@ try {
           mode: 'technical-validation', platform: process.platform, architecture: process.arch,
           runtime: process.version, fts5: fts5 ? 'verified' : 'failed',
           checkpointReopen: reopened === 2 ? 'verified' : 'failed',
-          liveProviders: 'unavailable',
+          liveProviders: 'implemented-unverified',
           pdfDocx: { pdf: pdfVerified ? 'verified' : 'failed', docx: docxVerified ? 'verified' : 'failed' },
           embeddings: 'unavailable',
           optionalProbes: optionalProbeResults(),

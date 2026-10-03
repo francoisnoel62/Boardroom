@@ -48,11 +48,12 @@ test('history inspects durable playback and export outcomes without executing pe
   assert.deepEqual(JSON.parse(run('history', '--json')), history);
 });
 
-test('launching BOARDROOM describes the recorded local mode and blocked capabilities', () => {
+test('launching BOARDROOM distinguishes implemented live meetings from pending real-account qualification', () => {
   const output = execFileSync(process.execPath, [cli, '--help'], { encoding: 'utf8' });
   assert.match(output, /BOARDROOM/);
   assert.match(output, /Recorded example/);
-  assert.match(output, /Live meetings: unavailable/);
+  assert.match(output, /Live meetings: available/);
+  assert.match(output, /real-account qualification pending/);
   assert.match(output, /Commands and MCP: unavailable/);
   assert.match(output, /Cloud telemetry: off/);
 });
@@ -109,7 +110,7 @@ test('technical validation is explicit and reports durable storage without claim
   assert.equal(result.mode, 'technical-validation');
   assert.equal(result.fts5, 'verified');
   assert.equal(result.checkpointReopen, 'verified');
-  assert.equal(result.liveProviders, 'unavailable');
+  assert.equal(result.liveProviders, 'implemented-unverified');
 });
 
 test('Ink terminal renderer displays the recorded message and exits without requiring raw stdin', (t) => {

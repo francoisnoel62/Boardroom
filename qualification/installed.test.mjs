@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { openTerminal } from './terminal.ts';
+import { qualifyLiveDecision } from './live-decision.mjs';
 
 const candidate = fileURLToPath(new URL('..', import.meta.url));
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
@@ -87,7 +88,7 @@ test('installed launcher completes the account-free journey with only the bundle
   assert.equal(frozen.passages[0].text, 'Team: two engineers; four weeks available for the launch.');
   assert.equal(frozen.passages[0].originalChanged, true);
   assert.deepEqual(JSON.parse(run('history', '--project', liveProject.id, '--json')).events.map(event => event.type), ['live.meeting-prepared']);
-  assert.match(run('status'), /Live meetings: unavailable/);
+  assert.match(run('status'), /Live meetings: available/);
   writeFileSync(join(evidence, 'live-preparation.json'), JSON.stringify({
     schemaVersion: 1, status: prepared.status, noModelCalls: true,
     originalPreserved: hash(original) === originalHash, frozenPassage: frozen.passages[0].text,
@@ -212,4 +213,5 @@ test('installed launcher completes the account-free journey with only the bundle
   writeFileSync(join(evidence, 'installation.json'), JSON.stringify({ schemaVersion: 1, mode, platform: process.platform,
     architecture: process.arch, runtime: process.version, hostNodeVisible: false, dataOutsideCandidate: true,
     sourceUnchanged: true, restart: 'new application processes', terminalStartupMs, commandLog, doctor, removalProof }, null, 2) + '\n');
+  await qualifyLiveDecision(t, { candidate, root, evidence, env, run });
 });

@@ -1,5 +1,15 @@
 # Plan 02 implementation evidence
 
+## Increment 10 — packaged full-workflow qualification
+
+Observed red: the launched help still claimed live meetings unavailable; green now distinguishes implemented live workflow from pending real-account qualification. The installed-package test then failed on absent `live-decision.json` after its existing installed journey passed. Green after wiring a full launcher/Ink campaign with real graphs, native SQLite, immutable sources and an external HTTP import kept outside the candidate. An initial unprivileged native-vault failure was environmental and is not counted as a behavioral red. A fixture's single-key framing setup was corrected to the documented CLI protocol.
+
+The Windows x64 / Node 24.12.0 package regression passes (73.4 s), including the required native vault, empty PATH, actual launcher and full Ink journey. It proves 13 bounded HTTP requests for three models/two adapters, three initial payloads with identical facts and no cross-conclusions, a staffing fact/objection causing an actual preserved v1→v2 change, three different exact-version verdicts, a separate deferral, readable plan/memo/JSON, original preservation and absence of the dummy-key sentinel in exports, terminal and domain/checkpoint files. Retained CI artifacts include payloads, chain, usage, exports and actual terminal text/VT capture, explicitly labeled deterministic.
+
+PR8 and PR9 passed all producer/installed jobs on Windows x64, Linux x64 and macOS arm64 in both push/PR runs. PR8: [push](https://github.com/francoisnoel62/Boardroom/actions/runs/37127431231), [PR](https://github.com/francoisnoel62/Boardroom/actions/runs/37127434970). PR9: [push](https://github.com/francoisnoel62/Boardroom/actions/runs/37128616808), [PR](https://github.com/francoisnoel62/Boardroom/actions/runs/37128619731). PR9 local validation: 118/118, zero failed/skipped (147.6 s). GitGuardian passes; the separate Vercel deployment fails and is not a local CLI qualification job.
+
+Final PR10 suite/platform results are recorded in its PR. No real credentials, paid requests, Hotelix changes, merge or release. [Acceptance remains open](plan-02-acceptance.md) until actual route/account/usage/cancellation tests and the complete distributable real meeting are observed under explicit accounts/budgets. The README links the live quickstart and keeps its fictional story labeled.
+
 ## Increment 9 — interactive live terminal
 
 Observed red cycles: `live` was unknown; stream tail truncation hid its provisional identity; a 44×18 visible viewport lost the header/draft; an unfunded framing displayed generic phase completion. Each is covered by real PTY/VT assertions and its corresponding fix. The refusal now exposes failed/execution-refused state and zero ceiling, with no HTTP and no receipt. A full terminal journey edits a Unicode question, selects passages, approves framing, runs independent analyses and a sourced revision, collects three views, defers and reads both exported files.

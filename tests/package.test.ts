@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -73,7 +73,8 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   const installedEnv: NodeJS.ProcessEnv = { ...env };
   delete installedEnv.NODE_TEST_CONTEXT;
   const installed = spawnSync(runtime, ['--test', join(candidate, 'qualification', 'installed.test.mjs')], {
-    cwd: root, encoding: 'utf8', env: { ...installedEnv, BOARDROOM_INSTALLATION_MODE: 'local-empty-path', BOARDROOM_QUALIFICATION_OUTPUT: join(root, 'installation evidence') },
+    cwd: root, encoding: 'utf8', env: { ...installedEnv, BOARDROOM_INSTALLATION_MODE: 'local-empty-path', BOARDROOM_QUALIFICATION_OUTPUT: join(root, 'installation evidence'),
+      BOARDROOM_QUALIFICATION_HTTP_HOOK: fileURLToPath(new URL('./support/provider-http.mjs', import.meta.url)) },
   });
   assert.equal(installed.status, 0, installed.stdout + installed.stderr);
   const livePreparation = JSON.parse(readFileSync(join(root, 'installation evidence', 'live-preparation.json'), 'utf8'));
@@ -85,4 +86,14 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(protectedConfiguration.sessionInjection, 'verified');
   assert.equal(protectedConfiguration.frozenTeam, 'verified');
   assert.equal(protectedConfiguration.sentinelAbsent, true);
+  const liveDecision = JSON.parse(readFileSync(join(root, 'installation evidence', 'live-decision.json'), 'utf8'));
+  assert.equal(liveDecision.mode, 'deterministic-external-http');
+  assert.equal(liveDecision.hostNodeVisible, false);
+  assert.equal(liveDecision.independentAnalyses, true);
+  assert.equal(liveDecision.sourceObjectionRevisionChain, true);
+  assert.equal(liveDecision.finalViews.length, 3);
+  assert.equal(liveDecision.humanDecision, 'deferred');
+  assert.equal(liveDecision.originalPreserved, true);
+  assert.equal(liveDecision.sentinelAbsent, true);
+  assert.equal(existsSync(join(candidate, 'tests', 'support', 'provider-http.mjs')), false);
 });

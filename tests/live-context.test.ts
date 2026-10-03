@@ -137,7 +137,8 @@ test('a real named project reopens with its language without changing the record
     assert.throws(() => app.getProject('missing'), /Project unavailable/);
     assert.throws(() => app.createProject({ name: ' ', language: 'fr' }));
     assert.throws(() => app.createProject({ name: 'Hotel', language: '' }));
-    assert.equal(app.capabilities().liveMeetings, 'unavailable');
+    assert.equal(app.capabilities().liveMeetings, 'available');
+    assert.equal(app.capabilities().liveQualification, 'real-account qualification pending');
   } finally { app.close(); }
 });
 

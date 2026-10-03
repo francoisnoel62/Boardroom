@@ -9,6 +9,7 @@
 
 <p align="center">
   <a href="docs/getting-started.md#try-the-local-example">Try the local example</a> ·
+  <a href="docs/live-quickstart.md">Start a live decision</a> ·
   <a href="#a-launch-that-found-its-focus">See the story</a> ·
   <a href="#every-ambition-deserves-its-own-team">Explore the vision</a> ·
   <a href="docs/contributing.md">Build with us</a>
