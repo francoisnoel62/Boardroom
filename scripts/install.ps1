@@ -30,6 +30,17 @@ function Save-Download([string]$Url, [string]$Destination) {
   else { Invoke-WebRequest -UseBasicParsing -Uri $Url -OutFile $Destination }
 }
 
+# .NET directly: Get-FileHash is missing when Windows PowerShell inherits PowerShell 7's module path.
+function Get-Sha256([string]$Path) {
+  $stream = [IO.File]::OpenRead($Path)
+  try {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { $bytes = $sha.ComputeHash($stream) } finally { $sha.Dispose() }
+  }
+  finally { $stream.Dispose() }
+  return -join ($bytes | ForEach-Object { $_.ToString('x2') })
+}
+
 try {
   $platform = (Get-Setting 'BOARDROOM_PLATFORM' 'windows').ToLowerInvariant()
   $detectedArch = $env:PROCESSOR_ARCHITECTURE
@@ -67,7 +78,7 @@ try {
 
     $archive = Join-Path $work $asset
     Save-Download "$base/$asset" $archive
-    $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+    $actual = Get-Sha256 $archive
     if ($actual -ne $expected) {
       throw "BOARDROOM installer: checksum mismatch for $asset (expected $expected, got $actual). Nothing was installed."
     }
