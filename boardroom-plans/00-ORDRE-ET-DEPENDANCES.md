@@ -1,6 +1,6 @@
 # BOARDROOM V1 — 9 plans de livraison
 
-Date : 1er octobre 2026. Statut : feuille de route ; [plan 01 terminé techniquement](../docs/plan-01-acceptance.md) le 3 octobre 2026. Plans 02–09 à réaliser ; PR ouvertes pour revue.
+Date : 1er octobre 2026. Statut : feuille de route ; [plan 01 accepté avec réserves](../docs/plan-01-acceptance.md) le 3 octobre 2026. Plans 02–09 à réaliser.
 
 Source : [BOARDROOM_V1_SPEC.md](BOARDROOM_V1_SPEC.md), référence V1 du 1er octobre 2026. Ces documents décomposent cette spec ; les critères futurs ne constituent pas des preuves de validation. Les preuves d'implémentation sont consignées dans le compte rendu du jalon concerné. Les affirmations externes de la spec devront être revérifiées au moment des intégrations concernées.
 

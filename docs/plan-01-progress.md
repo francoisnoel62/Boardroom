@@ -1,6 +1,6 @@
 # Plan 01 — implementation evidence
 
-Updated: 2026-10-03. Status: **technically complete for Plan 01**. This report retains the red → green evidence; the [acceptance report](plan-01-acceptance.md) records the complete target matrix, optional blocks and later-milestone limits. PRs remain open for review.
+Updated: 2026-10-03. Status: **accepted with reservations**. This report retains the red → green evidence; the [acceptance report](plan-01-acceptance.md) records the complete target matrix, optional blocks, accepted limits and later-milestone work. Merging PRs #1–#7 records the acceptance.
 
 ## Red → green record
 
@@ -90,4 +90,29 @@ The test driver is Microsoft `node-pty` 1.2.0-beta.15, with system ConPTY on Win
 
 The final screenshot comes from the actual packaged CLI in a real Windows PTY. A local first-frame startup exceeded the old ten-second readiness window; the final qualifier records startup timing with a bounded thirty-second cold-start window while subsequent interaction checks remain bounded at ten seconds. No test is skipped or automatically retried. The final-head matrix remains the authority for the submitted PR.
 
-All Plan 01 criteria now have passing mandatory evidence or the explicit optional blocked/failed outcomes allowed by its passage rule. [Acceptance and future work](plan-01-acceptance.md) distinguish those outcomes from live integration or tool activation. Broader editing/recovery, retrieval, tools, novice onboarding, cloud observability and public release remain in their respective plans. No paid account, product release or automatic merge occurred.
+All Plan 01 criteria have passing mandatory evidence or the explicit optional blocked/failed outcomes allowed by its passage rule. [Acceptance and future work](plan-01-acceptance.md) distinguish those outcomes from live integration or tool activation. Broader editing/recovery, retrieval, tools, novice onboarding, cloud observability and public release remain in their respective plans. No paid account, product release or automatic merge occurred.
+
+## Acceptance review — evidence guarantees
+
+The review found guarantees promised by the README and architecture without any test. The tests below are **characterization tests**: each was written after its behavior and passed. It then failed for the expected reason once its guard was temporarily removed, and passed again after restoration. They secure the behavior; they do not claim TDD-first. Each check ran `npm run build`, then `node --test --test-name-pattern="<test name>" <test file>`.
+
+| Guarantee | Guard removed | Observed failure | Restored behavior |
+| --- | --- | --- | --- |
+| Deleted text original | Missing-original fallback when citing text | `ENOENT` instead of a citation | Saved snapshot text with `originalChanged: true` |
+| Deleted document original, service and CLI | Missing-original fallback when citing a page or block | `ENOENT`; the CLI printed `BOARDROOM: ENOENT` | Saved page plus the visible CLI warning |
+| Altered text, PDF or extraction snapshot | Digest check when citing | Missing expected integrity exception | `Snapshot integrity check failed` |
+| Altered snapshot when capturing text | Digest check on an existing snapshot | Capture succeeded over conflicting bytes | Capture refused |
+| Altered snapshot when capturing a document | Digest check on an existing snapshot | Evidence was saved before a later failure, so the file could not be captured again | A refused capture saves nothing; a later capture gets revision 1 |
+| Unsupported document format | Extension guard | A `.txt` capture was not rejected | `Document extraction supports PDF and DOCX files only` |
+
+One behavior was changed test-first:
+
+| Slice | Observed red result | Green behavior |
+| --- | --- | --- |
+| Missing snapshot | `node --test --test-name-pattern="missing .*snapshot is refused" tests/project.test.ts tests/document-evidence.test.ts` failed with a raw `ENOENT` naming the internal snapshot path | One shared snapshot reader refuses missing and altered snapshots with an explicit integrity error |
+
+The first deleted-original test failed for an unrelated reason. On Windows, Node 24.12 `rmSync` returned without deleting a path containing `é`, so the original still existed. `unlinkSync` deletes it, and the product fallback was correct. The same runtime behavior can leave temporary directories with non-ASCII names after tests on Windows.
+
+The installed qualification suite now also retains the first exported plan and memo with its evidence.
+
+Local result: **48 tests passed**, none skipped; type checking and `git diff --check` passed. A locally built candidate also ran its installed suite with empty `PATH` and retained `export-plan.md` and `export-memo.md`.

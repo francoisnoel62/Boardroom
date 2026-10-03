@@ -150,11 +150,11 @@ npm test
 
 Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](plan-01-progress.md) records the observed failures and passing behaviors.
 
-A GitHub Actions workflow runs 40 deterministic integration/E2E tests and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) records the observed results, optional blocks and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
+A GitHub Actions workflow runs 48 deterministic integration/E2E tests and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) records the observed results, optional blocks and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
 
 ## Next milestones
 
-Plan 02 adds the first real decision using three distinct models from at least two providers. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. Optional embeddings, provider streaming and cloud traces remain explicitly blocked in this recorded build. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
+Plan 02 adds the first real decision using three distinct models from at least two providers. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. In this recorded build, optional embeddings are not attempted, while provider streaming and cloud traces remain blocked without authorized accounts. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
 
 The project is currently a development checkout, not a public release. Its project license and release/signing arrangements await a decision. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 

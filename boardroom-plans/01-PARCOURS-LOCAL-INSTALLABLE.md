@@ -1,6 +1,6 @@
 # Plan 01 — Un parcours local installable, sans compte
 
-Statut : terminé techniquement le 3 octobre 2026 ; parcours local enregistré qualifié sur Windows x64, Linux x64 et macOS arm64, avec paquets sans Node applicatif préinstallé. PR dépendantes ouvertes pour revue, sans fusion ni release automatique. [Acceptation et limites](../docs/plan-01-acceptance.md). [Preuves et travaux restants](../docs/plan-01-progress.md). Dépendances : aucune. Suite : [plan 02](02-PREMIERE-DECISION-REELLE.md). Références : spec §1, §3, §6, §7, §10 et §11. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
+Statut : accepté avec réserves le 3 octobre 2026 ; parcours local enregistré qualifié sur Windows x64, Linux x64 et macOS arm64, avec paquets sans Node applicatif préinstallé. La fusion des PR #1 à #7 dans `main` acte l'acceptation, sans release. [Acceptation, limites et réserves](../docs/plan-01-acceptance.md). [Preuves et travaux restants](../docs/plan-01-progress.md). Dépendances : aucune. Suite : [plan 02](02-PREMIERE-DECISION-REELLE.md). Références : spec §1, §3, §6, §7, §10 et §11. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
 
 ## Ce qui devient utilisable
 
@@ -55,6 +55,15 @@ Appliquer les [exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md
 - [x] PDF textuel et DOCX s'extraient depuis le paquet distribué ; un fichier mal interprété produit un avertissement exploitable.
 - [x] Le checkpoint, FTS5, le candidat embeddings, le streaming fournisseur et le candidat export filtré ont une preuve d'essai ou un résultat de blocage explicite par environnement. Le streaming réel reste à confirmer obligatoirement en 02 s'il manque des accès de test en 01.
 - [x] Le rapport d'isolation distingue ce qui protège réellement les cibles, les prérequis nécessaires et les capacités indisponibles. Une simple copie de répertoire n'est pas considérée comme une barrière.
+
+Réserves consignées à l'acceptation, détaillées dans le [dossier d'acceptation](../docs/plan-01-acceptance.md#accepted-limits-and-reservations) :
+
+- **TDD** : les garanties d'intégrité des instantanés, d'original supprimé et de format refusé n'ont reçu leurs tests qu'à la revue d'acceptation. Ce sont des tests de caractérisation, pas du TDD-first.
+- **Flux représentatif** : un rafraîchissement fictif toutes les 200 ms. Le streaming fournisseur sur un long transcript est à qualifier en 02.
+- **Candidat embeddings** : non tenté, faute de runtime et de modèle embarqués. Le risque de packaging passe en 05.
+- **Isolation** : aucun candidat ne démontre de protection. La cible « protégée » l'est par un attribut lecture seule, et un refus réseau peut n'être qu'un délai dépassé.
+- **Contrats** : schémas minimaux calqués sur l'exemple ; dans la projection JSON, les avis ne sont pas attribués individuellement.
+- **Configuration** : options CLI et projet enregistré. Les clés et les secrets sont définis en 02.
 
 ## Preuves et règle de passage
 

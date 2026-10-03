@@ -54,6 +54,8 @@ test('installed launcher completes the account-free journey with only the bundle
   assert.notEqual(first.directory, second.directory);
   assert.match(readFileSync(first.memo, 'utf8'), /INSUFFICIENT_EVIDENCE/);
   assert.match(readFileSync(first.plan, 'utf8'), /Recorded example/);
+  copyFileSync(first.plan, join(evidence, 'export-plan.md'));
+  copyFileSync(first.memo, join(evidence, 'export-memo.md'));
   const history = JSON.parse(run('history', '--json'));
   assert.equal(history.events.filter(event => event.type === 'recorded.message').length, 2);
   assert.equal(history.operations.length, 2);
