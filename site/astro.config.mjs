@@ -20,6 +20,8 @@ export default defineConfig({
       social: [{ icon: 'github', label: 'GitHub', href: repository }],
       editLink: { baseUrl: `${repository}/edit/main/site/` },
       lastUpdated: true,
+      // Long commands wrap rather than creating scroll regions a keyboard cannot reach; copying is unaffected.
+      expressiveCode: { defaultProps: { wrap: true, preserveIndent: true } },
       customCss: ['./src/styles/fonts.css', './src/styles/tokens.css', './src/styles/docs.css'],
       components: {
         PageTitle: './src/components/docs/PageTitle.astro',

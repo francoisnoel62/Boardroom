@@ -45,7 +45,7 @@ Changing a fixture or an export changes the site; an unsupported fixture version
 | Accessibility | part of `test:e2e` | No serious/critical axe violation (WCAG 2.2 AA) on every page, both themes; reduced motion honoured |
 | Lighthouse | `npm run lighthouse` | `/`, `/engineering/`, `/docs/`, `/docs/quickstart/`, median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
 
-Observed locally on 2026-10-03 after phase 2 (Node 22.22, Chromium 141): 23 unit tests, 6 built-site checks and 76 end-to-end tests pass. Lighthouse (simulated mobile, median of 3) scored 100 in all four categories on the four audited pages, with median LCP of 1.66 s (`/`), 1.51 s (`/engineering/`), 1.06 s (`/docs/`) and 1.22 s (`/docs/quickstart/`). GitHub's runners measure slower than this container, so CI is the reference for the budgets.
+Observed locally on 2026-10-03 after phase 2 (Node 22.22, Chromium 141): 23 unit tests, 6 built-site checks and 78 end-to-end tests pass. Lighthouse (simulated mobile, median of 3) scored 100 in all four categories on the four audited pages, with median LCP of 1.66 s (`/`), 1.51 s (`/engineering/`), 1.06 s (`/docs/`) and 1.22 s (`/docs/quickstart/`). GitHub's runners measure slower than this container, so CI is the reference for the budgets.
 
 ## Red → green record
 
@@ -64,6 +64,7 @@ Observed locally on 2026-10-03 after phase 2 (Node 22.22, Chromium 141): 23 unit
 | Engineering evidence | `decisions` was not exported | Every decision and limit cites an existing document or test |
 | License honesty | `/docs/` called the project open source | Any “open source” mention requires the visible “Planned · Plan 09” license claim |
 | Replay | No replay control existed | The capture replays one intervention at a time, can be skipped, and stays fully readable without JavaScript |
+| Keyboard-reachable code | With a wider monospace font, four Quickstart code blocks scrolled horizontally without being focusable (axe `scrollable-region-focusable`, first seen on a CI run) | Long commands wrap; the regression test forces a wide font at 900 px |
 | FAQ and engineering page | Neither existed | Cost, license and data answers; `/engineering/` with figures, decisions, evidence links and stated limits |
 
 Corrections found by those checks rather than by review: the first CI run failed the docs' LCP budget on GitHub's runners although it passed locally (fixed by the font decision below), a misplaced `@import` silently dropped two fonts (and briefly flattered an LCP measurement), global utility classes overrode component colours (fixed by layering `site.css`), an Engineering link hidden on phones (the recruiter path) became always visible, and four test selectors were wrong about the search box role, the scope of the “no download” rule, repeated claims and repeated evidence links.

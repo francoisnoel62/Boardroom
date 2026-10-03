@@ -25,3 +25,14 @@ test('search finds a page from the documentation', async ({ page }) => {
   await dialog.getByRole('textbox', { name: 'Search' }).fill('citation');
   await expect(dialog.locator('a[href*="/docs/"]').first()).toBeVisible({ timeout: 10_000 });
 });
+
+test('code blocks never need horizontal scrolling that a keyboard cannot reach', async ({ page }) => {
+  // A wide monospace font must not create a scroll region: long commands wrap instead.
+  await page.setViewportSize({ width: 900, height: 800 });
+  await page.goto('/docs/quickstart/');
+  await page.addStyleTag({ content: 'pre, code { font-family: "DejaVu Sans Mono", monospace !important; letter-spacing: 0.08em !important; }' });
+  const unreachable = await page.locator('pre').evaluateAll(blocks => blocks
+    .filter(block => block.scrollWidth > block.clientWidth + 1 && !block.hasAttribute('tabindex'))
+    .map(block => block.textContent?.slice(0, 60)));
+  expect(unreachable).toEqual([]);
+});
