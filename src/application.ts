@@ -3,7 +3,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
+import { openDomainDatabase } from './local-database.ts';
 import { EvidenceSchema, EventSchema, ExportOperationSchema, FixtureSchema, ProjectSchema, RecordedMeetingSchema, RecordedDecisionSchema, type Project, type Evidence, type RecordedMeeting, type EventInput } from './domain.ts';
 import { DocumentLocatorSchema, ExtractionSchema, extractDocument, type DocumentLocator } from './extraction.ts';
 import { LiveProjectSchema, ProjectInputSchema, MeetingInputSchema, LiveMeetingSchema,
@@ -23,16 +24,7 @@ export class Boardroom {
   constructor(dataDirectory: string) {
     this.dataDirectory = resolve(dataDirectory);
     mkdirSync(this.dataDirectory, { recursive: true });
-    this.db = new Database(join(this.dataDirectory, 'domain.sqlite'));
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('busy_timeout = 5000');
-    this.db.exec(`CREATE TABLE IF NOT EXISTS records (
-      kind TEXT NOT NULL, id TEXT NOT NULL, value TEXT NOT NULL,
-      PRIMARY KEY (kind, id)
-    )`);
-    this.db.exec(`CREATE TABLE IF NOT EXISTS events (
-      sequence INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL, value TEXT NOT NULL
-    )`);
+    this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
   }
 
   capabilities() {

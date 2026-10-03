@@ -18,7 +18,10 @@ test('installed launcher completes the account-free journey with only the bundle
   mkdirSync(evidence, { recursive: true });
   const mode = process.env.BOARDROOM_INSTALLATION_MODE ?? 'local-empty-path';
   assert.ok(['clean', 'local-empty-path'].includes(mode));
-  const env = { ...process.env, NODE_PATH: '', NODE_OPTIONS: '', HOME: join(root, 'home'),
+  // macOS Keychain belongs to the real login HOME. Isolate application data
+  // explicitly there rather than inventing a login home with no default vault.
+  const macDataDirectory = join(root, 'application-data');
+  const env = { ...process.env, NODE_PATH: '', NODE_OPTIONS: '', HOME: process.platform === 'darwin' ? process.env.HOME : join(root, 'home'),
     LOCALAPPDATA: join(root, 'local'), XDG_DATA_HOME: join(root, 'xdg'), CI: 'true',
     LANGSMITH_TRACING: 'false', LANGCHAIN_TRACING_V2: 'false' };
   if (mode === 'local-empty-path') env.PATH = '';
@@ -34,6 +37,7 @@ test('installed launcher completes the account-free journey with only the bundle
   const launcher = join(candidate, process.platform === 'win32' ? 'boardroom.cmd' : 'boardroom');
   const commandLog = [];
   const invokeInput = (input, ...args) => {
+    if (process.platform === 'darwin') args.push('--data-dir', macDataDirectory);
     commandLog.push(args);
     const quote = arg => { assert.ok(!/["\r\n%]/.test(arg)); return `"${arg}"`; };
     const command = process.platform === 'win32' ? join(process.env.SystemRoot, 'System32', 'cmd.exe') : launcher;
@@ -140,7 +144,7 @@ test('installed launcher completes the account-free journey with only the bundle
   // Checkpoint/domain files are external artifacts at the installed product seam.
   const { readdirSync } = await import('node:fs');
   const dataHome = process.platform === 'win32' ? join(root, 'local', 'Boardroom')
-    : process.platform === 'darwin' ? join(root, 'home', 'Library', 'Application Support', 'Boardroom') : join(root, 'xdg', 'boardroom');
+    : process.platform === 'darwin' ? macDataDirectory : join(root, 'xdg', 'boardroom');
   for (const name of readdirSync(dataHome).filter(name => /sqlite/.test(name))) {
     assert.ok(!readFileSync(join(dataHome, name)).includes(Buffer.from(token)));
   }
@@ -199,7 +203,7 @@ test('installed launcher completes the account-free journey with only the bundle
   writeFileSync(join(evidence, 'terminal-screen.txt'), display.snapshot());
   assert.equal(hash(original), originalHash);
   const dataPath = process.platform === 'win32' ? join(env.LOCALAPPDATA, 'Boardroom')
-    : process.platform === 'darwin' ? join(env.HOME, 'Library', 'Application Support', 'Boardroom') : join(env.XDG_DATA_HOME, 'boardroom');
+    : process.platform === 'darwin' ? macDataDirectory : join(env.XDG_DATA_HOME, 'boardroom');
   assert.ok(existsSync(join(dataPath, 'domain.sqlite')));
   assert.ok(!dataPath.startsWith(candidate));
   writeFileSync(join(evidence, 'installation.json'), JSON.stringify({ schemaVersion: 1, mode, platform: process.platform,
