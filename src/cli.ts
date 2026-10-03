@@ -12,15 +12,21 @@ Commands and MCP: unavailable
 Cloud telemetry: off
 
 Usage:
+  boardroom project-create --name <name> [--language en]  Create a real project
+  boardroom project --id <project-id>    Inspect a saved project
+  boardroom source --project <id> --source <file> --allow-source  Save authorized UTF-8 text
+  boardroom meeting-prepare --project <id> --input <json-file>  Freeze a question and selected passages
+  boardroom meeting --project <id> --id <meeting-id>          Inspect a prepared meeting
+  boardroom meeting-context --project <id> --id <meeting-id>  Read its frozen text passages
   boardroom demo [--next]                 Read or resume the recorded example
   boardroom evidence [--line 4]          Inspect the saved source revision
   boardroom document --source <file> --allow-source  Save authorized PDF/DOCX text
   boardroom evidence --id <id> --page <n>           Inspect a saved PDF page
   boardroom evidence --id <id> --block <n>          Inspect a saved DOCX block
   boardroom export --output <directory>  Create a new plan and decision memo
-  boardroom history [--json]             Inspect playback events and export receipts
+  boardroom history [--project <id>] [--json]  Inspect saved events and export receipts
   boardroom decision [--json]            Inspect saved context, proposals and adviser views
-  boardroom trace --output <directory>   Export a filtered local technical trace
+  boardroom trace --output <directory> [--project <id>]  Export a filtered local technical trace
   boardroom status                      Show local capabilities
   boardroom doctor [--json]              Run separate local storage probes
   boardroom terminal-check              Try input during a fictional stream (TTY only)
@@ -43,6 +49,9 @@ try {
       'data-dir': { type: 'string' }, output: { type: 'string' }, line: { type: 'string' },
       source: { type: 'string' }, 'allow-source': { type: 'boolean' },
       id: { type: 'string' }, page: { type: 'string' }, block: { type: 'string' },
+      name: { type: 'string' }, language: { type: 'string' },
+      project: { type: 'string' },
+      input: { type: 'string' },
     },
   });
   const command = positionals[0];
@@ -61,20 +70,56 @@ try {
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+    if (!['project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new Error('Unknown command. Run boardroom --help.');
     }
+    if (command === 'project-create' && !values.name) throw new Error('Project creation requires --name <name>.');
+    if (command === 'project' && !values.id) throw new Error('Project inspection requires --id <project-id>.');
+    if (['meeting-prepare', 'meeting', 'meeting-context'].includes(command) && !values.project) throw new Error('Meeting commands require --project <project-id>.');
+    if (command === 'meeting-prepare' && !values.input) throw new Error('Meeting preparation requires --input <json-file>.');
+    if ((command === 'meeting' || command === 'meeting-context') && !values.id) throw new Error('Meeting inspection requires --id <meeting-id>.');
     if (command === 'export' && !values.output) throw new Error('Export requires --output <directory>.');
     if (command === 'trace' && !values.output) throw new Error('Trace export requires --output <directory>.');
-    if (command === 'document' && !values.source) throw new Error('Document extraction requires --source <file>.');
-    if (command === 'document' && !values['allow-source']) throw new Error('Document reading requires explicit source consent: add --allow-source for this file.');
+    if (command === 'source' && !values.project) throw new Error('Text capture requires --project <project-id>.');
+    if ((command === 'source' || command === 'document') && !values.source) throw new Error('Source capture requires --source <file>.');
+    if ((command === 'source' || command === 'document') && !values['allow-source']) throw new Error('Document reading requires explicit source consent: add --allow-source for this file.');
     if (command === 'evidence' && values.id && ((values.page !== undefined) === (values.block !== undefined))) {
       throw new Error('Saved document evidence requires exactly one --page or --block locator.');
     }
     if (command === 'evidence' && !values.id && (values.page || values.block)) throw new Error('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (command === 'demo') {
+      if (command === 'project-create' || command === 'project') {
+        const project = command === 'project-create'
+          ? app.createProject({ name: values.name!, language: values.language ?? 'en' }) : app.getProject(values.id!);
+        console.log(values.json ? JSON.stringify(project)
+          : `${project.recorded ? 'Recorded' : 'Real'} project: ${project.id}\nName: ${project.name}\nLanguage: ${project.language}`);
+      } else if (command === 'meeting-prepare' || command === 'meeting') {
+        const meeting = command === 'meeting' ? app.getMeeting(values.project!, values.id!) : (() => {
+          const input = JSON.parse(readFileSync(values.input!, 'utf8'));
+          if (!input || typeof input !== 'object' || Array.isArray(input) || 'projectId' in input) {
+            throw new Error('Meeting input must be an object without projectId; use --project.');
+          }
+          return app.prepareMeeting({ ...input, projectId: values.project! });
+        })();
+        console.log(values.json ? JSON.stringify(meeting) : [
+          'Live meeting prepared — no model calls.', `Meeting: ${meeting.id}`, `Project: ${meeting.projectId}`,
+          `Question: ${meeting.question}`, `Language: ${meeting.language}`,
+          `Context v${meeting.context.version} | ${meeting.context.passages.length} selected passages`,
+          `Duration target: ${meeting.durationTargetSeconds}s | declared ceiling: ${meeting.costCeiling.amount} ${meeting.costCeiling.currency}`,
+          'Provider connections and operational budget enforcement are not available yet.',
+        ].join('\n'));
+      } else if (command === 'meeting-context') {
+        const context = app.readMeetingContext(values.project!, values.id!);
+        console.log(values.json ? JSON.stringify(context) : [
+          `Frozen context v${context.contextVersion}`,
+          ...context.passages.map(passage => `Evidence ${passage.evidenceId} | revision ${passage.revision}\n${passage.location}\nSHA-256: ${passage.sha256}\n${passage.text}${passage.originalChanged ? '\nWarning: original changed or unavailable; showing the saved snapshot.' : ''}`),
+        ].join('\n\n'));
+      } else if (command === 'source') {
+        const evidence = app.captureSource(values.project!, values.source!, { authorized: true });
+        console.log(values.json ? JSON.stringify(evidence)
+          : `Saved text evidence: ${evidence.id}\nRevision: ${evidence.revision}\nSHA-256: ${evidence.sha256}`);
+      } else if (command === 'demo') {
         const transcript = ['BOARDROOM | Recorded example — scripted fictional fixture; no model calls.\n'];
         let count = 0;
         do {
@@ -118,7 +163,7 @@ try {
         const result = app.exportRecordedExample(values.output!);
         console.log(values.json ? JSON.stringify(result) : `Recorded example export: ${result.operationId}\n${result.plan}\n${result.memo}\nHuman decision: pending.`);
       } else if (command === 'trace') {
-        const path = app.exportFilteredTrace(app.openDemo().id, values.output!);
+        const path = app.exportFilteredTrace(values.project ?? app.openDemo().id, values.output!);
         console.log(values.json ? JSON.stringify({ mode: 'local-filtered-trace', path }) : `Local filtered trace: ${path}\nCloud telemetry: off.`);
       } else if (command === 'decision') {
         const decision = app.recordedDecision(app.openDemo().id);
@@ -130,12 +175,13 @@ try {
           'Human decision: pending. Adviser views do not decide for the human.',
         ].join('\n'));
       } else if (command === 'history') {
-        const history = app.history(app.openDemo().id);
+        const history = app.history(values.project ?? app.openDemo().id);
         if (values.json) { console.log(JSON.stringify(history)); }
         else {
           const events = history.events.map(event => {
             const detail = event.type === 'recorded.message'
-              ? `${event.messageId} | position ${event.position}` : event.operationId;
+              ? `${event.messageId} | position ${event.position}`
+              : event.type === 'live.meeting-prepared' ? `${event.meetingId} | context v${event.contextVersion}` : event.operationId;
             return `#${event.sequence} ${event.occurredAt} | ${event.type} | ${detail}`;
           });
           const operations = history.operations.map(operation => [
@@ -145,7 +191,7 @@ try {
             ...(operation.status === 'unconfirmed'
               ? ['Outcome unconfirmed. Inspect the directory before requesting a new export; no automatic retry.'] : []),
           ].join('\n'));
-          console.log(['Recorded example | saved history', ...events, 'Exports:', ...operations].join('\n'));
+          console.log([values.project ? `Project ${values.project} | saved history` : 'Recorded example | saved history', ...events, 'Exports:', ...operations].join('\n'));
         }
       } else if (command === 'doctor') {
         // Product telemetry is opt-in; inherited development tracing flags grant no consent.

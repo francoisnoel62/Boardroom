@@ -74,6 +74,9 @@ const EventEnvelope = z.object({
 
 export const EventSchema = z.discriminatedUnion('type', [
   EventEnvelope.extend({
+    type: z.literal('live.meeting-prepared'), meetingId: z.string().uuid(), contextVersion: z.literal(1),
+  }),
+  EventEnvelope.extend({
     type: z.literal('recorded.message'), meetingId: z.string(),
     messageId: z.string(), position: z.number().int().positive(),
   }),

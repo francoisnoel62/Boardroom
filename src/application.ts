@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
 import { EvidenceSchema, EventSchema, ExportOperationSchema, FixtureSchema, ProjectSchema, RecordedMeetingSchema, RecordedDecisionSchema, type Project, type Evidence, type RecordedMeeting, type EventInput } from './domain.ts';
 import { DocumentLocatorSchema, ExtractionSchema, extractDocument, type DocumentLocator } from './extraction.ts';
+import { LiveProjectSchema, ProjectInputSchema, MeetingInputSchema, LiveMeetingSchema,
+  type ProjectInput, type LiveProject, type MeetingInput, type LiveMeeting } from './live-domain.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -49,11 +51,66 @@ export class Boardroom {
     return project;
   }
 
+  createProject(input: ProjectInput): LiveProject {
+    const fields = ProjectInputSchema.parse(input);
+    const project = LiveProjectSchema.parse({ ...fields, schemaVersion: 1, id: randomUUID(), recorded: false });
+    this.save('project', project.id, project);
+    return project;
+  }
+
+  getProject(projectId: string): Project | LiveProject {
+    const stored = this.load('project', projectId);
+    if (!stored) throw new Error('Project unavailable.');
+    const recorded = ProjectSchema.safeParse(stored);
+    return recorded.success ? recorded.data : LiveProjectSchema.parse(stored);
+  }
+
+  prepareMeeting(input: MeetingInput): LiveMeeting {
+    const fields = MeetingInputSchema.parse(input);
+    const project = this.getProject(fields.projectId);
+    if (project.recorded) throw new Error('A live meeting requires a real project.');
+    let contextBytes = 0;
+    const passages = fields.passages.map(selection => {
+      const citation = this.resolveCitation(project.id, selection.evidenceId, selection.firstLine, selection.lastLine);
+      contextBytes += Buffer.byteLength(citation.text, 'utf8');
+      if (contextBytes > 64 * 1024) throw new Error('Selected context exceeds 64 KiB of UTF-8 text.');
+      return { ...selection, revision: citation.revision, sha256: citation.sha256 };
+    });
+    const { passages: _selection, ...settings } = fields;
+    const meeting = LiveMeetingSchema.parse({
+      ...settings, schemaVersion: 1, id: randomUUID(), mode: 'live', status: 'prepared',
+      language: fields.language ?? project.language, createdAt: new Date().toISOString(),
+      context: { schemaVersion: 1, version: 1, projectId: project.id, passages },
+    });
+    this.db.transaction(() => {
+      this.save('live-meeting', meeting.id, meeting);
+      this.appendEvent({ schemaVersion: 1, projectId: project.id, occurredAt: meeting.createdAt,
+        type: 'live.meeting-prepared', meetingId: meeting.id, contextVersion: 1 });
+    }).immediate();
+    return meeting;
+  }
+
+  getMeeting(projectId: string, meetingId: string): LiveMeeting {
+    const stored = this.load('live-meeting', meetingId);
+    if (!stored) throw new Error('Meeting unavailable.');
+    const meeting = LiveMeetingSchema.parse(stored);
+    if (meeting.projectId !== projectId) throw new Error('Meeting is outside this project.');
+    return meeting;
+  }
+
+  readMeetingContext(projectId: string, meetingId: string) {
+    const meeting = this.getMeeting(projectId, meetingId);
+    return { contextVersion: meeting.context.version, passages: meeting.context.passages.map(passage => ({
+      ...passage, ...this.resolveCitation(projectId, passage.evidenceId, passage.firstLine, passage.lastLine),
+    })) };
+  }
+
   captureSource(projectId: string, path: string, consent: { authorized: boolean }): Evidence {
     if (!consent.authorized) throw new Error('Source access requires explicit authorization.');
     if (!this.load('project', projectId)) throw new Error('Project unavailable.');
     const originalPath = resolve(path);
     const content = readFileSync(originalPath);
+    if (content.byteLength > 4 * 1024 * 1024) throw new Error('Text sources are limited to 4 MiB. Select a smaller source file.');
     try {
       const decoded = new TextDecoder('utf-8', { fatal: true }).decode(content);
       if (decoded.includes('\0')) throw new Error('Binary content');
@@ -61,25 +118,29 @@ export class Boardroom {
       throw new Error('Source must be valid UTF-8 text; this extractor cannot read the file.');
     }
     const sha256 = hash(content);
-    const previous = this.all('evidence').map(value => EvidenceSchema.parse(value))
-      .filter(evidence => evidence.projectId === projectId && evidence.originalPath === originalPath);
-    const identical = previous.find(evidence => evidence.sha256 === sha256);
-    if (identical) return identical;
-    const snapshots = join(this.dataDirectory, 'snapshots');
-    mkdirSync(snapshots, { recursive: true });
-    const snapshot = join(snapshots, sha256);
-    try { writeFileSync(snapshot, content, { flag: 'wx' }); }
-    catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-      if (hash(readFileSync(snapshot)) !== sha256) throw new Error('Snapshot integrity check failed.');
-    }
-    const evidence = EvidenceSchema.parse({
-      schemaVersion: 1, id: randomUUID(), projectId, originalPath, sha256,
-      revision: Math.max(0, ...previous.map(item => item.revision)) + 1,
-      extraction: 'utf8-text',
-    });
-    this.save('evidence', evidence.id, evidence);
-    return evidence;
+    // Read/validate the original before locking. Serialize publication and identity
+    // allocation so another text capture cannot reuse a partially written snapshot.
+    return this.db.transaction(() => {
+      const previous = this.all('evidence').map(value => EvidenceSchema.parse(value))
+        .filter(evidence => evidence.projectId === projectId && evidence.originalPath === originalPath);
+      const identical = previous.find(evidence => evidence.sha256 === sha256 && evidence.extraction === 'utf8-text');
+      if (identical) return identical;
+      const snapshots = join(this.dataDirectory, 'snapshots');
+      mkdirSync(snapshots, { recursive: true });
+      const snapshot = join(snapshots, sha256);
+      try { writeFileSync(snapshot, content, { flag: 'wx' }); }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        if (hash(readFileSync(snapshot)) !== sha256) throw new Error('Snapshot integrity check failed.');
+      }
+      const evidence = EvidenceSchema.parse({
+        schemaVersion: 1, id: randomUUID(), projectId, originalPath, sha256,
+        revision: Math.max(0, ...previous.map(item => item.revision)) + 1,
+        extraction: 'utf8-text',
+      });
+      this.save('evidence', evidence.id, evidence);
+      return evidence;
+    }).immediate();
   }
 
   resolveCitation(projectId: string, evidenceId: string, firstLine: number, lastLine: number) {
@@ -271,7 +332,9 @@ export class Boardroom {
     if (!this.load('project', projectId)) throw new Error('Project unavailable.');
     const events = this.history(projectId).events.map(event => ({
       sequence: event.sequence, type: event.type, occurredAt: event.occurredAt,
-      ...(event.type === 'recorded.message' ? { position: event.position } : { operationId: event.operationId }),
+      ...(event.type === 'recorded.message' ? { position: event.position }
+        : event.type === 'live.meeting-prepared' ? { meetingId: event.meetingId, contextVersion: event.contextVersion }
+        : { operationId: event.operationId }),
     }));
     const root = resolve(outputDirectory);
     mkdirSync(root, { recursive: true });
