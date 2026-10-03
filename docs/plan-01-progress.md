@@ -46,6 +46,10 @@ Each behavior below was introduced after executing its failing test. Run the res
 | Interactive TTY in CI | Candidate PTY stayed blank with `CI=true`; reproduced locally | Explicit interactive rendering keeps input and sample updates visible in a real TTY |
 | Recorded decision contracts | `recordedDecision` was absent | Context, two proposals and three version-bound views survive reopen; human decision stays pending |
 | Decision CLI | `decision` was unknown | Separate processes inspect saved versioned records and preserved uncertainty |
+| Local filtered trace | `exportFilteredTrace` was absent | New JSON exports keep correlation metadata while omitting paths, bodies and receipts |
+| Trace CLI | `trace` was unknown | The compiled application creates a new local filtered artifact |
+| Optional probe blocks | `doctor` had no prerequisite explanations | Runtime/assets and authorized account/budget blocks are explicit; no optional pass is fabricated |
+| Isolation report | `isolation-check` was unknown | Real fixed temporary writes and loopback access are measured; command/MCP capabilities stay unavailable |
 
 The package copy initially failed using Node's recursive `cpSync` on this Windows environment. Copying files and directories individually resolved the observed failure; the same package E2E then passed. This is not a claim that all Windows environments have that issue.
 

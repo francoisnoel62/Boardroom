@@ -258,6 +258,20 @@ export class Boardroom {
     this.db.prepare('INSERT INTO events(project_id, value) VALUES (?, ?)').run(event.projectId, JSON.stringify(payload));
   }
 
+  /** Local validation artifact, with a field allowlist rather than redaction of arbitrary bodies. */
+  exportFilteredTrace(projectId: string, outputDirectory: string): string {
+    if (!this.load('project', projectId)) throw new Error('Project unavailable.');
+    const events = this.history(projectId).events.map(event => ({
+      sequence: event.sequence, type: event.type, occurredAt: event.occurredAt,
+      ...(event.type === 'recorded.message' ? { position: event.position } : { operationId: event.operationId }),
+    }));
+    const root = resolve(outputDirectory);
+    mkdirSync(root, { recursive: true });
+    const path = join(root, `boardroom-trace-${randomUUID()}.json`);
+    writeFileSync(path, JSON.stringify({ schemaVersion: 1, mode: 'local-filtered-trace', events }, null, 2) + '\n', { flag: 'wx' });
+    return path;
+  }
+
   exportRecordedExample(outputDirectory: string) {
     return this.prepareRecordedExport(outputDirectory).execute();
   }

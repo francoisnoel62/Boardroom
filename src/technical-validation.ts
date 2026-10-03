@@ -2,6 +2,21 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
 import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
+import { createRequire } from 'node:module';
+
+export function optionalProbeResults() {
+  let embeddingRuntimePresent = false;
+  try { createRequire(import.meta.url).resolve('@huggingface/transformers'); embeddingRuntimePresent = true; }
+  catch { /* An absent optional runtime is a block, not a successful embedding test. */ }
+  return {
+    embeddings: { status: 'blocked', runtimePresent: embeddingRuntimePresent,
+      reason: 'Embedding runtime and model assets are not qualified in this package; no model download is configured. FTS5 is the fallback.' },
+    providerStreaming: { status: 'blocked',
+      reason: 'No provider account or development budget is configured in this build. Real streaming must be qualified in Plan 02.' },
+    cloudTrace: { status: 'blocked',
+      reason: 'No authorized cloud trace account is configured. Local filtered trace export is available; cloud telemetry stays off.' },
+  };
+}
 
 const State = Annotation.Root({ count: Annotation<number>() });
 const config = { configurable: { thread_id: 'boardroom-storage-probe-v1' } };
