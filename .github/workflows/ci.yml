@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   verify:
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -31,9 +32,81 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
-      - run: npm run package
+      - run: npm run package -- --output release/candidate
+      - name: Archive candidate with native executable modes
+        run: tar -czf release/boardroom.tar.gz -C release candidate
       - uses: actions/upload-artifact@v7
         with:
           name: boardroom-candidate-${{ matrix.os }}-${{ matrix.arch }}
-          path: release/
+          path: release/boardroom.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: boardroom-ci-tools-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            scripts/clean-ci-node.ps1
+            scripts/clean-ci-node.sh
+            qualification/Dockerfile
+
+  installed:
+    needs: verify
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x64
+          - os: ubuntu-latest
+            arch: x64
+          - os: macos-14
+            arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      # A distinct VM downloads the archive; no source checkout or setup-node step.
+      - uses: actions/download-artifact@v8
+        with:
+          name: boardroom-candidate-${{ matrix.os }}-${{ matrix.arch }}
+          path: incoming
+      - uses: actions/download-artifact@v8
+        with:
+          name: boardroom-ci-tools-${{ matrix.os }}-${{ matrix.arch }}
+          path: tools
+      - name: Extract archive into a Unicode and space path
+        shell: bash
+        run: |
+          mkdir -p 'Boardroom clean François' evidence
+          tar -xzf incoming/boardroom.tar.gz -C 'Boardroom clean François'
+      - name: Qualify Windows without installed application Node
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $proof = Join-Path $PWD 'evidence/no-node.json'
+          & ./tools/scripts/clean-ci-node.ps1 -ProofPath $proof
+          $env:BOARDROOM_INSTALLATION_MODE = 'clean'
+          $env:BOARDROOM_NO_NODE_PROOF = $proof
+          $env:BOARDROOM_QUALIFICATION_OUTPUT = Join-Path $PWD 'evidence'
+          & './Boardroom clean François/candidate/runtime/node.exe' --test './Boardroom clean François/candidate/qualification/installed.test.mjs'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Qualify macOS without installed application Node
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          bash tools/scripts/clean-ci-node.sh "$PWD/evidence/no-node.json"
+          BOARDROOM_INSTALLATION_MODE=clean BOARDROOM_NO_NODE_PROOF="$PWD/evidence/no-node.json" BOARDROOM_QUALIFICATION_OUTPUT="$PWD/evidence" \
+            './Boardroom clean François/candidate/runtime/node' --test './Boardroom clean François/candidate/qualification/installed.test.mjs'
+      - name: Qualify Linux in an offline image containing no Node
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          docker build -t boardroom-no-node tools/qualification
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            -v "$PWD/Boardroom clean François/candidate:/candidate:ro" -v "$PWD/evidence:/evidence" \
+            -e BOARDROOM_INSTALLATION_MODE=clean -e BOARDROOM_NO_NODE_PROOF=/evidence/no-node.json -e BOARDROOM_QUALIFICATION_OUTPUT=/evidence \
+            boardroom-no-node /bin/sh -c 'set -eu; ! command -v node; printf "{\"schemaVersion\":1,\"strategy\":\"fresh-ubuntu-image-no-node-offline\",\"systemNodeVisible\":false,\"absentPaths\":[\"/usr/bin/node\",\"/usr/local/bin/node\"]}" > /evidence/no-node.json; /candidate/runtime/node --test /candidate/qualification/installed.test.mjs'
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: boardroom-installation-evidence-${{ matrix.os }}-${{ matrix.arch }}
+          path: evidence/
           if-no-files-found: error
