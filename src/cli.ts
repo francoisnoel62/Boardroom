@@ -19,6 +19,7 @@ Usage:
   boardroom evidence --id <id> --block <n>          Inspect a saved DOCX block
   boardroom export --output <directory>  Create a new plan and decision memo
   boardroom history [--json]             Inspect playback events and export receipts
+  boardroom decision [--json]            Inspect saved context, proposals and adviser views
   boardroom status                      Show local capabilities
   boardroom doctor [--json]              Run separate local storage probes
   boardroom terminal-check              Try input during a fictional stream (TTY only)
@@ -52,7 +53,7 @@ try {
     const { runTerminalValidation } = await import('./terminal-validation.tsx');
     await runTerminalValidation();
   } else {
-    if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history'].includes(command) || positionals.length !== 1) {
+    if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision'].includes(command) || positionals.length !== 1) {
       throw new Error('Unknown command. Run boardroom --help.');
     }
     if (command === 'export' && !values.output) throw new Error('Export requires --output <directory>.');
@@ -107,6 +108,15 @@ try {
       } else if (command === 'export') {
         const result = app.exportRecordedExample(values.output!);
         console.log(values.json ? JSON.stringify(result) : `Recorded example export: ${result.operationId}\n${result.plan}\n${result.memo}\nHuman decision: pending.`);
+      } else if (command === 'decision') {
+        const decision = app.recordedDecision(app.openDemo().id);
+        console.log(values.json ? JSON.stringify(decision) : [
+          'Recorded example | saved decision',
+          `Context v${decision.context.version} | proposal v${decision.proposals.at(-1)!.version}`,
+          ...decision.proposals.map(proposal => proposal.text),
+          ...decision.views.map(view => `${view.role}: ${view.stance} on v${view.proposalVersion}`),
+          'Human decision: pending. Adviser views do not decide for the human.',
+        ].join('\n'));
       } else if (command === 'history') {
         const history = app.history(app.openDemo().id);
         if (values.json) { console.log(JSON.stringify(history)); }

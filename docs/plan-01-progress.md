@@ -44,6 +44,8 @@ Each behavior below was introduced after executing its failing test. Run the res
 | Window resize | Current dimensions were absent | Narrower/wider PTY windows update dimensions and preserve an editable Unicode draft |
 | Pasted controls | ANSI bytes changed the displayed draft's styling | Control bytes are removed and do not cancel or issue terminal commands |
 | Interactive TTY in CI | Candidate PTY stayed blank with `CI=true`; reproduced locally | Explicit interactive rendering keeps input and sample updates visible in a real TTY |
+| Recorded decision contracts | `recordedDecision` was absent | Context, two proposals and three version-bound views survive reopen; human decision stays pending |
+| Decision CLI | `decision` was unknown | Separate processes inspect saved versioned records and preserved uncertainty |
 
 The package copy initially failed using Node's recursive `cpSync` on this Windows environment. Copying files and directories individually resolved the observed failure; the same package E2E then passed. This is not a claim that all Windows environments have that issue.
 

@@ -39,6 +39,10 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(JSON.parse(run('evidence', '--id', docx.evidence.id, '--block', '2', '--json')).text, 'Budget: €500 for the café pilot.');
   assert.match(run('demo', '--terminal'), /INSUFFICIENT_EVIDENCE/);
   const beforeTerminal = JSON.parse(run('history', '--json'));
+  const decision = JSON.parse(run('decision', '--json'));
+  assert.equal(decision.context.version, 1);
+  assert.deepEqual(decision.views.map((view: { stance: string }) => view.stance), ['APPROVED', 'APPROVED', 'INSUFFICIENT_EVIDENCE']);
+  assert.equal(decision.humanDecision, 'pending');
   const terminal = openTerminal(t, [cli, 'terminal-check', '--data-dir', data], { executable: runtime, cwd: root, env });
   await terminal.waitFor(/Stream tick: [1-9]/);
   terminal.write('\x1b[200~Capacity:\r\ncafé 😀\x1b[201~');

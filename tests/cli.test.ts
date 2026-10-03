@@ -9,6 +9,20 @@ import { Boardroom } from '../src/application.ts';
 
 const cli = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 
+test('decision inspection exposes saved versions and uncertainty across CLI processes', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom decision CLI '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const run = (...args: string[]) => execFileSync(process.execPath, [cli, ...args, '--data-dir', root], { encoding: 'utf8' });
+  const decision = JSON.parse(run('decision', '--json'));
+  assert.deepEqual(decision.proposals.map((proposal: { version: number }) => proposal.version), [1, 2]);
+  assert.equal(decision.views[2].stance, 'INSUFFICIENT_EVIDENCE');
+  run('demo', '--next');
+  assert.deepEqual(JSON.parse(run('decision', '--json')), decision);
+  assert.match(run('decision'), /Context v1.*proposal v2/);
+  assert.match(run('decision'), /Marketing Manager: INSUFFICIENT_EVIDENCE/);
+  assert.match(run('decision'), /Human decision: pending/);
+});
+
 test('history inspects durable playback and export outcomes without executing pending intent', (t) => {
   const root = mkdtempSync(join(tmpdir(), 'Boardroom history CLI '));
   t.after(() => rmSync(root, { recursive: true, force: true }));
