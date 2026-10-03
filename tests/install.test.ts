@@ -55,7 +55,8 @@ function install(root: string, base: string, extra: Record<string, string> = {})
 
 function runInstalled(root: string) {
   return windows
-    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `"${join(root, 'bin', 'boardroom.cmd')}" --help`], { encoding: 'utf8', windowsVerbatimArguments: true })
+    // With /s, cmd strips the outermost pair of quotes, so the quoted path needs an enclosing pair.
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${join(root, 'bin', 'boardroom.cmd')}" --help"`], { encoding: 'utf8', windowsVerbatimArguments: true })
     : spawnSync(join(root, 'bin', 'boardroom'), ['--help'], { encoding: 'utf8' });
 }
 
