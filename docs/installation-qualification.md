@@ -31,6 +31,6 @@ Open the final [PR 7 checks](https://github.com/francoisnoel62/Boardroom/pull/7/
 - `boardroom-candidate-<runner>-<architecture>`: the candidate archive.
 - `boardroom-installation-evidence-<runner>-<architecture>`: observed journey and environment proof.
 
-Artifacts have GitHub's workflow retention limit; keep important candidates/evidence locally before expiry. No GitHub release or signed installer is published at this milestone.
+Artifacts have GitHub's workflow retention limit; keep important candidates/evidence locally before expiry. The accepted campaign's archives are kept outside the repository and listed with their SHA-256 in [the retained-candidate record](validation/plan01-retained-candidates.json). No GitHub release or signed installer is published at this milestone.
 
 Primary references: [GitHub-hosted VM lifecycle and platform labels](https://docs.github.com/en/actions/reference/runners/github-hosted-runners), [artifact download and executable-mode preservation](https://github.com/actions/download-artifact), and the [macOS](https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md) / [Windows](https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md) runner inventories. The exact runtime and OS image actually used are retained in job logs.

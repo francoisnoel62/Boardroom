@@ -31,6 +31,8 @@ The macOS candidate also blocked the permitted control write, so it **failed**; 
 
 GitHub internal action runtimes remain in its orchestration control plane on Windows/macOS; BOARDROOM does not use them. Restart evidence concerns new application processes, not whole-machine reboot or power-loss durability. [Full installation procedure and limits](installation-qualification.md). Compact observed results are retained in [the target evidence record](validation/plan01-targets.json). Earlier local downloads kept that installation evidence but not the candidate archives.
 
+The acceptance-review head `7d60a91` passed all twelve jobs in [push workflow 37107742606](https://github.com/francoisnoel62/Boardroom/actions/runs/37107742606) and [PR workflow 37107745572](https://github.com/francoisnoel62/Boardroom/actions/runs/37107745572). Its three candidate archives are retained outside the repository. Their SHA-256, the exported plan and memo of each clean installation, and one [sample export](validation/recorded-export/plan.md) are kept in [the retained-candidate record](validation/plan01-retained-candidates.json). Linux and macOS exports are byte-identical. The Windows candidate ships the bundled source with CRLF line endings from its checkout, so that source has a different SHA-256 there; byte-reproducible packaging belongs to Plan 09.
+
 ## Accepted limits and reservations
 
 These limits are permitted by the Plan 01 passage rule or belong to later milestones. Accepting Plan 01 does not certify them.
@@ -47,6 +49,6 @@ These limits are permitted by the Plan 01 passage rule or belong to later milest
 - Plan 05: optional model assets, retrieval relevance and broader document/layout qualification.
 - Plan 06: usable command isolation, scoped local/remote MCP permissions and enforcement. The isolation probe first needs an inconclusive timeout state, a target writable without a sandbox, resolved temporary paths on macOS and reliable cleanup of non-ASCII Windows paths.
 - Plans 07–08: novice onboarding and complete README composition, optional cloud observability and account setup.
-- Plan 09: production dependency pruning, full licensing/distribution decisions, installers/signing, public beta and integrated release qualification.
+- Plan 09: production dependency pruning, byte-reproducible packaging across platforms, full licensing/distribution decisions, installers/signing, public beta and integrated release qualification.
 
 These items do not block the Plan 01 local consultation/export workflow under its explicit passage rule. No optional block is represented as a successful live integration.
