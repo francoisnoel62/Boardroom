@@ -1,5 +1,13 @@
 # Plan 02 implementation evidence
 
+## Increment 4 — two bounded provider adapters
+
+Official API/model/pricing pages were read on 2026-10-03 before selecting the restricted candidates: OpenAI Responses (`gpt-4.1-mini-2025-04-14`, `gpt-4.1-2025-04-14`) and Anthropic Messages (`claude-haiku-4-5-20251001`). [Route notes](provider-preflight.md) give primary sources, dated rates and exclusions. Catalog expiry is deliberately short. No live account or paid smoke was authorized or used; real availability/cancellation acceptance remains open.
+
+Observed red cycles in `tests/providers.test.ts`: supported-route API absent; premature Anthropic `message_stop` incorrectly accepted; unexpected tools/model substitution incorrectly released unknown billing; credential replacement left a verified label. Each corresponding assertion passed after its fix. Nine provider/CLI tests now cover both adapters on a chunked HTTP boundary, pinned URLs/model identities, explicit token/deadline bounds, JSON/reference repair with a new charged intention, no third repair, unknown usage, refused/truncated/tool output, quota/auth/server errors without raw bodies, cancellation and a cut stream. An unfunded correction sends no second request and leaves the first receipt readable.
+
+The real CLI preflight subprocess refuses absent spending consent before any HTTP or receipt. Its authorized deterministic run passes, sends no selected context, excludes key sentinels and updates only the disposable fixture route. The HTTP import is test-only and is not shipped. Ordinary structured calls never confer a verified label. Final typecheck, full suite/package and remote platform results are recorded in the PR.
+
 ## Increment 3 — durable call control
 
 Nine public-service/process tests exercise real SQLite, real files, a minimal real LangGraph and an external deterministic provider boundary. Observed red cycles: route pricing rejected as unknown; execution handle absent; stop API absent; invalid metering accepted; monotonic waiting/overlap returned real elapsed time instead of 200 ms; CLI execution command unknown. Each corresponding test passed after implementation. Correction, timeout, pool protection and four-process affordability also pass. The crash test kills processes after durable reservation and reopening does not reconstruct execution handles.
