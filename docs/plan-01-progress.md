@@ -1,6 +1,6 @@
 # Plan 01 — implementation evidence
 
-Date: 2026-10-01. Status: **started; not accepted**. This report records the local workflow and PDF/DOCX increments. All unchecked milestone acceptance criteria remain in force.
+Date: 2026-10-01. Status: **started; not accepted**. This report records the local workflow, PDF/DOCX, and durable-history increments. All unchecked milestone acceptance criteria remain in force.
 
 ## Red → green record
 
@@ -28,6 +28,14 @@ Each behavior below was introduced after executing its failing test. Run the res
 | Document CLI | `--source` was unknown | Explicit file consent, extraction, and saved citation inspection work across processes |
 | Machine-readable failure | Malformed PDF extraction exited successfully | JSON remains parseable and failed extraction exits with code 2 |
 | Packaged document probe | `doctor` reported PDF/DOCX unavailable | Candidate loads its PDF.js worker/assets and Mammoth; saved citations resolve through its own runtime |
+| Playback journal | `history` was absent | Playback position and an ordered, versioned event survive reopen together |
+| Export identity and receipt | Both exports returned undefined operation IDs | Distinct IDs, ordered events, and file-hash receipts survive reopen |
+| Known export failure | A refused output stayed `unconfirmed` | Failure code and receipt survive reopen; the existing file stays unchanged |
+| Interrupted export intent | Child process failed because `prepareRecordedExport` was absent | Killing it after saved intent leaves an inspectable unconfirmed operation, without replay |
+| Single export attempt | Reusing a handle attempted directory creation again | Completed and failed attempts reject repetition without changing history |
+| History CLI | `history` was an unknown command | New processes inspect text/JSON outcomes without executing pending intent |
+| Concurrent first readers | Four readers received only one distinct message ID | Serialized first creation and playback deliver four successive messages |
+| Consistent history | An operation appeared without its prepared event | A read transaction keeps events and receipts on one snapshot during concurrent exports |
 
 The package copy initially failed using Node's recursive `cpSync` on this Windows environment. Copying files and directories individually resolved the observed failure; the same package E2E then passed. This is not a claim that all Windows environments have that issue.
 
@@ -35,11 +43,17 @@ The package copy initially failed using Node's recursive `cpSync` on this Window
 
 Environment: Windows x64; Node 24.12.0; npm 11.6.2. The tests use real temporary files, SQLite databases, immutable snapshots, application processes, and a copied runtime. No live provider, embedding download, or cloud account is used.
 
-Local result: **19 tests passed**, none skipped; `npm run typecheck` passed. [PR 1](https://github.com/francoisnoel62/Boardroom/pull/1) contains the 11-test recorded-workflow baseline; all Windows x64, Linux x64, and macOS arm64 jobs passed on both its push and PR workflows. The follow-up adds the extraction tests and requires its own CI results before claiming that extension on every platform.
+The baseline had **19 passing tests**. [PR 1](https://github.com/francoisnoel62/Boardroom/pull/1) contains the 11-test recorded workflow and [PR 2](https://github.com/francoisnoel62/Boardroom/pull/2) adds extraction; both passed Windows x64, Linux x64, and macOS arm64 jobs on their push and PR workflows. [PR 3](https://github.com/francoisnoel62/Boardroom/pull/3) adds eight journal/service/CLI tests and extends the candidate journey with history inspection. Its validation is recorded separately below.
+
+Durable-history local result: **27 tests passed**, none skipped; `npm run typecheck` and `git diff --check` passed. The full suite includes the candidate's own runtime with empty `PATH`. Remote results are available on the PR 3 checks page; a configured matrix alone is not a passing result.
 
 The candidate test covers playback, restart, evidence inspection, exports, Ink rendering, and the storage probe from the packaged application with its own Node. It sets `PATH`, `NODE_PATH`, and `NODE_OPTIONS` to empty in child processes. This is evidence of runtime independence on the present host, not a clean OS installation.
 
 The candidate test now also extracts packaged PDF/DOCX fixtures, runs both document probes through `doctor`, and inspects saved PDF page 2 and DOCX block 2 through new processes. See the [fixture provenance and exact limits](../assets/validation/README.md). The added dependencies are PDF.js 6.3.289 and Mammoth 1.13.0; the lockfile retains exact resolutions.
+
+The history checks include a real process killed after saved intent, four concurrent first readers, and thirty exports written by another process while history is read. The interruption check covers the gap before output creation; it does not qualify every crash point or power-loss durability. Unconfirmed operations remain visible and are never replayed automatically. Export receipts cover writes that finished; they do not eliminate the SQLite/filesystem commit gap.
+
+Additive compatibility was also checked against data created by the retained PR 2 Windows candidate: saved position 2 and source citation survived; playback continued at position 3, and the new event and export receipt were saved. Existing data has no fabricated historical events. No general migration runner or recovery reconciliation is delivered yet.
 
 The README transcript is captured from the compiled CLI with a fresh local demonstration data directory. Its SVG is a static rendering of that actual text, not a photograph of a terminal window. Fictional model labels are visibly identified.
 
@@ -47,8 +61,8 @@ The README transcript is captured from the compiled CLI with a fresh local demon
 
 - Clean-machine packages on Windows x64, Linux x64, and macOS arm64; execute the CI matrix, review native packaging and launcher behavior on each.
 - Interactive streaming input, multiline paste, resizing, Unicode, and cancellation with real terminal automation.
-- Broader document/font/layout qualification and remote matrix results for the PDF/DOCX extension; optional embedding candidate qualification. The basic packaged worker/assets, DOCX text, and empty/malformed cases are implemented.
-- Versioned context/proposal/stance/event/action contracts, durable event/action journal and operation identifiers, storage migration and reconciliation groundwork.
+- Broader document/font/layout qualification and optional embedding candidate qualification. The basic packaged worker/assets, DOCX text, and empty/malformed cases have passed the three-target CI matrix.
+- Live context/proposal/stance contracts and general command/MCP action contracts. Versioned playback/export events, operation IDs, receipts, and additive storage compatibility are implemented; a migration runner, recovery reconciliation, and further crash/disk-fault qualification remain.
 - Protection experiments for commands and local/remote MCP: protected temporary originals, outside-copy files, filesystem/network restrictions, platform prerequisites. All such tools remain blocked in the product.
 - Filtered trace export experiment, optional embedding results, and provider-streaming evidence or an explicit access-related block. Real provider calls require separately authorized accounts and spending.
 - A real terminal capture, GitHub rendering review, copied quickstart commands against each candidate, and a novice installation/readability check.

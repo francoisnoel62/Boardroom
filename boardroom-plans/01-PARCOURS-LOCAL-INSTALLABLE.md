@@ -1,6 +1,6 @@
 # Plan 01 — Un parcours local installable, sans compte
 
-Statut : en cours depuis le 1er octobre 2026 ; socle local et extraction PDF/DOCX implémentés, jalon non accepté. [Preuves et travaux restants](../docs/plan-01-progress.md). Dépendances : aucune. Suite : [plan 02](02-PREMIERE-DECISION-REELLE.md). Références : spec §1, §3, §6, §7, §10 et §11. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
+Statut : en cours depuis le 1er octobre 2026 ; socle local, extraction PDF/DOCX et journal de lecture/export implémentés, jalon non accepté. [Preuves et travaux restants](../docs/plan-01-progress.md). Dépendances : aucune. Suite : [plan 02](02-PREMIERE-DECISION-REELLE.md). Références : spec §1, §3, §6, §7, §10 et §11. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
 
 ## Ce qui devient utilisable
 

@@ -23,6 +23,12 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.match(run('evidence'), /Team: two engineers/);
   const exported = JSON.parse(run('export', '--output', join(root, 'output'), '--json'));
   assert.match(readFileSync(exported.plan, 'utf8'), /Recorded example/);
+  const history = JSON.parse(run('history', '--json'));
+  assert.equal(history.events[0].type, 'recorded.message');
+  assert.equal(history.events[1].type, 'recorded.message');
+  assert.equal(history.operations[0].id, exported.operationId);
+  assert.equal(history.operations[0].status, 'completed');
+  assert.equal(history.operations[0].receipts.length, 2);
   const diagnostics = JSON.parse(run('doctor', '--json'));
   assert.equal(diagnostics.checkpointReopen, 'verified');
   assert.deepEqual(diagnostics.pdfDocx, { pdf: 'verified', docx: 'verified' });

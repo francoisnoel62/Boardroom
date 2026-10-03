@@ -4,7 +4,7 @@
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 in progress.** You can explore a fictional recorded example, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress. Live AI meetings are planned for the next milestone.
+**Current build: Plan 01 in progress.** You can explore a fictional recorded example, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. Live AI meetings are planned for the next milestone.
 
 [Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](docs/architecture.md) · [Validation and remaining work](docs/plan-01-progress.md)
 
@@ -34,6 +34,7 @@ npm run build
 node dist/cli.js demo --data-dir .boardroom/example
 node dist/cli.js evidence --line 4 --data-dir .boardroom/example
 node dist/cli.js export --output .boardroom/exports --data-dir .boardroom/example
+node dist/cli.js history --data-dir .boardroom/example
 ```
 
 Run `demo --next` to read one intervention at a time. Repeating `demo` resumes from the saved position; after the last message it reports `Recording complete`. Use a new `--data-dir` for a fresh example.
@@ -52,6 +53,7 @@ On Windows, open PowerShell in that printed directory:
 .\boardroom.cmd demo
 .\boardroom.cmd evidence --line 4
 .\boardroom.cmd export --output .\exports
+.\boardroom.cmd history
 .\boardroom.cmd doctor --json
 ```
 
@@ -84,6 +86,8 @@ This increment supports textual PDFs and DOCX text extraction. It does not perfo
 - Playback reads only the bundled fictional source. Source ingestion through the application service requires explicit authorization for the chosen file and project.
 - Saved citations point to a SHA-256 identified revision. Editing the original does not change that snapshot; inspection warns if the original has changed or disappeared.
 - Each export creates a new directory and two UTF-8 Markdown files. Existing plans and sources are preserved.
+- `history` shows saved playback events and export outcomes. Each export has a stable ID and receipts containing the paths and SHA-256 hashes of files successfully written. Add `--json` for structured history.
+- An export without a saved outcome remains `unconfirmed`, including while it is running. Inspect its directory before requesting a new export. Reopening or reading history never retries it. A failed export may leave partial files; its receipt records the writes that finished.
 - Playback makes no provider calls. Commands, MCP, live meetings, and cloud telemetry are unavailable in this build.
 - Local files and SQLite databases are readable by the machine owner. Hashes help identify revisions; they are not protection against a malicious machine owner.
 
@@ -110,7 +114,7 @@ npm test
 
 Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](docs/plan-01-progress.md) records the observed failures and passing behaviors.
 
-A GitHub Actions workflow runs the deterministic integration/E2E suite and packages candidates on Windows x64, Linux x64, and macOS arm64. The [first PR's matrix is green](https://github.com/francoisnoel62/Boardroom/pull/1/checks). The PDF/DOCX extension has 19 passing local tests; its own remote checks are tracked on the follow-up PR. CI packaging evidence does not replace the clean-machine installation campaign.
+A GitHub Actions workflow runs the deterministic integration/E2E suite and packages candidates on Windows x64, Linux x64, and macOS arm64. Both the [recorded workflow](https://github.com/francoisnoel62/Boardroom/pull/1/checks) and [PDF/DOCX extension](https://github.com/francoisnoel62/Boardroom/pull/2/checks) passed their matrices. The durable-history increment adds process interruption and concurrent-reader checks; its matrix is tracked on [PR 3](https://github.com/francoisnoel62/Boardroom/pull/3/checks). CI packaging evidence does not replace the clean-machine installation campaign.
 
 ## Next milestones
 
