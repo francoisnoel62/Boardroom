@@ -52,7 +52,7 @@ Changing a fixture or an export changes the site; an unsupported fixture version
 | Documented commands | `node site/scripts/doc-commands.mjs --repo . --candidate release/candidate` (in the application CI) | Every command in a `doc-test` block runs against the checkout and the packaged candidate on Windows, Linux and macOS |
 | Lighthouse | `npm run lighthouse` | `/`, `/engineering/`, `/docs/`, `/docs/quickstart/`, median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
 
-Observed locally on 2026-10-03 after phase 4 (Node 22.22, Chromium 141): 38 unit tests, 8 built-site checks (including a fixture release build) and 124 end-to-end tests pass, and the five Lighthouse pages meet their budgets. The application's 52 tests include the four installer tests. GitHub's runners measure slower than this container, so CI is the reference for the budgets.
+Observed locally on 2026-10-03 after phase 4 (Node 22.22, Chromium 141): 38 unit tests, 8 built-site checks (including a fixture release build) and 124 end-to-end tests pass, and the five Lighthouse pages meet their budgets. The application's 53 tests include the five installer tests. GitHub's runners measure slower than this container, so CI is the reference for the budgets.
 
 ## Red → green record
 

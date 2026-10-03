@@ -104,12 +104,28 @@ try {
     if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
     Move-Item -LiteralPath $extract -Destination $target
 
-    # cmd.exe reads batch files in the OEM code page, so the relay is written in it.
+    # cmd.exe decodes batch files with the console's active code page, which varies, so the relay
+    # avoids depending on it: a path relative to the relay when it lives in the install directory,
+    # an ASCII absolute path otherwise, and as a last resort a UTF-8 relay that switches the code page.
     New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-    $relay = "@echo off`r`n`"$target\boardroom.cmd`" %*`r`nexit /b %errorlevel%`r`n"
-    try { $encoding = [Text.Encoding]::GetEncoding([Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage) }
-    catch { $encoding = [Text.Encoding]::Default }
-    [IO.File]::WriteAllText((Join-Path $binDir 'boardroom.cmd'), $relay, $encoding)
+    $relayPath = Join-Path $binDir 'boardroom.cmd'
+    $defaultBin = Join-Path $installDir 'bin'
+    if ([IO.Path]::GetFullPath($binDir).TrimEnd('\') -eq [IO.Path]::GetFullPath($defaultBin).TrimEnd('\')) {
+      $relay = "@echo off`r`n`"%~dp0..\versions\$version\boardroom.cmd`" %*`r`n"
+    }
+    elseif ($target -match '^[\x20-\x7E]+$') {
+      $relay = "@echo off`r`n`"$target\boardroom.cmd`" %*`r`n"
+    }
+    else {
+      $relay = "@echo off`r`nsetlocal`r`n" +
+        "for /f `"tokens=2 delims=:.`" %%c in ('chcp') do set `"BOARDROOM_CP=%%c`"`r`n" +
+        "chcp 65001 >nul`r`n" +
+        "call `"$target\boardroom.cmd`" %*`r`n" +
+        "set `"BOARDROOM_EXIT=%errorlevel%`"`r`n" +
+        "chcp %BOARDROOM_CP% >nul`r`n" +
+        "exit /b %BOARDROOM_EXIT%`r`n"
+    }
+    [IO.File]::WriteAllText($relayPath, $relay, (New-Object Text.UTF8Encoding $false))
 
     if ((Get-Setting 'BOARDROOM_NO_MODIFY_PATH' '') -ne '1') {
       $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')

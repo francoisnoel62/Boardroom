@@ -38,8 +38,8 @@ function fakeRelease(root: string, { corrupt = false, withAsset = true } = {}) {
   return pathToFileURL(release).href;
 }
 
-function install(root: string, base: string, extra: Record<string, string> = {}) {
-  const env = {
+function install(root: string, base: string, extra: Record<string, string | undefined> = {}) {
+  const env: Record<string, string | undefined> = {
     ...process.env,
     BOARDROOM_DOWNLOAD_BASE: base,
     BOARDROOM_VERSION: version,
@@ -53,11 +53,11 @@ function install(root: string, base: string, extra: Record<string, string> = {})
     : spawnSync('sh', [script('install.sh')], { env, encoding: 'utf8' });
 }
 
-function runInstalled(root: string) {
+function runInstalled(binDir: string) {
   return windows
     // With /s, cmd strips the outermost pair of quotes, so the quoted path needs an enclosing pair.
-    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${join(root, 'bin', 'boardroom.cmd')}" --help"`], { encoding: 'utf8', windowsVerbatimArguments: true })
-    : spawnSync(join(root, 'bin', 'boardroom'), ['--help'], { encoding: 'utf8' });
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `""${join(binDir, 'boardroom.cmd')}" --help"`], { encoding: 'utf8', windowsVerbatimArguments: true })
+    : spawnSync(join(binDir, 'boardroom'), ['--help'], { encoding: 'utf8' });
 }
 
 test('the installer verifies a release and puts a working boardroom command on the path', (t) => {
@@ -67,10 +67,22 @@ test('the installer verifies a release and puts a working boardroom command on t
   assert.equal(result.status, 0, result.stderr + result.stdout);
   assert.match(result.stdout, /Checksum verified/);
   assert.ok(existsSync(join(root, 'install dir é', 'versions', version)));
-  const run = runInstalled(root);
+  const run = runInstalled(join(root, 'bin'));
   assert.equal(run.status, 0, run.stderr);
   assert.match(run.stdout, /installed payload/);
   assert.match(run.stdout, /args: --help/);
+});
+
+test('the default layout works from an install path with accents', (t) => {
+  // Windows: the command lives in <install dir>\\bin; elsewhere in ~/.local/bin under HOME.
+  const root = mkdtempSync(join(tmpdir(), 'boardroom installer '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const home = join(root, 'François');
+  const result = install(root, fakeRelease(root), { BOARDROOM_BIN_DIR: undefined, HOME: home });
+  assert.equal(result.status, 0, result.stderr + result.stdout);
+  const run = runInstalled(windows ? join(root, 'install dir é', 'bin') : join(home, '.local', 'bin'));
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /installed payload/);
 });
 
 test('a checksum mismatch installs nothing', (t) => {
