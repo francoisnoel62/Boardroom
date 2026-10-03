@@ -75,6 +75,7 @@ const EventEnvelope = z.object({
 export const EventSchema = z.discriminatedUnion('type', [
   EventEnvelope.extend({ type: z.enum(['execution.configured', 'execution.stopped', 'execution.conclusion-requested']), meetingId: z.uuid() }),
   EventEnvelope.extend({ type: z.enum(['call.reserved', 'call.started', 'call.settled']), meetingId: z.uuid(), callId: z.uuid() }),
+  EventEnvelope.extend({ type: z.enum(['framing.started', 'framing.completed', 'framing.corrected', 'framing.approved', 'framing.stopped', 'framing.failed']), meetingId: z.uuid(), version: z.number().int().positive().optional() }),
   EventEnvelope.extend({
     type: z.literal('live.meeting-prepared'), meetingId: z.string().uuid(), contextVersion: z.literal(1),
   }),

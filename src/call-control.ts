@@ -12,8 +12,11 @@ export class CallController {
   private readonly getMeeting: (project: string, id: string) => LiveMeeting;
   private readonly append: (event: EventInput) => void;
   private readonly now: () => number;
-  constructor(db: Database.Database, getMeeting: (project: string, id: string) => LiveMeeting, append: (event: EventInput) => void, now?: () => number) {
+  private readonly authorize: (project: string, id: string, input: CallInput) => void;
+  constructor(db: Database.Database, getMeeting: (project: string, id: string) => LiveMeeting, append: (event: EventInput) => void,
+    now?: () => number, authorize: (project: string, id: string, input: CallInput) => void = () => {}) {
     this.db = db; this.getMeeting = getMeeting; this.append = append; this.now = now ?? (() => performance.now());
+    this.authorize = authorize;
   }
   private load(kind: string, id: string): unknown {
     const row = this.db.prepare('SELECT value FROM records WHERE kind = ? AND id = ?').get(kind, id) as { value: string } | undefined;
@@ -83,6 +86,7 @@ export class CallController {
       route: { id: route.id, revision: route.revision, providerId: route.providerId, modelId: route.modelId },
       reservedMicros: tokenCost(route.pricing, fields.limits.maxInputTokens, fields.limits.maxOutputTokens) });
     this.db.transaction(() => {
+      this.authorize(project, id, fields);
       const ledger = this.ledger(project, id), execution = ledger.execution;
       if (execution.status === 'stopped' || (execution.status === 'concluding' && fields.pool !== 'conclusion')) throw new PublicError('Execution no longer accepts this work.');
       const reserve = fields.pool === 'work' ? ledger.heldReserveMicros : fields.pool === 'revision' ? ledger.remainingConclusion : 0;
@@ -118,6 +122,7 @@ export class CallController {
     }
     this.db.transaction(() => {
       receipt = CallReceiptSchema.parse(this.load('call', id));
+      this.authorize(receipt.projectId, receipt.meetingId, receipt);
       const execution = ExecutionSchema.parse(this.load('execution', receipt.meetingId));
       if (execution.status === 'stopped' || (execution.status === 'concluding' && receipt.pool !== 'conclusion')) throw new PublicError('Execution no longer accepts this work.');
       if (receipt.status !== 'reserved') throw new PublicError('Call was already attempted; it cannot be replayed.');
@@ -128,8 +133,11 @@ export class CallController {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort('timeout'), receipt.limits.maxDurationMs);
     const poll = setInterval(() => {
-      const execution = ExecutionSchema.parse(this.load('execution', receipt.meetingId));
-      if (execution.status === 'stopped' || (execution.status === 'concluding' && receipt.pool !== 'conclusion')) controller.abort('cancelled');
+      try {
+        this.authorize(receipt.projectId, receipt.meetingId, receipt);
+        const execution = ExecutionSchema.parse(this.load('execution', receipt.meetingId));
+        if (execution.status === 'stopped' || (execution.status === 'concluding' && receipt.pool !== 'conclusion')) controller.abort('cancelled');
+      } catch { controller.abort('cancelled'); }
     }, 25);
     const aborted = new Promise<never>((_resolve, reject) => controller.signal.addEventListener('abort', () => reject(new Error('Aborted')), { once: true }));
     let settled = false;
@@ -153,7 +161,12 @@ export class CallController {
     }
     const finishedMonoMs = this.now();
     receipt = { ...receipt, finishedMonoMs, elapsedMs: finishedMonoMs - receipt.startedMonoMs!, finishedAt: new Date().toISOString() };
+    if (result && receipt.elapsedMs! >= receipt.limits.maxDurationMs) {
+      receipt = { ...receipt, status: 'failed', reason: 'timeout' }; result = undefined;
+    }
     this.db.transaction(() => {
+      if (result && !result.failure) try { this.authorize(receipt.projectId, receipt.meetingId, receipt); }
+      catch { receipt = { ...receipt, status: 'failed', reason: 'cancelled' }; result = undefined; }
       this.save('call', id, receipt);
       if (receipt.reason === 'invalid-usage') this.stop(receipt.projectId, receipt.meetingId);
       this.append({ schemaVersion: 1, projectId: receipt.projectId, meetingId: receipt.meetingId, callId: id, type: 'call.settled', occurredAt: receipt.finishedAt! });

@@ -115,11 +115,11 @@ Boardroom is for founders, CEOs, and builders who want to assemble the expertise
 
 Start with a fictional launch, follow the objection, and inspect the resulting plan. Setup and current availability live in the guide.
 
-You can also [prepare your own question locally](docs/preparing-a-question.md): create a project, select text passages, and keep an inspectable snapshot. Live adviser calls are still under development.
+You can also [prepare your own question locally](docs/preparing-a-question.md): create a project, select text passages, and keep an inspectable snapshot. [Live PO framing](docs/framing-a-question.md) can then propose a framing and await your explicit version-specific approval. The complete adviser debate and decision exports remain under development.
 
-[Call control](docs/controlling-calls.md) freezes protected budgets and time, exposes durable receipts and supports stopping in-flight work. [Explicit paid preflight](docs/provider-preflight.md) supports bounded OpenAI and Anthropic text routes. The human framing workflow follows in the next increment; actual provider/account qualification remains open.
+[Call control](docs/controlling-calls.md) freezes protected budgets and time, exposes durable receipts and supports stopping in-flight work. [Explicit paid preflight](docs/provider-preflight.md) supports bounded OpenAI and Anthropic text routes; actual provider/account qualification remains open.
 
-[Configure your advisers and protected credentials](docs/configuring-routes.md) before connecting real models in the upcoming increments.
+[Configure your advisers and protected credentials](docs/configuring-routes.md) before deliberately authorizing any paid request.
 
 If this is a problem you want to help solve, [build with us](docs/contributing.md). Bring a difficult decision, challenge a product assumption, or help engineer the room.
 

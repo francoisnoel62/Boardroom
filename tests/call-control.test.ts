@@ -63,9 +63,9 @@ test('call intentions reserve money atomically and preserve revision/conclusion 
     const intent = app.reserveCall(project.id, meeting.id, { adviserId: 'po', phase: 'framing',
       contextVersion: 1, subjectVersion: 1, pool: 'work', limits });
     assert.equal(intent.receipt.reservedMicros, 300);
-    app.reserveCall(project.id, meeting.id, { adviserId: 'dev', phase: 'analysis',
+    app.reserveCall(project.id, meeting.id, { adviserId: 'dev', phase: 'preflight',
       contextVersion: 1, subjectVersion: 1, pool: 'work', limits });
-    assert.throws(() => app.reserveCall(project.id, meeting.id, { adviserId: 'marketing', phase: 'analysis',
+    assert.throws(() => app.reserveCall(project.id, meeting.id, { adviserId: 'marketing', phase: 'preflight',
       contextVersion: 1, subjectVersion: 1, pool: 'work', limits }), /budget/i);
     const ledger = app.callLedger(project.id, meeting.id);
     assert.equal(ledger.committedMicros, 600); assert.equal(ledger.knownCostMicros, 0);
@@ -94,7 +94,7 @@ test('a real graph executes one durable handle, keeps unknown usage reserved and
     }).addEdge(START, 'call').addEdge('call', END).compile();
     assert.equal((await graph.invoke({ finished: false })).finished, true);
     await assert.rejects(handle.execute({ text: 'Again' }, async () => ({ text: '{}' })), /already attempted/);
-    const next = app.reserveCall(project.id, meeting.id, { adviserId: 'dev', phase: 'analysis',
+    const next = app.reserveCall(project.id, meeting.id, { adviserId: 'dev', phase: 'preflight',
       contextVersion: 1, subjectVersion: 1, pool: 'work', limits });
     const unknown = await next.execute({ text: 'Question' }, async () => ({ text: '{}' }));
     assert.equal(unknown.receipt.knownCostMicros, undefined);
@@ -243,5 +243,19 @@ test('correction is a fresh charged intention, time exhaustion refuses work and 
       limits: { maxInputTokens: 1, maxOutputTokens: 1, maxDurationMs: 8001 } }), /active time/);
     const metadata = JSON.stringify({ ledger: app.callLedger(project.id, meeting.id), history: app.history(project.id) });
     for (const sentinel of ['PRIVATE_QUESTION', 'PRIVATE_CORRECTION', 'SECRET_TOKEN']) assert.equal(metadata.includes(sentinel), false);
+  } finally { app.close(); }
+});
+
+test('a response after the monotonic deadline is refused even if the timer callback has not run', async t => {
+  let now = 0;
+  const { app, project, meeting } = setup(t, () => now);
+  try {
+    app.configureExecution(project.id, meeting.id, reserves);
+    const result = await app.reserveCall(project.id, meeting.id, { adviserId: 'po', phase: 'framing', contextVersion: 1,
+      subjectVersion: 1, pool: 'work', limits }).execute({ text: 'Question' }, async () => {
+      now = 1001; return { text: '{"accepted":true}', usage: { inputTokens: 10, outputTokens: 10 } };
+    });
+    assert.equal(result.text, undefined); assert.equal(result.receipt.reason, 'timeout');
+    assert.equal(result.receipt.knownCostMicros, 30); assert.equal(result.receipt.elapsedMs, 1001);
   } finally { app.close(); }
 });

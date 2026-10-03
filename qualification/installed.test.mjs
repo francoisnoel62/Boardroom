@@ -109,6 +109,9 @@ test('installed launcher completes the account-free journey with only the bundle
   writeFileSync(questionPath, JSON.stringify(question));
   const configured = JSON.parse(run('meeting-prepare', '--project', liveProject.id, '--input', questionPath, '--team', 'decision', '--json'));
   assert.equal(configured.team.revision, 1); assert.equal(configured.advisers[1].modelId, 'b1');
+  const framing = JSON.parse(run('meeting-framing', '--project', liveProject.id, '--id', configured.id, '--json'));
+  assert.equal(framing.status, 'prepared'); assert.deepEqual(framing.versions, []);
+  assert.equal(framing.checkpoint.status, 'not-started');
   const token = 'installed-SENTINEL-private-7e4c';
   env.BOARDROOM_SESSION_KEY = token;
   const session = invoke('credential-check', '--route', 'po', '--session', '--json');

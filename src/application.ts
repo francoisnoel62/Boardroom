@@ -19,6 +19,8 @@ import { z } from 'zod';
 import { supportedRoute, supportedModel } from './providers/catalog.ts';
 import { providerBoundary } from './providers/http.ts';
 import type { CallReceipt } from './call-domain.ts';
+import { FramingStateSchema, type FramingBody } from './framing-domain.ts';
+import type { LiveFraming } from './live-framing.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -27,21 +29,58 @@ export class Boardroom {
   private readonly db: Database.Database;
   private readonly calls: CallController;
   private readonly http: typeof fetch;
+  private framing?: LiveFraming;
+  private framingLoading?: Promise<LiveFraming>;
   readonly dataDirectory: string;
 
   constructor(dataDirectory: string, options: { monotonicNow?: () => number; fetch?: typeof fetch } = {}) {
     this.dataDirectory = resolve(dataDirectory);
     mkdirSync(this.dataDirectory, { recursive: true });
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
-    this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow);
+    this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow,
+      (project, id, input) => {
+        if (input.phase !== 'analysis' && input.phase !== 'revision') return;
+        this.getMeeting(project, id);
+        const state = FramingStateSchema.safeParse(this.load('framing-state', id));
+        if (!state.success || state.data.status !== 'approved' || state.data.approvedVersion !== state.data.latestVersion
+          || (input.phase === 'analysis' && input.subjectVersion !== state.data.approvedVersion)) throw new PublicError('Work requires the current approved framing.');
+      });
     this.http = options.fetch ?? globalThis.fetch;
   }
 
   configureExecution(projectId: string, meetingId: string, input: Reserves) { return this.calls.configure(projectId, meetingId, input); }
   reserveCall(projectId: string, meetingId: string, input: CallInput) { return this.calls.reserve(projectId, meetingId, input); }
   callLedger(projectId: string, meetingId: string) { return this.db.transaction(() => this.calls.ledger(projectId, meetingId))(); }
-  stopExecution(projectId: string, meetingId: string) { return this.calls.stop(projectId, meetingId); }
-  requestConclusion(projectId: string, meetingId: string) { return this.calls.stop(projectId, meetingId, true); }
+  stopExecution(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, false); }
+  requestConclusion(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, true); }
+  private haltExecution(project: string, id: string, conclude: boolean) {
+    return this.db.transaction(() => {
+      const execution = this.calls.stop(project, id, conclude);
+      const stored = this.load('framing-state', id);
+      if (stored) {
+        const state = FramingStateSchema.parse(stored);
+        this.save('framing-state', id, { ...state, status: 'stopped' });
+        this.appendEvent({ schemaVersion: 1, type: 'framing.stopped', projectId: project, meetingId: id,
+          ...(state.latestVersion ? { version: state.latestVersion } : {}), occurredAt: new Date().toISOString() });
+      }
+      return execution;
+    }).immediate();
+  }
+
+  private framingService() {
+    this.framingLoading ??= import('./live-framing.ts').then(({ LiveFraming }) => {
+      this.framing = new LiveFraming(this.db, this, event => this.appendEvent(event)); return this.framing;
+    });
+    return this.framingLoading;
+  }
+  async startMeeting(project: string, id: string, store: SecretStore, emit?: (text: string) => void) {
+    return (await this.framingService()).start(project, id, store, emit);
+  }
+  async inspectMeeting(project: string, id: string) { return (await this.framingService()).inspect(project, id); }
+  async approveFraming(project: string, id: string, version: number) { return (await this.framingService()).approve(project, id, version); }
+  async correctFraming(project: string, id: string, version: number, body: FramingBody) {
+    return (await this.framingService()).correct(project, id, version, body);
+  }
 
   configureSupportedRoute(input: { id: string; providerId: string; modelId: string }) {
     return this.configureRoute(supportedRoute(input));
@@ -501,7 +540,7 @@ export class Boardroom {
       ...(event.type === 'recorded.message' ? { position: event.position }
         : event.type === 'live.meeting-prepared' ? { meetingId: event.meetingId, contextVersion: event.contextVersion }
         : 'callId' in event ? { meetingId: event.meetingId, callId: event.callId }
-        : 'meetingId' in event ? { meetingId: event.meetingId } : { operationId: event.operationId }),
+        : 'meetingId' in event ? { meetingId: event.meetingId, ...('version' in event && event.version ? { version: event.version } : {}) } : { operationId: event.operationId }),
     }));
     const root = resolve(outputDirectory);
     mkdirSync(root, { recursive: true });
@@ -589,5 +628,5 @@ export class Boardroom {
       .run(kind, id, JSON.stringify(value));
   }
 
-  close(): void { this.db.close(); }
+  close(): void { this.framing?.close(); this.db.close(); }
 }
