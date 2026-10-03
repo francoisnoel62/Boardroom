@@ -1,6 +1,6 @@
 # Plan 02 — Implémentation en 10 PR
 
-Date : 3 octobre 2026, heure de Bangkok. Base auditée : `f87a42f3c7bc9255e010da95a847344a177cc717`. Statut : PR1 qualifiée localement et en CI sur les trois OS ; PR2 qualifiée localement, CI requise ; PR3–10 proposées. Aucun appel fournisseur effectué. [Preuves des incréments](../docs/plan-02-progress.md).
+Date : 3 octobre 2026, heure de Bangkok. Base auditée : `f87a42f3c7bc9255e010da95a847344a177cc717`. Statut : PR1–5 qualifiées localement et en CI sur les trois OS ; PR6 implémentée, validation en cours ; PR7–10 proposées. Aucun appel fournisseur effectué. [Preuves des incréments](../docs/plan-02-progress.md).
 
 Références : [cahier des charges 02](02-PREMIERE-DECISION-REELLE.md), [état des lieux](../docs/etat-des-lieux-2026-10-03.md), [spec §3–5, §8, §10–11](BOARDROOM_V1_SPEC.md), [TDD et README](EXIGENCES-TDD-ET-README.md), [réserves 01](../docs/plan-01-acceptance.md), [direction produit et PR dépendantes](../docs/contributing.md).
 

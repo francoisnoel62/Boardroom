@@ -21,6 +21,7 @@ import { providerBoundary } from './providers/http.ts';
 import type { CallReceipt } from './call-domain.ts';
 import { FramingStateSchema, type FramingBody } from './framing-domain.ts';
 import type { LiveFraming } from './live-framing.ts';
+import type { LiveDeliberation } from './live-deliberation.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -31,6 +32,8 @@ export class Boardroom {
   private readonly http: typeof fetch;
   private framing?: LiveFraming;
   private framingLoading?: Promise<LiveFraming>;
+  private deliberation?: LiveDeliberation;
+  private deliberationLoading?: Promise<LiveDeliberation>;
   readonly dataDirectory: string;
 
   constructor(dataDirectory: string, options: { monotonicNow?: () => number; fetch?: typeof fetch } = {}) {
@@ -82,6 +85,17 @@ export class Boardroom {
     return (await this.framingService()).correct(project, id, version, body);
   }
 
+  private deliberationService() {
+    this.deliberationLoading ??= import('./live-deliberation.ts').then(({ LiveDeliberation }) => {
+      this.deliberation = new LiveDeliberation(this.db, this, event => this.appendEvent(event)); return this.deliberation;
+    });
+    return this.deliberationLoading;
+  }
+  async analyseMeeting(project: string, id: string, store: SecretStore) {
+    return (await this.deliberationService()).analyse(project, id, store);
+  }
+  async inspectAnalyses(project: string, id: string) { return (await this.deliberationService()).inspect(project, id); }
+
   configureSupportedRoute(input: { id: string; providerId: string; modelId: string }) {
     return this.configureRoute(supportedRoute(input));
   }
@@ -108,6 +122,26 @@ export class Boardroom {
   async callStructured<T>(projectId: string, meetingId: string, input: CallInput,
     output: { text: string; schema: z.ZodType<T>; validate?: (value: T) => boolean }, store: SecretStore,
     emit?: (text: string) => void): Promise<{ value?: T; receipts: CallReceipt[] }> {
+    const run = await this.prepareStructured(projectId, meetingId, input, output, store, emit);
+    return run(this.reserveCall(projectId, meetingId, input));
+  }
+
+  /** All credentials and initial reservations succeed before any request can leave this process. */
+  async callStructuredBatch<T>(project: string, id: string,
+    requests: { input: CallInput; output: { text: string; schema: z.ZodType<T>; validate?: (value: T) => boolean } }[],
+    store: SecretStore, completed: (index: number, result: { value?: T; receipts: CallReceipt[] }) => void) {
+    const runners = await Promise.all(requests.map(request => this.prepareStructured(project, id, request.input, request.output, store)));
+    const handles = this.db.transaction(() => requests.map(request => this.reserveCall(project, id, request.input))).immediate();
+    await Promise.all(runners.map(async (run, index) => {
+      let result: { value?: T; receipts: CallReceipt[] };
+      try { result = await run(handles[index]!); }
+      catch { result = { receipts: this.callLedger(project, id).calls.filter(call => call.id === handles[index]!.receipt.id) }; }
+      completed(index, result);
+    }));
+  }
+
+  private async prepareStructured<T>(projectId: string, meetingId: string, input: CallInput,
+    output: { text: string; schema: z.ZodType<T>; validate?: (value: T) => boolean }, store: SecretStore, emit?: (text: string) => void) {
     const meeting = this.getMeeting(projectId, meetingId);
     const adviser = meeting.team?.advisers.find(item => item.id === input.adviserId);
     const route = meeting.team?.routes.find(item => item.id === adviser?.routeId);
@@ -127,9 +161,10 @@ export class Boardroom {
       for (const child of Object.values(node)) removeUnsupportedBounds(child);
     };
     removeUnsupportedBounds(jsonSchema);
+    return async (first: ReturnType<Boardroom['reserveCall']>): Promise<{ value?: T; receipts: CallReceipt[] }> => {
     const receipts: CallReceipt[] = [];
     for (let attempt = 0; attempt < 2; attempt++) {
-      const handle = this.reserveCall(projectId, meetingId, { ...input,
+      const handle = attempt === 0 ? first : this.reserveCall(projectId, meetingId, { ...input,
         phase: attempt && input.phase === 'framing' ? 'framing-correction' : input.phase });
       const provider = providerBoundary(route, handle.receipt, key, this.http);
       let value: T | undefined;
@@ -149,6 +184,7 @@ export class Boardroom {
       if (result.receipt.reason !== 'invalid-output') break;
     }
     return { receipts };
+    };
   }
 
   capabilities() {
@@ -628,5 +664,5 @@ export class Boardroom {
       .run(kind, id, JSON.stringify(value));
   }
 
-  close(): void { this.framing?.close(); this.db.close(); }
+  close(): void { this.deliberation?.close(); this.framing?.close(); this.db.close(); }
 }

@@ -6,7 +6,7 @@ This guide documents the current implementation, setup, and validation. The READ
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 complete, first two Plan 02 increments implemented.** Explore a fictional discussion, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. You can also [prepare your own question](preparing-a-question.md) in a real project with selected text context and [configure routes, a team and protected credentials](configuring-routes.md). A separate terminal check lets you try input during a fictional stream. Live AI meetings remain unavailable.
+**Current build: Plan 01 complete; Plan 02 increments 1–6 implemented.** Explore the fictional discussion, immutable text/PDF/DOCX evidence and its exports. You can also [prepare your own question](preparing-a-question.md), [configure routes and protected credentials](configuring-routes.md), [control paid calls](controlling-calls.md), [frame and approve a question](framing-a-question.md), and [obtain three independent analyses](independent-analyses.md). The complete live decision workflow and interactive live terminal remain in progress. Actual provider accounts and the live multi-provider milestone remain unqualified.
 
 [Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](architecture.md) · [Acceptance evidence](plan-01-acceptance.md)
 
