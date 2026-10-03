@@ -1,6 +1,6 @@
 # Plan 01 — implementation evidence
 
-Updated: 2026-10-03. Status: **started; not accepted**. This report records the local workflow, PDF/DOCX, durable-history, and terminal-validation increments. All unchecked milestone acceptance criteria remain in force.
+Updated: 2026-10-03. Status: **technically complete for Plan 01**. This report retains the red → green evidence; the [acceptance report](plan-01-acceptance.md) records the complete target matrix, optional blocks and later-milestone limits. PRs remain open for review.
 
 ## Red → green record
 
@@ -50,6 +50,7 @@ Each behavior below was introduced after executing its failing test. Run the res
 | Trace CLI | `trace` was unknown | The compiled application creates a new local filtered artifact |
 | Optional probe blocks | `doctor` had no prerequisite explanations | Runtime/assets and authorized account/budget blocks are explicit; no optional pass is fabricated |
 | Isolation report | `isolation-check` was unknown | Real fixed temporary writes and loopback access are measured; command/MCP capabilities stay unavailable |
+| Installed qualification | The copied runtime could not find its shipped installed suite | The actual launcher completes the account-free journey and retains environment, trace, isolation and terminal evidence |
 
 The package copy initially failed using Node's recursive `cpSync` on this Windows environment. Copying files and directories individually resolved the observed failure; the same package E2E then passed. This is not a claim that all Windows environments have that issue.
 
@@ -69,7 +70,7 @@ The history checks include a real process killed after saved intent, four concur
 
 Additive compatibility was also checked against data created by the retained PR 2 Windows candidate: saved position 2 and source citation survived; playback continued at position 3, and the new event and export receipt were saved. Existing data has no fabricated historical events. No general migration runner or recovery reconciliation is delivered yet.
 
-The README transcript is captured from the compiled CLI with a fresh local demonstration data directory. Its SVG is a static rendering of that actual text, not a photograph of a terminal window. Fictional model labels are visibly identified.
+The earlier README SVG rendered captured CLI text. The final README uses a screenshot of the actual packaged PTY screen, with timestamped VT recording and accessible screen text. [Capture provenance](media/README.md) distinguishes that rendered screen from a native-window photograph. Fictional model labels remain explicit.
 
 ## Terminal-validation increment — PR 4
 
@@ -81,15 +82,12 @@ The first remote run exposed Ink's default noninteractive rendering when `CI=tru
 
 The test driver is Microsoft `node-pty` 1.2.0-beta.15, with system ConPTY on Windows, plus `@xterm/headless` 6.0.0 to interpret actual VT output. The earlier stable driver retained Windows workers after exit; the selected beta completed the same cleanup checks. No production dependency or provider access was added. This proof concerns the documented sample and window sizes; it does not qualify every terminal, IME, editing operation, or real provider stream. Remote results are tracked on [PR 4](https://github.com/francoisnoel62/Boardroom/pull/4/checks).
 
-## Still required before accepting Plan 01
+## Final increments and acceptance
 
-- Clean-machine packages on Windows x64, Linux x64, and macOS arm64; execute the CI matrix, review native packaging and launcher behavior on each.
-- Broader terminal/editor qualification and the real-provider streaming gate in Plan 02. The separate fictional-stream probe now covers input, multiline paste, resizing, Unicode, and cancellation through real PTYs and the packaged runtime.
-- Broader document/font/layout qualification and optional embedding candidate qualification. The basic packaged worker/assets, DOCX text, and empty/malformed cases have passed the three-target CI matrix.
-- Live context/proposal/stance contracts and general command/MCP action contracts. Versioned playback/export events, operation IDs, receipts, and additive storage compatibility are implemented; a migration runner, recovery reconciliation, and further crash/disk-fault qualification remain.
-- Protection experiments for commands and local/remote MCP: protected temporary originals, outside-copy files, filesystem/network restrictions, platform prerequisites. All such tools remain blocked in the product.
-- Filtered trace export experiment, optional embedding results, and provider-streaming evidence or an explicit access-related block. Real provider calls require separately authorized accounts and spending.
-- A real terminal capture, GitHub rendering review, copied quickstart commands against each candidate, and a novice installation/readability check.
-- Dependency production pruning, full license/distribution review, and release decisions where applicable.
+[PR 5](https://github.com/francoisnoel62/Boardroom/pull/5) adds the versioned saved-decision projection and CLI: **36 local tests passed**, with both three-target matrices green. [PR 6](https://github.com/francoisnoel62/Boardroom/pull/6) adds local filtered traces, actual temporary isolation experiments and explicit optional blocks: **40 local tests passed**, with both three-target matrices green.
 
-No plan acceptance box has been checked. The source repository and dependent PRs are public at the user's request; no product release, external model-account integration, purchase, or signing has occurred. PRs are left open for review, without automatic merging.
+[PR 7](https://github.com/francoisnoel62/Boardroom/pull/7) extends the candidate test with its shipped installed journey, archives executable modes and runs separate download/install jobs. The first complete campaign passed all six jobs in each workflow: three producer/test jobs and three fresh-environment installation jobs. Windows/macOS system/cache application Node was removed; Linux used an offline fresh Ubuntu image without Node. Complete evidence was downloaded locally, and compact results are [retained in the repository](validation/plan01-targets.json).
+
+The final screenshot comes from the actual packaged CLI in a real Windows PTY. A local first-frame startup exceeded the old ten-second readiness window; the final qualifier records startup timing with a bounded thirty-second cold-start window while subsequent interaction checks remain bounded at ten seconds. No test is skipped or automatically retried. The final-head matrix remains the authority for the submitted PR.
+
+All Plan 01 criteria now have passing mandatory evidence or the explicit optional blocked/failed outcomes allowed by its passage rule. [Acceptance and future work](plan-01-acceptance.md) distinguish those outcomes from live integration or tool activation. Broader editing/recovery, retrieval, tools, novice onboarding, cloud observability and public release remain in their respective plans. No paid account, product release or automatic merge occurred.

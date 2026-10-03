@@ -20,6 +20,8 @@ It also saves PDF/DOCX evidence, edits the PDF original, reopens its exact saved
 
 `local-empty-path` mode is used by the ordinary package regression test and does not assert clean-environment acceptance. `clean` mode additionally requires a removal/image proof, verifies absent paths and refuses a reachable host Node. CI archives retain the environment proof, installation JSON, exact command sequence, doctor results, isolation report, filtered trace, actual terminal recording and rendered screen text.
 
+One local first launch missed the original ten-second PTY readiness window; a diagnostic launch and both fresh-VM matrices completed the same journey. The installed probe therefore records actual first-frame readiness and allows a bounded thirty-second cold startup, separately from the unchanged ten-second interaction checks. This is not a startup-performance claim or permission to retry failed assertions. No test is skipped or automatically rerun.
+
 Restart here means stopping and starting application processes. Whole-machine reboot, power-loss recovery, comprehensive migrations, signed installers, Gatekeeper/SmartScreen onboarding, novice onboarding and public distribution remain later-milestone qualification.
 
 ## Evidence access

@@ -1,6 +1,6 @@
 # BOARDROOM V1 — 9 plans de livraison
 
-Date : 1er octobre 2026. Statut : feuille de route ; [plan 01 démarré](../docs/plan-01-progress.md), aucun jalon encore accepté.
+Date : 1er octobre 2026. Statut : feuille de route ; [plan 01 terminé techniquement](../docs/plan-01-acceptance.md) le 3 octobre 2026. Plans 02–09 à réaliser ; PR ouvertes pour revue.
 
 Source : [BOARDROOM_V1_SPEC.md](BOARDROOM_V1_SPEC.md), référence V1 du 1er octobre 2026. Ces documents décomposent cette spec ; les critères futurs ne constituent pas des preuves de validation. Les preuves d'implémentation sont consignées dans le compte rendu du jalon concerné. Les affirmations externes de la spec devront être revérifiées au moment des intégrations concernées.
 
@@ -64,7 +64,7 @@ Cette progression évite de reporter les invariants de sécurité, les preuves d
 9. Toute implémentation suit un cycle TDD-first : test de comportement rouge constaté, code minimal, test vert, puis tranche suivante. Les tests d'intégration et E2E identifiés dans chaque plan sont requis ; des tests ajoutés après coup ou une démonstration manuelle seule ne satisfont pas cette règle. Les [exigences transversales](EXIGENCES-TDD-ET-README.md) précisent frontières, doubles externes, preuves et portes CI.
 10. Le README anglais est un livrable du produit dès 01 et évolue avec chaque jalon. Sa promesse, sa démonstration, son démarrage rapide, sa présentation et ses preuves techniques doivent atteindre les critères d'excellence définis dans les exigences transversales ; leur validation finale est bloquante en 09.
 
-Les cases des plans sont des critères futurs : aucune n'est cochée dans cette livraison documentaire. Les commandes ou noms de contrats proposés décrivent une intention, sans imposer une API définitive.
+Les cases des plans suivent leurs preuves : celles du plan 01 sont validées dans son dossier d'acceptation ; les autres restent des critères futurs. Les commandes ou noms de contrats proposés décrivent une intention, sans imposer une API définitive.
 
 ## Portes de validation technique
 

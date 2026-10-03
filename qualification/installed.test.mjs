@@ -60,6 +60,7 @@ test('installed launcher completes the account-free journey with only the bundle
   assert.deepEqual(JSON.parse(run('history', '--json')), history);
   assert.equal(JSON.parse(run('decision', '--json')).humanDecision, 'pending');
   assert.match(run('demo', '--next'), /Marketing Manager/);
+  assert.match(run('demo'), /INSUFFICIENT_EVIDENCE/);
   const pdf = join(root, 'launch.pdf');
   copyFileSync(join(candidate, 'assets', 'validation', 'launch.pdf'), pdf);
   const savedPdf = JSON.parse(run('document', '--source', pdf, '--allow-source', '--json'));
@@ -84,8 +85,12 @@ test('installed launcher completes the account-free journey with only the bundle
   copyFileSync(isolation.path, join(evidence, 'isolation.json'));
   const runtime = join(candidate, 'runtime', process.platform === 'win32' ? 'node.exe' : 'node');
   const cli = join(candidate, 'dist', 'cli.js');
+  const terminalStarted = performance.now();
   const terminal = openTerminal(t, [cli, 'terminal-check'], { executable: runtime, cwd: root, env });
-  await terminal.waitFor(/Stream tick: [1-9]/);
+  // Qualify cold startup separately; all subsequent interaction checks retain the 10-second bound.
+  await terminal.waitFor(/Stream tick: [1-9]/, 30000);
+  const terminalStartupMs = Math.round(performance.now() - terminalStarted);
+  t.diagnostic(`Installed PTY first-frame readiness: ${terminalStartupMs} ms`);
   terminal.write('\x1b[200~Capacity:\r\ncafé 😀\x1b[201~');
   await terminal.waitFor(/Draft: Capacity:\ncafé 😀/);
   terminal.resize(44, 18);
@@ -109,5 +114,5 @@ test('installed launcher completes the account-free journey with only the bundle
   assert.ok(!dataPath.startsWith(candidate));
   writeFileSync(join(evidence, 'installation.json'), JSON.stringify({ schemaVersion: 1, mode, platform: process.platform,
     architecture: process.arch, runtime: process.version, hostNodeVisible: false, dataOutsideCandidate: true,
-    sourceUnchanged: true, restart: 'new application processes', commandLog, doctor, removalProof }, null, 2) + '\n');
+    sourceUnchanged: true, restart: 'new application processes', terminalStartupMs, commandLog, doctor, removalProof }, null, 2) + '\n');
 });

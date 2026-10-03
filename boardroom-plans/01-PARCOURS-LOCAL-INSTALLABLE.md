@@ -1,6 +1,6 @@
 # Plan 01 — Un parcours local installable, sans compte
 
-Statut : en cours depuis le 1er octobre 2026 ; socle local, extraction PDF/DOCX, journal de lecture/export et validation terminal sur flux fictif implémentés, jalon non accepté. Mise à jour du 3 octobre 2026. [Preuves et travaux restants](../docs/plan-01-progress.md). Dépendances : aucune. Suite : [plan 02](02-PREMIERE-DECISION-REELLE.md). Références : spec §1, §3, §6, §7, §10 et §11. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
+Statut : terminé techniquement le 3 octobre 2026 ; parcours local enregistré qualifié sur Windows x64, Linux x64 et macOS arm64, avec paquets sans Node applicatif préinstallé. PR dépendantes ouvertes pour revue, sans fusion ni release automatique. [Acceptation et limites](../docs/plan-01-acceptance.md). [Preuves et travaux restants](../docs/plan-01-progress.md). Dépendances : aucune. Suite : [plan 02](02-PREMIERE-DECISION-REELLE.md). Références : spec §1, §3, §6, §7, §10 et §11. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
 
 ## Ce qui devient utilisable
 
@@ -44,17 +44,17 @@ Appliquer les [exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md
 
 ## Validation de sortie
 
-- [ ] Les tranches sont réalisées en TDD-first avec preuve rouge → vert ; les tests d'intégration et E2E requis passent dans les environnements concernés et leurs contrôles déterministes sont intégrés à la CI.
-- [ ] Le README anglais initial permet de comprendre et d'essayer ce jalon avec des instructions réellement vérifiées.
+- [x] Les tranches sont réalisées en TDD-first avec preuve rouge → vert ; les tests d'intégration et E2E requis passent dans les environnements concernés et leurs contrôles déterministes sont intégrés à la CI.
+- [x] Le README anglais initial permet de comprendre et d'essayer ce jalon avec des instructions réellement vérifiées.
 
-- [ ] Sur Windows, macOS et Linux, un environnement propre sans Node préinstallé lance le paquet, lit la fixture et rouvre ses données locales après redémarrage.
-- [ ] Une citation texte retrouve la bonne révision ; une modification de l'original ne modifie pas l'instantané déjà enregistré.
-- [ ] Deux exports successifs créent des résultats distincts ; les empreintes des originaux restent identiques.
-- [ ] L'étiquette d'enregistrement est visible pendant la lecture et dans les exports. Le parcours sans compte n'émet aucun appel fournisseur ni trace cloud par défaut.
-- [ ] La frappe, le collage multiligne, le redimensionnement, Unicode et l'annulation restent utilisables pendant un flux représentatif.
-- [ ] PDF textuel et DOCX s'extraient depuis le paquet distribué ; un fichier mal interprété produit un avertissement exploitable.
-- [ ] Le checkpoint, FTS5, le candidat embeddings, le streaming fournisseur et le candidat export filtré ont une preuve d'essai ou un résultat de blocage explicite par environnement. Le streaming réel reste à confirmer obligatoirement en 02 s'il manque des accès de test en 01.
-- [ ] Le rapport d'isolation distingue ce qui protège réellement les cibles, les prérequis nécessaires et les capacités indisponibles. Une simple copie de répertoire n'est pas considérée comme une barrière.
+- [x] Sur Windows, macOS et Linux, un environnement propre sans Node préinstallé lance le paquet, lit la fixture et rouvre ses données locales après redémarrage.
+- [x] Une citation texte retrouve la bonne révision ; une modification de l'original ne modifie pas l'instantané déjà enregistré.
+- [x] Deux exports successifs créent des résultats distincts ; les empreintes des originaux restent identiques.
+- [x] L'étiquette d'enregistrement est visible pendant la lecture et dans les exports. Le parcours sans compte n'émet aucun appel fournisseur ni trace cloud par défaut.
+- [x] La frappe, le collage multiligne, le redimensionnement, Unicode et l'annulation restent utilisables pendant un flux représentatif.
+- [x] PDF textuel et DOCX s'extraient depuis le paquet distribué ; un fichier mal interprété produit un avertissement exploitable.
+- [x] Le checkpoint, FTS5, le candidat embeddings, le streaming fournisseur et le candidat export filtré ont une preuve d'essai ou un résultat de blocage explicite par environnement. Le streaming réel reste à confirmer obligatoirement en 02 s'il manque des accès de test en 01.
+- [x] Le rapport d'isolation distingue ce qui protège réellement les cibles, les prérequis nécessaires et les capacités indisponibles. Une simple copie de répertoire n'est pas considérée comme une barrière.
 
 ## Preuves et règle de passage
 

@@ -4,9 +4,9 @@
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 in progress.** You can explore a fictional recorded example, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. A separate terminal check lets you try input during a fictional stream. Live AI meetings are planned for the next milestone.
+**Current build: Plan 01 complete — local recorded example.** Explore a fictional discussion, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. A separate terminal check lets you try input during a fictional stream. Live AI meetings are planned for Plan 02.
 
-[Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](docs/architecture.md) · [Validation and remaining work](docs/plan-01-progress.md)
+[Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](docs/architecture.md) · [Acceptance evidence](docs/plan-01-acceptance.md)
 
 ## An objection that changes the plan
 
@@ -16,7 +16,9 @@ The Marketing Manager still reports `INSUFFICIENT_EVIDENCE`: willingness to pay 
 
 This is a **scripted, fictional recorded example**, authored for the project. Its model labels are fictional; no model generated this recording and no model calls occur during playback.
 
-![Actual CLI output from the fictional recorded example, including the staffing objection, revised proposal, and remaining uncertainty.](docs/media/recorded-example.svg)
+![Captured packaged terminal: five integrations become one after the staffing objection; two approvals preserve the Marketing Manager's insufficient evidence and the pending human decision.](docs/media/recorded-terminal.jpg)
+
+This is the rendered screen from an actual packaged CLI process in an OS pseudoterminal. [Replayable VT recording](docs/media/recorded-example.cast) · [Accessible screen text](docs/media/terminal-screen.txt) · [Capture provenance](docs/media/README.md).
 
 [Read the complete captured text](docs/demo-transcript.txt) · [Inspect the fictional source](assets/demo/context.md) · [Read the fixture and export content](assets/demo/meeting.json)
 
@@ -26,7 +28,7 @@ No account, API key, or model download is needed for playback.
 
 ### From the development checkout
 
-Prerequisites: **Node 24.12.0**, npm, and the dependencies installed by `npm ci`. The native SQLite driver is required. The recorded workflow passes CI on Windows x64, Linux x64, and macOS arm64. Clean-machine installation qualification remains outstanding.
+Prerequisites: **Node 24.12.0**, npm, and the dependencies installed by `npm ci`. The native SQLite driver is required. The recorded workflow and independent installed-candidate journey pass CI on Windows x64, Linux x64, and macOS arm64.
 
 ```sh
 npm ci
@@ -55,12 +57,26 @@ On Windows, open PowerShell in that printed directory:
 .\boardroom.cmd evidence --line 4
 .\boardroom.cmd export --output .\exports
 .\boardroom.cmd history
+.\boardroom.cmd decision
 .\boardroom.cmd doctor --json
 ```
 
+On Linux or macOS, open a terminal in the printed directory:
+
+```sh
+./boardroom demo
+./boardroom evidence --line 4
+./boardroom export --output ./exports
+./boardroom history
+./boardroom decision
+./boardroom doctor --json
+```
+
+Development archives are retained in the successful [PR 7 workflow runs](https://github.com/francoisnoel62/Boardroom/pull/7/checks). Download the candidate for your OS/architecture and extract `boardroom.tar.gz`; on Unix, use `tar -xzf boardroom.tar.gz` to preserve executable modes. GitHub may require sign-in to retrieve workflow artifacts; the installed application and recorded example require no model account. There is no published product release yet.
+
 The default data directory is `%LOCALAPPDATA%\Boardroom` on Windows, `~/Library/Application Support/Boardroom` on macOS, and `$XDG_DATA_HOME/boardroom` (or `~/.local/share/boardroom`) on Linux. Data remains outside the candidate directory. `--data-dir` overrides this location.
 
-The packaged recorded workflow passes empty-`PATH`, space/Unicode-path tests on Windows x64, Linux x64, and macOS arm64 in [PR 1's CI](https://github.com/francoisnoel62/Boardroom/pull/1/checks). A clean machine without Node has **not yet been validated**. There are no published releases or signed installers yet.
+The downloaded candidate passes the [independent installation campaign](docs/installation-qualification.md): fresh Windows/macOS VMs with system/cache application Node removed, and an offline Ubuntu image containing no Node package. The journey uses the bundled runtime, actual launcher, Unicode/space paths and durable data outside the candidate. Signed installers and general release onboarding remain later work.
 
 ## Inspect PDF and DOCX evidence
 
@@ -132,11 +148,11 @@ npm test
 
 Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](docs/plan-01-progress.md) records the observed failures and passing behaviors.
 
-A GitHub Actions workflow runs the deterministic integration/E2E suite and packages candidates on Windows x64, Linux x64, and macOS arm64. Both the [recorded workflow](https://github.com/francoisnoel62/Boardroom/pull/1/checks) and [PDF/DOCX extension](https://github.com/francoisnoel62/Boardroom/pull/2/checks) passed their matrices. The durable-history increment adds process interruption and concurrent-reader checks; its matrix is tracked on [PR 3](https://github.com/francoisnoel62/Boardroom/pull/3/checks). CI packaging evidence does not replace the clean-machine installation campaign.
+A GitHub Actions workflow runs 40 deterministic integration/E2E tests and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](docs/plan-01-acceptance.md) records the observed results, optional blocks and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
 
 ## Next milestones
 
-Plan 01 still requires broader document qualification, terminal interaction qualification, protection experiments, further durable contracts, and a three-platform installation campaign. Plan 02 adds the first real decision using three distinct models from at least two providers. [All nine plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their acceptance gates.
+Plan 02 adds the first real decision using three distinct models from at least two providers. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. Optional embeddings, provider streaming and cloud traces remain explicitly blocked in this recorded build. [All nine plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
 
 The project is currently a development checkout, not a public release. Its project license and release/signing arrangements await a decision. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 

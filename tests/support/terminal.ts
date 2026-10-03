@@ -48,8 +48,8 @@ export function openTerminal(t: TestContext, args: string[], options: {
     raw: () => raw,
     snapshot: text,
     recording: () => recording,
-    async waitFor(pattern: RegExp | ((text: string) => boolean)) {
-      const deadline = Date.now() + 10000;
+    async waitFor(pattern: RegExp | ((text: string) => boolean), timeoutMs = 10000) {
+      const deadline = Date.now() + timeoutMs;
       do {
         await flush();
         const current = text();
