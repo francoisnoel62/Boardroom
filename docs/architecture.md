@@ -1,12 +1,12 @@
 # Local recorded-example architecture
 
-Status: recorded workflow, PDF/DOCX, and durable-history increments of Plan 01, 2026-10-01. The complete milestone and public release are not accepted yet.
+Status: recorded workflow, PDF/DOCX, durable history, and terminal-validation increments of Plan 01, updated 2026-10-03. The complete milestone and public release are not accepted yet.
 
 ## Public boundaries
 
 The approved plan defines the seams: application commands, the terminal/CLI, and the distributed package. Tests use those boundaries rather than querying private tables or mocking internal services.
 
-`Boardroom` opens a fictional project, captures explicitly authorized UTF-8/PDF/DOCX sources, resolves saved citations, advances recorded playback, and creates new exports. PDF/DOCX extraction runs on the exact bytes read after source consent. The CLI passes commands and displays results. Ink renders the transcript; it does not own domain state. The current terminal is command-oriented; interactive streaming, typing, multiline paste, resize, and cancellation still require their own implementation and qualification.
+`Boardroom` opens a fictional project, captures explicitly authorized UTF-8/PDF/DOCX sources, resolves saved citations, advances recorded playback, and creates new exports. PDF/DOCX extraction runs on the exact bytes read after source consent. The CLI passes commands and displays results. Ink renders the transcript; it does not own domain state. The recorded workflow remains command-oriented. A separate `terminal-check` command exercises typing, multiline paste, resize, and cancellation during a fictional stream; it opens no application service or database.
 
 ## Durable data
 
@@ -30,6 +30,12 @@ The event table is added without rewriting existing records or snapshots. Data f
 Tests kill a real process after durable export intent and before output writes. They also run four simultaneous first readers and inspect history while another process exports. Crash points inside file writes, disk-full/power-loss behavior, recovery reconciliation, and general command/MCP receipts still need qualification. Receipt hashes describe bytes written at the time; they do not certify that the user has left those files unchanged.
 
 ## Dependency and runtime decision
+
+The terminal probe uses the already pinned Ink hooks for input, bracketed paste, window size, and exit. A 200 ms timer changes the fictional sample independently of input. Draft and last accepted input remain component-local; the timer and input modes are released on cancellation. Backspace uses Node's grapheme segmentation so it does not leave a broken combining character or emoji. CR/CRLF become LF, and C0/C1 control bytes are removed except tabs and newlines. This is an append/backspace probe, not a general editor.
+
+Tests use real OS pseudoterminals and a VT screen emulator, observing the rendered CLI rather than component internals. Test-only dependencies are `node-pty` **1.2.0-beta.15** and `@xterm/headless` **6.0.0**. The earlier stable PTY 1.1.0 retained Windows connection workers after child exit in this environment. The pinned beta with system ConPTY completed the same tests and cleanup; it is a deliberate test-tool qualification choice. The product does not import either dependency, although the current candidate still copies development dependencies. [Microsoft node-pty API](https://github.com/microsoft/node-pty), [xterm headless API and experimental status](https://github.com/xtermjs/xterm.js/tree/master/headless).
+
+The PTY tests cover 100×30, 44×18, and 110×34 windows, ASCII, accented text, emoji, a combining accent, CRLF multiline paste, control-byte paste, and Escape/Ctrl+C. Cancellation must exit the actual child with code 130 and restore cursor/paste modes. Candidate tests repeat paste, resize, submission, and cancellation with the copied runtime and empty PATH, and verify that project history stays unchanged. Terminal-specific IMEs, advanced editing, much larger pastes, and streaming from a real provider remain outside this proof.
 
 The actual qualified local combination is Node **24.12.0**, Ink **7.1.1**, React **19.2.4**, LangGraph **1.4.18**, the official SQLite checkpointer **1.0.4**, and `better-sqlite3` **12.10.0**. Exact top-level versions and transitive resolutions are in `package.json` and `package-lock.json`.
 
