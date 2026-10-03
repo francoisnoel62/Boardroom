@@ -1,0 +1,26 @@
+---
+title: Contributing
+description: "How changes are made in BOARDROOM: tests first, small dependent pull requests and evidence kept with the code."
+status: available
+---
+
+## Tests first
+
+Every behaviour change starts with a failing test at a public seam — the application service, the CLI or terminal, or the packaged application — then the minimal code that makes it pass. Use real internal components, files, databases and processes. Keep accounts and billable provider calls out of the deterministic suite. The observed red and green results are recorded in the milestone's evidence log.
+
+```sh
+npm run typecheck
+npm test
+```
+
+The website has its own suite: `cd site && npm test`.
+
+## Small pull requests
+
+Each pull request delivers one usable increment, describes its public behaviour and validation, and keeps the milestone's unmet gates visible. Dependent work branches from the preceding pull request and is retargeted to `main` once that one merges.
+
+## Keep the story and the facts apart
+
+The repository README tells the product story. Implementation status, setup commands and limits live in the documentation. Fictional examples stay labelled, and design principles are never presented as available capabilities.
+
+Full guide: [contributing.md](https://github.com/francoisnoel62/Boardroom/blob/main/docs/contributing.md).

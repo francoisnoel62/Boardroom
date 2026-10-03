@@ -1,6 +1,7 @@
 // @ts-check
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
+import { fileURLToPath } from 'node:url';
 
 const repository = 'https://github.com/francoisnoel62/Boardroom';
 
@@ -11,6 +12,8 @@ export default defineConfig({
   vite: {
     // The site reads the product's own fixtures and exports from the repository root.
     server: { fs: { allow: ['..'] } },
+    // src/domain.ts lives outside the site package; its schemas resolve zod from here (same pinned version).
+    resolve: { alias: { zod: fileURLToPath(new URL('./node_modules/zod', import.meta.url)) } },
   },
   integrations: [
     starlight({
@@ -27,8 +30,11 @@ export default defineConfig({
         PageTitle: './src/components/docs/PageTitle.astro',
       },
       sidebar: [
-        { label: 'Get started', items: ['docs', 'docs/quickstart'] },
-        { label: 'Concepts', items: ['docs/your-data'] },
+        { label: 'Get started', items: ['docs', 'docs/quickstart', 'docs/install', 'docs/first-real-meeting'] },
+        { label: 'Concepts', items: ['docs/concepts/the-room', 'docs/concepts/meeting-lifecycle', 'docs/concepts/verdicts', 'docs/concepts/evidence', 'docs/your-data'] },
+        { label: 'Guides', items: ['docs/guides/recorded-example', 'docs/guides/documents', 'docs/guides/export', 'docs/guides/history-and-decision', 'docs/guides/terminal-check', 'docs/guides/doctor', 'docs/guides/technical-evidence', 'docs/guides/troubleshooting'] },
+        { label: 'Reference', items: ['docs/reference/cli', 'docs/reference/exit-codes', 'docs/reference/json-output', 'docs/reference/data-directory', 'docs/reference/platforms'] },
+        { label: 'Project', items: ['docs/project/roadmap', { label: 'Engineering', link: '/engineering/' }, 'docs/project/contributing', 'docs/project/license'] },
       ],
     }),
   ],

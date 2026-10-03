@@ -33,6 +33,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run package -- --output release/candidate
+      - name: Run the commands the documentation presents as runnable
+        run: node site/scripts/doc-commands.mjs --repo . --candidate release/candidate
       - name: Archive candidate with native executable modes
         run: tar -czf release/boardroom.tar.gz -C release candidate
       - uses: actions/upload-artifact@v7

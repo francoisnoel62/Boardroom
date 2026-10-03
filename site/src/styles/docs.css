@@ -80,3 +80,7 @@ h1#_top {
 .page-status {
   margin-top: 0.75rem;
 }
+/* Generated reference tables: long field paths and commands wrap instead of overflowing. */
+.reference-table code {
+  overflow-wrap: anywhere;
+}

@@ -1,6 +1,6 @@
 # Site vitrine, téléchargement gratuit et documentation — plan détaillé
 
-Date : 3 octobre 2026. Statut : **phases 1 et 2 réalisées** le 3 octobre 2026 — fondations, design system, page d'accueil (capture rejouable, FAQ), page `/engineering` avancée depuis la phase 5, et squelette de documentation dans [`site/`](../site/README.md), non déployés. Le test éditorial des 30 secondes (sortie de phase 2) reste à mener avec des personnes extérieures. Phases 3 à 6 à réaliser ; décisions D1–D10 en attente. [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
+Date : 3 octobre 2026. Statut : **phases 1 à 3 réalisées** le 3 octobre 2026 — fondations, design system, page d'accueil (capture rejouable, FAQ), page `/engineering` avancée depuis la phase 5, documentation v1 (référence CLI et JSON générée depuis le code, commandes documentées exécutées en CI) dans [`site/`](../site/README.md), non déployés. Le test éditorial des 30 secondes (sortie de phase 2) reste à mener avec des personnes extérieures. Phases 4 à 6 à réaliser ; décisions D1–D10 en attente. [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
 
 Ce document est une **piste parallèle** aux neuf plans de livraison, pas un dixième jalon. Le site est une vitrine marketing statique et une documentation publique : il ne contredit pas la règle « pas de GUI/web » du produit, qui reste une application terminal locale. Comme le reste du travail de conception, ce plan est rédigé en français ; le site, sa documentation et ses exemples seront **en anglais**.
 
@@ -304,8 +304,8 @@ Project
 ### 8.4 Sources uniques de vérité
 
 ```text
-src/cli.ts ──► manifeste de commandes (à extraire, TDD) ──► --help  ─┐
-                                                                    ├─► /docs/reference/cli/*
+src/cli.ts (texte d'aide, commandes acceptées, codes de sortie) ──► /docs/reference/cli/, exit-codes/
+(phase 3 : lu dans la source plutôt qu'un manifeste extrait, pour ne pas modifier l'application depuis la PR du site)
 src/domain.ts (Zod) ──► z.toJSONSchema() ──► /docs/reference/schemas/*
 qualification/ (CI 3 OS) ──► .cast + screen.txt régénérés ──► lecteurs terminal des guides
 assets/demo/meeting.json + context.md ──► récit de la home + tutoriel

@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'site/**'
+      - 'src/**'
+      - 'tests/**'
       - 'assets/**'
       - 'docs/**'
       - 'boardroom-plans/**'
@@ -12,6 +14,8 @@ on:
   pull_request:
     paths:
       - 'site/**'
+      - 'src/**'
+      - 'tests/**'
       - 'assets/**'
       - 'docs/**'
       - 'boardroom-plans/**'

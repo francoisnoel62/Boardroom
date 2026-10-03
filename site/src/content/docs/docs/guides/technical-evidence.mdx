@@ -1,0 +1,29 @@
+---
+title: Export technical evidence
+description: Produce a filtered local trace and a fixed isolation report, and understand what they do not prove.
+status: available
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Filtered local trace
+
+```sh doc-test
+node dist/cli.js trace --output .boardroom/traces --data-dir .boardroom/example
+```
+
+Creates a new local JSON file with allowlisted event metadata: sequence, type, time, playback position or export operation ID. Paths, source and transcript bodies and receipts are excluded. Nothing is uploaded.
+
+## Isolation check
+
+```sh doc-test
+node dist/cli.js isolation-check --output .boardroom/isolation
+```
+
+Measures fixed fictional temporary targets and loopback networking, then writes a report. It accepts no arbitrary command or MCP endpoint.
+
+<Aside type="caution" title="No protection is claimed">
+  The report records what each platform candidate blocked or allowed. At this milestone **no candidate demonstrates protection**, so commands and MCP servers stay unavailable in the product.
+</Aside>
+
+Both commands accept `--json`.

@@ -1,6 +1,6 @@
 # BOARDROOM website and documentation
 
-The public site and documentation, built as a static [Astro](https://astro.build) site with [Starlight](https://starlight.astro.build) for the docs. It implements phases 1 and 2 of the [website plan](../boardroom-plans/SITE-VITRINE-ET-DOCUMENTATION.md): foundations, design system, the home page with its replayable capture and FAQ, the engineering page and the documentation skeleton.
+The public site and documentation, built as a static [Astro](https://astro.build) site with [Starlight](https://starlight.astro.build) for the docs. It implements phases 1 to 3 of the [website plan](../boardroom-plans/SITE-VITRINE-ET-DOCUMENTATION.md): foundations, design system, the home page with its replayable capture and FAQ, the engineering page, and documentation v1 (getting started, concepts, guides, generated reference, project pages and `llms.txt`).
 
 Nothing here is deployed yet. The domain, hosting and analytics are pending decisions (D3–D5 in the plan), and no download is offered until a release is published (D1–D2).
 
@@ -31,6 +31,8 @@ The site never retypes product facts. It reads them from the repository at build
 | Every capability statement | `src/data/claims.ts`, each with its evidence path or owning plan |
 | Test count and qualified platforms | `tests/*.test.ts` and the matrix of `.github/workflows/ci.yml` |
 | Engineering decisions and limits | `src/data/engineering.ts`, each citing a document or test that must exist |
+| CLI reference | The help text, accepted commands and exit codes in `src/cli.ts` and `src/terminal-validation.tsx` |
+| JSON output reference | The application's Zod schemas in `src/domain.ts`, converted with `z.toJSONSchema` |
 
 Changing a fixture or an export changes the site; an unsupported fixture version, a citation outside its source or a final view without a verdict fails the build instead of being guessed.
 
@@ -43,6 +45,7 @@ Changing a fixture or an export changes the site; an unsupported fixture version
 | Built site | `npm run test:build` | Internal links/anchors, `lang`/title/description, no superlatives, no third-party requests, no “open source” without the pending-license claim |
 | End-to-end | `npm run test:e2e` | Story, evidence, verdicts, statuses, theme, search, no horizontal scroll — desktop and mobile |
 | Accessibility | part of `test:e2e` | No serious/critical axe violation (WCAG 2.2 AA) on every page, both themes; reduced motion honoured |
+| Documented commands | `node site/scripts/doc-commands.mjs --repo . --candidate release/candidate` (in the application CI) | Every command in a `doc-test` block runs against the checkout and the packaged candidate on Windows, Linux and macOS |
 | Lighthouse | `npm run lighthouse` | `/`, `/engineering/`, `/docs/`, `/docs/quickstart/`, median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
 
 Observed locally on 2026-10-03 after phase 2 (Node 22.22, Chromium 141): 23 unit tests, 6 built-site checks and 78 end-to-end tests pass. Lighthouse (simulated mobile, median of 3) scored 100 in all four categories on the four audited pages, with median LCP of 1.66 s (`/`), 1.51 s (`/engineering/`), 1.06 s (`/docs/`) and 1.22 s (`/docs/quickstart/`). GitHub's runners measure slower than this container, so CI is the reference for the budgets.
@@ -65,6 +68,11 @@ Observed locally on 2026-10-03 after phase 2 (Node 22.22, Chromium 141): 23 unit
 | License honesty | `/docs/` called the project open source | Any “open source” mention requires the visible “Planned · Plan 09” license claim |
 | Replay | No replay control existed | The capture replays one intervention at a time, can be skipped, and stays fully readable without JavaScript |
 | Keyboard-reachable code | With a wider monospace font, four Quickstart code blocks scrolled horizontally without being focusable (axe `scrollable-region-focusable`, first seen on a CI run) | Long commands wrap; the regression test forces a wide font at 900 px |
+| CLI reference | `src/data/cli.ts` was absent | Commands, options and exit codes read from the CLI source; accepted and documented commands must match |
+| Accepted but unhandled command | The help announced `status` as showing capabilities | The reference flags that `status` prints the help text in this build |
+| JSON reference | No schema rendering existed | Nested and enumerated fields of `decision --json` and `history --json` from the Zod schemas |
+| Documented commands | `scripts/doc-commands.mjs` was absent | `doc-test` blocks are extracted and run; 18 checkout commands passed locally, candidate commands run in CI |
+| Scrollable tables | The JSON reference tables scrolled without keyboard focus | Field paths wrap; reference tables are focusable |
 | FAQ and engineering page | Neither existed | Cost, license and data answers; `/engineering/` with figures, decisions, evidence links and stated limits |
 
 Corrections found by those checks rather than by review: the first CI run failed the docs' LCP budget on GitHub's runners although it passed locally (fixed by the font decision below), a misplaced `@import` silently dropped two fonts (and briefly flattered an LCP measurement), global utility classes overrode component colours (fixed by layering `site.css`), an Engineering link hidden on phones (the recruiter path) became always visible, and four test selectors were wrong about the search box role, the scope of the “no download” rule, repeated claims and repeated evidence links.

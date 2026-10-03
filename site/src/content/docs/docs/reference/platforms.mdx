@@ -1,0 +1,13 @@
+---
+title: Platform support
+description: The platforms BOARDROOM is qualified on, generated from the CI matrix, and the ones it is not.
+status: available
+---
+
+import Platforms from '../../../../components/reference/Platforms.astro';
+
+Qualified platforms are read from the matrix of the application's CI workflow. Each one builds a package, then installs it on a separate machine with Node removed — on Linux, an offline image with no Node at all — and runs the public journey from a path with spaces and accents.
+
+<Platforms />
+
+A configured CI job is not proof of support on its own: a platform is listed as qualified only while its installation job passes. See the [installation qualification](https://github.com/francoisnoel62/Boardroom/blob/main/docs/installation-qualification.md).

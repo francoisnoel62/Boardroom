@@ -33,19 +33,19 @@ Explore the recorded example: a fictional SaaS launch in which a staffing object
 
 2. Read the recorded discussion. Repeating the command resumes from the saved position; add `--next` to read one intervention at a time.
 
-   ```sh
+   ```sh doc-test
    node dist/cli.js demo --data-dir .boardroom/example
    ```
 
 3. Inspect the saved source line behind the staffing objection.
 
-   ```sh
+   ```sh doc-test
    node dist/cli.js evidence --line 4 --data-dir .boardroom/example
    ```
 
 4. Export a new plan and decision memo, then review what happened.
 
-   ```sh
+   ```sh doc-test
    node dist/cli.js export --output .boardroom/exports --data-dir .boardroom/example
    node dist/cli.js history --data-dir .boardroom/example
    node dist/cli.js decision --data-dir .boardroom/example
@@ -60,7 +60,7 @@ Explore the recorded example: a fictional SaaS launch in which a staffing object
 <Tabs syncKey="os">
   <TabItem label="macOS / Linux">
 
-    ```sh
+    ```sh doc-test
     ./boardroom demo
     ./boardroom evidence --line 4
     ./boardroom export --output ./exports

@@ -1,0 +1,13 @@
+---
+import { schemaRows } from '../../data/cli.ts';
+import { outputs } from '../../data/schemas.ts';
+
+interface Props { output: keyof typeof outputs }
+const { command, schema } = outputs[Astro.props.output];
+const rows = schemaRows(schema as Parameters<typeof schemaRows>[0]);
+---
+<p>Produced by <code>{command}</code>. Generated from the application's Zod schema.</p>
+<table class="reference-table" data-schema={Astro.props.output} tabindex="0" aria-label={`Fields of the ${command} output`}>
+  <thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Required</th></tr></thead>
+  <tbody>{rows.map(row => <tr><td><code>{row.path}</code></td><td><code>{row.type}</code></td><td>{row.required ? 'Yes' : 'No'}</td></tr>)}</tbody>
+</table>
