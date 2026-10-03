@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { claims, getClaim } from '../../src/data/claims.ts';
@@ -36,4 +36,12 @@ test('claim identifiers are unique', () => {
 
 test('an unknown claim cannot be rendered', () => {
   assert.throws(() => getClaim('does-not-exist'), /Unknown claim "does-not-exist"/);
+});
+
+test('the license claim is backed by an Apache 2.0 LICENSE file and the package metadata', () => {
+  const license = getClaim('open-source-license');
+  assert.equal(license.status, 'available');
+  assert.deepEqual(license.evidence, ['LICENSE', 'package.json']);
+  assert.match(readFileSync(resolve(repo, 'LICENSE'), 'utf8'), /Apache License\s+Version 2\.0, January 2004/);
+  assert.equal(JSON.parse(readFileSync(resolve(repo, 'package.json'), 'utf8')).license, 'Apache-2.0');
 });

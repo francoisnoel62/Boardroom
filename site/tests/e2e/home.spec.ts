@@ -86,11 +86,16 @@ test('the page never scrolls horizontally', async ({ page }) => {
 test('the FAQ answers cost, license and data questions honestly', async ({ page }) => {
   const faq = page.getByRole('region', { name: 'Questions worth asking' });
   await faq.getByText('Is it open source?').click();
-  await expect(faq.locator('[data-claim="open-source-license"] [data-status]')).toHaveText('Planned · Plan 09');
+  await expect(faq.locator('[data-claim="open-source-license"] [data-status]')).toHaveText('Available');
+  await expect(faq).toContainText('Apache License 2.0');
   await faq.getByText('What leaves my machine?').click();
   await expect(faq).toContainText('no telemetry');
 });
 
 test('the engineering section shows figures derived from the repository', async ({ page }) => {
   await expect(page.locator('#engineering [data-stat="tests"] [data-value]')).toHaveText('53');
+});
+
+test('the footer states the license', async ({ page }) => {
+  await expect(page.locator('footer')).toContainText('Licensed under Apache-2.0');
 });

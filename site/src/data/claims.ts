@@ -65,10 +65,9 @@ export const claims: Claim[] = [
   },
   {
     id: 'open-source-license',
-    text: 'Released under an open-source license',
-    status: 'planned',
-    evidence: [],
-    plan: '09',
+    text: 'Open source under the Apache License 2.0',
+    status: 'available',
+    evidence: ['LICENSE', 'package.json'],
   },
   {
     id: 'configurable-room',

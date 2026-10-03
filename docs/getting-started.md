@@ -156,7 +156,7 @@ A GitHub Actions workflow runs 53 deterministic integration/E2E tests, including
 
 Plan 02 adds the first real decision using three distinct models from at least two providers. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. In this recorded build, optional embeddings are not attempted, while provider streaming and cloud traces remain blocked without authorized accounts. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
 
-The project is currently a development checkout, not a public release. Its project license and release/signing arrangements await a decision. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
+The project is currently a development checkout, not a public release. BOARDROOM is licensed under the [Apache License 2.0](../LICENSE); release and signing arrangements await later decisions. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 
 To contribute during development, use the approved spec and milestone acceptance criteria, reproduce changes through public interfaces, and start each behavior change with a failing test. Include the relevant validation and update the documentation. See the [small dependent PR workflow](contributing.md) used on the [public repository](https://github.com/francoisnoel62/Boardroom).
 

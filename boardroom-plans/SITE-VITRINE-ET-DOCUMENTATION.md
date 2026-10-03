@@ -1,6 +1,6 @@
 # Site vitrine, téléchargement gratuit et documentation — plan détaillé
 
-Date : 3 octobre 2026. Statut : **phases 1 à 4 réalisées** le 3 octobre 2026 — fondations, design system, page d'accueil (capture rejouable, FAQ), page `/engineering` avancée depuis la phase 5, documentation v1 (référence CLI et JSON générée depuis le code, commandes documentées exécutées en CI), chaîne de téléchargement (installeurs testés sur 3 OS, workflow de release en brouillon, pages `/download` et `/welcome` qui suivent l'état réel des releases) dans [`site/`](../site/README.md), non déployés. Le test éditorial des 30 secondes (sortie de phase 2) reste à mener avec des personnes extérieures. Aucune release n'est publiée : le workflow ne crée qu'un brouillon, en attente de D1–D2. Phases 5 et 6 à réaliser ; décisions D1–D10 en attente. [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
+Date : 3 octobre 2026. Statut : **phases 1 à 4 réalisées** le 3 octobre 2026 — fondations, design system, page d'accueil (capture rejouable, FAQ), page `/engineering` avancée depuis la phase 5, documentation v1 (référence CLI et JSON générée depuis le code, commandes documentées exécutées en CI), chaîne de téléchargement (installeurs testés sur 3 OS, workflow de release en brouillon, pages `/download` et `/welcome` qui suivent l'état réel des releases) dans [`site/`](../site/README.md), non déployés. Le test éditorial des 30 secondes (sortie de phase 2) reste à mener avec des personnes extérieures. Aucune release n'est publiée : le workflow ne crée qu'un brouillon, en attente de D1–D2. Phases 5 et 6 à réaliser ; décisions D1–D5 prises (Apache-2.0, pas de preview, pas de mise en ligne, aucune mesure d'audience). [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
 
 Ce document est une **piste parallèle** aux neuf plans de livraison, pas un dixième jalon. Le site est une vitrine marketing statique et une documentation publique : il ne contredit pas la règle « pas de GUI/web » du produit, qui reste une application terminal locale. Comme le reste du travail de conception, ce plan est rédigé en français ; le site, sa documentation et ses exemples seront **en anglais**.
 
@@ -122,7 +122,7 @@ Le récit suit une structure où **l'utilisateur est le héros** et BOARDROOM le
 - **À proscrire** : *revolutionary, 10x, autonomous, AI-powered everything, unlimited, guaranteed, best-in-class*, ainsi que tout chiffre non sourcé.
 - **Statuts obligatoires** sur toute capacité : `Available` · `Preview` · `Planned — Plan 0X` · `Vision` (direction produit qu'aucun plan ne porte encore, comme l'équipe configurable). Une capacité future n'est jamais rédigée au présent.
 - **Fiction toujours étiquetée** : *Recorded example — scripted fictional fixture* reste visible près de chaque extrait.
-- **Gratuité honnête** : *Boardroom has no account, subscription or payment. Live meetings use your own model provider keys; providers bill you directly.* Ne pas écrire « open source » tant que la licence n'est pas décidée (D1) : le code est public, pas encore sous licence libre.
+- **Gratuité honnête** : *Boardroom is free and open source (Apache-2.0), with no account, subscription or payment. Live meetings use your own model provider keys; providers bill you directly.*
 - Relecture automatisée par Vale (§11) avec un vocabulaire maison.
 
 ---
@@ -548,6 +548,8 @@ Total jusqu'à une developer preview présentable : **environ 5 à 7 semaines**.
 ---
 
 ## 14. Décisions à prendre
+
+**Décisions prises le 3 octobre 2026 :** D1 Apache-2.0 (fichiers `LICENSE` et `NOTICE`, livrés avec chaque paquet) ; D2 pas de developer preview avant la bêta ; D3/D4 pas de mise en ligne pour l'instant ; D5 aucune mesure d'audience. D6 à D10 restent ouvertes (D8 et D10 appliquées par défaut : polices libres, même dépôt).
 
 | ID | Décision | Options | Recommandation | Bloque |
 |---|---|---|---|---|
