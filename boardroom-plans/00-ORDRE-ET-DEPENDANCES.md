@@ -106,4 +106,6 @@ Les intégrations ChatGPT et Claude sont les premiers candidats abonnement à in
 
 Pas de GUI/web, SaaS multi-utilisateur, paiement, agents autonomes d'exécution, réunions récurrentes, surveillance événementielle, gestion complète d'expérimentations, classement longitudinal des conseillers, OCR ou interprétation avancée de tableurs. L'export natif Word/PDF et un benchmark public séparé ne deviennent pas des prérequis.
 
+Le site vitrine statique et sa documentation publique ne sont pas une interface du produit : ils suivent une piste parallèle décrite dans [le plan du site et de la documentation](SITE-VITRINE-ET-DOCUMENTATION.md), sans devenir un prérequis des neuf plans.
+
 Les preuves se collectent à chaque livraison : paquet utilisé, environnement, scénario, résultat attendu/observé, traces expurgées et limitations. Le plan 09 assemble ces preuves et exécute les vérifications intégrées ; il ne découvre pas pour la première fois tous les risques techniques.

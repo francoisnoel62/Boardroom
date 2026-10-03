@@ -1,0 +1,7 @@
+BOARDROOM
+Copyright 2026 The BOARDROOM authors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Packaged candidates also include the Node.js runtime and npm dependencies,
+each under its own license; those licenses accompany the package.

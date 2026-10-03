@@ -1,0 +1,29 @@
+---
+// Adds a feedback link, prefilled with the page, under every documentation page.
+import Default from '@astrojs/starlight/components/Footer.astro';
+
+const { entry } = Astro.locals.starlightRoute;
+const params = new URLSearchParams({
+  title: `Docs feedback: ${entry.data.title}`,
+  body: `Page: ${Astro.url.pathname}\n\nWhat was missing, unclear or wrong?\n`,
+  labels: 'documentation',
+});
+---
+<p class="feedback">
+  Was this page helpful? <a href={`https://github.com/francoisnoel62/Boardroom/issues/new?${params}`} rel="noopener">Tell us on GitHub</a>
+</p>
+<Default />
+
+<style>
+  .feedback {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+  }
+
+  .feedback a {
+    color: var(--sl-color-accent);
+  }
+</style>

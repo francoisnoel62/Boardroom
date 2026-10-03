@@ -1,0 +1,20 @@
+---
+title: Check your terminal
+description: Try typing, pasting and resizing during a fictional stream before live meetings exist.
+status: available
+---
+
+Run this in an interactive terminal:
+
+```sh
+node dist/cli.js terminal-check
+```
+
+The screen is labelled **Technical validation — fictional stream**. Type while the sample updates, paste several lines, resize the window, then press Enter to submit the scratch draft.
+
+- Backspace removes one whole character, including combined accents and emoji.
+- Pasted line endings are normalized; terminal control bytes are removed before display.
+- Escape or Ctrl+C cancels with exit code `130` and restores the terminal modes.
+- Piped input is refused.
+
+Input stays in memory: it creates no project data, does not advance playback and calls no model. This is a small input probe, not a live meeting or a text editor.

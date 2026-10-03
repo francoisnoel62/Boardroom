@@ -1,0 +1,20 @@
+---
+import { publicStatus, roadmap } from '../data/roadmap.ts';
+---
+<ol class="roadmap">
+  {roadmap.map((plan, index, plans) => (
+    <li data-plan={plan.id}><strong>Plan {plan.id} — {plan.title}.</strong> {plan.outcome} <span class="state" data-status>{publicStatus(plan, index, plans)}</span></li>
+  ))}
+</ol>
+
+<style>
+  .state {
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    font-family: var(--sl-font-mono);
+    font-size: var(--sl-text-xs);
+    white-space: nowrap;
+  }
+</style>

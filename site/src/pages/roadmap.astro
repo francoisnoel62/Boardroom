@@ -1,0 +1,137 @@
+---
+import { sourceUrl } from '../data/labels.ts';
+import { publicStatus, roadmap } from '../data/roadmap.ts';
+import Page from '../layouts/Page.astro';
+
+const tone = (status: string) => status === 'Next' ? 'next' : status.startsWith('Accepted') ? 'accepted' : 'planned';
+---
+<Page
+  title="Roadmap — Boardroom"
+  description="The nine delivery plans that take BOARDROOM from a recorded example to a public beta, with their real status and source documents."
+  eyebrow="Roadmap"
+  heading="Roadmap"
+  lede="Nine delivery plans take Boardroom from a recorded example to a public beta. Each status is read from the plan itself and checked in CI, so this page cannot announce progress that has not been accepted."
+>
+  <section aria-label="Delivery plans">
+    <ol class="plans">
+      {roadmap.map((plan, index, plans) => {
+        const status = publicStatus(plan, index, plans);
+        return (
+          <li class="plan" data-plan={plan.id} data-tone={tone(status)}>
+            <span class="number mono-label" aria-hidden="true">{plan.id}</span>
+            <div class="body">
+              <h2 class="plan-title">Plan {plan.id} — {plan.title}</h2>
+              <p>{plan.outcome}</p>
+              <p class="links">
+                <a href={sourceUrl(`boardroom-plans/${plan.file}`)} rel="noopener">Plan file (in French)</a>
+                {plan.evidence && <> · <a href={sourceUrl(plan.evidence)} rel="noopener">Acceptance record</a></>}
+              </p>
+            </div>
+            <span class="state" data-status>{status}</span>
+          </li>
+        );
+      })}
+    </ol>
+  </section>
+
+  <section aria-labelledby="reservations">
+    <h2 id="reservations">Accepted with reservations</h2>
+    <p>
+      Plan 01 was accepted with reservations that are written down rather than hidden: the streamed input was tested with a
+      fictional stream, no isolation candidate demonstrates protection yet, and some characterization tests came after the
+      code. The <a href="/engineering/#limits-title">engineering page</a> lists them with their sources.
+    </p>
+  </section>
+
+  <section aria-labelledby="downloads">
+    <h2 id="downloads">When you can download it</h2>
+    <p>
+      The first public download is planned with the public beta (Plan 09). There is no developer preview before it. Until
+      then, Boardroom can be <a href="/docs/install/">built from source</a>, and the <a href="/changelog/">changelog</a> lists
+      every milestone reached.
+    </p>
+  </section>
+
+  <section aria-labelledby="not-planned">
+    <h2 id="not-planned">What is not on the roadmap</h2>
+    <ul>
+      <li>A mandatory Boardroom account or a hosted Boardroom backend. Your meetings and documents stay on your machine.</li>
+      <li>A default upload of your data anywhere. Observability (Plan 08) stays optional, locally or in your own Langfuse account.</li>
+    </ul>
+    <p><a href={sourceUrl('boardroom-plans/BOARDROOM_V1_SPEC.md')} rel="noopener">Source: product specification</a></p>
+  </section>
+</Page>
+
+<style>
+  .plans {
+    display: grid;
+    gap: var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .plan {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  .plan[data-tone='next'] {
+    border-color: var(--accent);
+  }
+
+  .number {
+    padding-top: 0.2rem;
+  }
+
+  .body {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .plan-title {
+    color: var(--text-strong);
+    font-size: var(--step-1);
+    font-weight: 600;
+  }
+
+  .links {
+    font-size: var(--step--1);
+  }
+
+  .state {
+    padding: 0.15rem 0.65rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .plan[data-tone='accepted'] .state {
+    border-color: var(--approved);
+    color: var(--approved);
+  }
+
+  .plan[data-tone='next'] .state {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  @media (max-width: 40rem) {
+    .plan {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .state {
+      grid-column: 2;
+      justify-self: start;
+    }
+  }
+</style>

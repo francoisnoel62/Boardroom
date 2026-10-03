@@ -1,0 +1,21 @@
+---
+title: Export a plan and memo
+description: Write a new plan and decision memo, and understand receipts and unconfirmed exports.
+status: available
+---
+
+```sh doc-test
+node dist/cli.js export --output .boardroom/exports --data-dir .boardroom/example
+```
+
+Each export creates a **new** directory named `boardroom-recorded-<operation-id>` containing two UTF-8 Markdown files, `plan.md` and `memo.md`. Existing plans and sources are never overwritten. The memo records the saved evidence identity, the remaining disagreement and the pending human decision.
+
+## Receipts
+
+Every export has a stable operation ID. When it completes, its receipt lists the path and SHA-256 of each file written. See them with [`history`](/docs/guides/history-and-decision/).
+
+## Unconfirmed exports
+
+An export first records its intent and planned paths, then writes the files. If the process stops in between, the export stays `unconfirmed` — the same state it has while still running. BOARDROOM never retries it automatically. Inspect its directory before requesting a new export. A failed export may leave partial files; its receipt records the writes that finished.
+
+Receipt hashes describe the bytes written at the time; they do not certify that the files are still unchanged.

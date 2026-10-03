@@ -1,0 +1,21 @@
+---
+title: JSON output
+description: Field-by-field contracts of decision --json and history --json, generated from the application's Zod schemas.
+status: available
+---
+
+import JsonOutput from '../../../../components/reference/JsonOutput.astro';
+
+Structured outputs are versioned with `schemaVersion`. These tables are generated from the same Zod schemas the application validates its records with, so they cannot drift from the code.
+
+## `decision --json`
+
+<JsonOutput output="decision" />
+
+Every proposal and adviser view must reference the same context version, and every view must reference an available proposal version.
+
+## `history --json`
+
+<JsonOutput output="history" />
+
+Rows marked `events[type="…"]` apply to events of that type.

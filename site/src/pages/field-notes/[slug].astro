@@ -1,0 +1,66 @@
+---
+import { getCollection, render } from 'astro:content';
+import { sourceUrl } from '../../data/labels.ts';
+import Page from '../../layouts/Page.astro';
+
+export async function getStaticPaths() {
+  return (await getCollection('notes')).map(note => ({ params: { slug: note.id }, props: { note } }));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+const day = note.data.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+---
+<Page title={`${note.data.title} — Boardroom field notes`} description={note.data.description} eyebrow="Field notes" heading={note.data.title} lede={note.data.description}>
+  <p class="meta"><time datetime={note.data.date.toISOString().slice(0, 10)}>{day}</time> · <a href="/field-notes/">All field notes</a></p>
+  <article class="prose">
+    <Content />
+  </article>
+  <section class="sources" aria-labelledby="sources-title">
+    <h2 id="sources-title">Sources</h2>
+    <ul>
+      {note.data.sources.map(path => <li><a href={sourceUrl(path)} rel="noopener"><code>{path}</code></a></li>)}
+    </ul>
+  </section>
+</Page>
+
+<style>
+  .meta {
+    margin-bottom: calc(-1 * var(--space-4));
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .prose {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 44rem;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+
+  .prose :global(h2) {
+    margin-top: var(--space-4);
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 400;
+    line-height: 1.15;
+  }
+
+  .prose :global(ul) {
+    display: grid;
+    gap: var(--space-2);
+    padding-left: 1.1rem;
+  }
+
+  .prose :global(strong) {
+    color: var(--text-strong);
+  }
+
+  .sources {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+</style>

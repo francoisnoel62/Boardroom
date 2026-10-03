@@ -1,0 +1,75 @@
+---
+// Editorial illustration of the vision: a room whose seats the CEO chooses.
+// Seats are examples, not a fixed roster.
+const seats = [
+  { label: 'PRODUCT', x: 280, y: 52 },
+  { label: 'ENGINEERING', x: 104, y: 140 },
+  { label: 'MARKET', x: 456, y: 140 },
+  { label: 'LOGISTICS', x: 104, y: 320 },
+  { label: 'FINANCE', x: 456, y: 320 },
+];
+---
+<svg class="room" viewBox="0 0 560 460" role="img" aria-labelledby="room-title room-desc">
+  <title id="room-title">Your models. Your roles. Your call.</title>
+  <desc id="room-desc">An illustration of an advisory room. Example seats for Product, Engineering, Market, Logistics and Finance surround the table; the human CEO sits at its head.</desc>
+  <g class="ring">
+    <circle cx="280" cy="230" r="184" fill="none" stroke="var(--line-strong)" stroke-opacity="0.5" stroke-dasharray="3 10" />
+  </g>
+  <path d="M280 74V140M180 150L210 168M380 150L350 168M180 310L210 292M380 310L350 292M280 320V388" stroke="var(--line-strong)" stroke-opacity="0.45" />
+  <rect x="190" y="140" width="180" height="180" rx="74" fill="var(--surface-3)" stroke="var(--line-strong)" />
+  <rect x="206" y="156" width="148" height="148" rx="60" fill="none" stroke="var(--line-strong)" stroke-opacity="0.25" />
+  <g class="table-text" text-anchor="middle">
+    <text x="280" y="212">YOUR MODELS.</text>
+    <text x="280" y="236">YOUR ROLES.</text>
+    <text x="280" y="260">YOUR CALL.</text>
+  </g>
+  {seats.map(seat => (
+    <g class="seat">
+      <rect x={seat.x - 74} y={seat.y - 20} width="148" height="40" rx="20" fill="var(--surface-2)" stroke="var(--line-strong)" />
+      <text x={seat.x} y={seat.y + 5} text-anchor="middle">{seat.label}</text>
+    </g>
+  ))}
+  <g class="you">
+    <rect x="198" y="390" width="164" height="44" rx="22" fill="var(--accent)" />
+    <text x="280" y="417" text-anchor="middle">YOU, THE CEO</text>
+  </g>
+</svg>
+
+<style>
+  .room {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  text {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+  }
+
+  .seat text {
+    fill: var(--text);
+  }
+
+  .table-text text {
+    fill: var(--text-strong);
+    font-size: 13.5px;
+  }
+
+  .you text {
+    fill: var(--surface-0);
+  }
+
+  .ring {
+    transform-origin: 280px 230px;
+    animation: turn 140s linear infinite;
+  }
+
+  @keyframes turn {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>

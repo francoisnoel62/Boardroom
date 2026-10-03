@@ -1,0 +1,68 @@
+---
+import { repository, sourceUrl } from '../data/labels.ts';
+import Page from '../layouts/Page.astro';
+
+const report = `${repository}/security/advisories/new`;
+---
+<Page
+  title="Security — Boardroom"
+  description="How to report a vulnerability in BOARDROOM privately, the security model of the current build, and the limits that are not proven yet."
+  eyebrow="Security"
+  heading="Security"
+  lede="Boardroom asks you to trust it with your plans and documents. Here is how to report a problem, what protects you today, and what does not yet."
+>
+  <section aria-labelledby="report-title">
+    <div class="panel">
+      <h2 id="report-title">Report a vulnerability</h2>
+      <p>
+        Please report privately through GitHub, not in a public issue. Say which component is affected, the version or
+        commit, your platform, how to reproduce it and the impact you observed.
+      </p>
+      <div class="ctas">
+        <a class="button button--primary" href={report} rel="noopener">Report a vulnerability privately</a>
+        <a class="button button--ghost" href={sourceUrl('SECURITY.md')} rel="noopener">Security policy</a>
+      </div>
+      <p class="note">
+        If private reporting is unavailable, open an issue that only asks for a private contact, without any detail. There is
+        no committed response time yet; no release has been published, so fixes land on the main branch.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="model-title">
+    <h2 id="model-title">What protects you today</h2>
+    <ul>
+      <li><strong>Local by design.</strong> No account and no Boardroom server. The current build plays a recorded example and makes no model calls.</li>
+      <li><strong>Sources on request.</strong> Authorization is checked before an external source is read, and evidence from another project is refused. This is application-level scoping, not operating-system sandboxing.</li>
+      <li><strong>Documents read as text.</strong> PDF files are parsed from their bytes and never run scripts; DOCX files are reduced to raw text, and HTML is never rendered or executed.</li>
+      <li><strong>Originals preserved.</strong> Snapshots keep the original bytes, and each export receipt records the SHA-256 of what was written.</li>
+      <li><strong>Verified installs.</strong> The installers check a package's SHA-256 against the release's checksums before installing anything, and the release workflow attaches a build provenance attestation to each package.</li>
+    </ul>
+    <p><a href={sourceUrl('docs/architecture.md')} rel="noopener">Source: architecture</a></p>
+  </section>
+
+  <section aria-labelledby="limits-title">
+    <h2 id="limits-title">What is not proven yet</h2>
+    <ul>
+      <li>
+        <strong>No candidate demonstrates protection.</strong> The isolation candidates tried on Windows, Linux and macOS were
+        blocked or failed, so command and MCP tools stay unavailable until Plan 06 qualifies one.
+      </li>
+      <li>Packages are not code-signed or notarized yet, and they still include development dependencies.</li>
+      <li>Snapshots and exports are ordinary local files; saved source paths may reveal local directory names.</li>
+      <li>Live model connections do not exist yet. When they arrive, API keys are to be stored apart from shareable project configuration, exports and logs.</li>
+    </ul>
+    <p>
+      <a href={sourceUrl('docs/plan-01-acceptance.md')} rel="noopener">Source: Plan 01 acceptance</a> ·
+      <a href={sourceUrl('docs/technical-qualification.md')} rel="noopener">Technical qualification</a> ·
+      <a href={sourceUrl('boardroom-plans/BOARDROOM_V1_SPEC.md')} rel="noopener">Specification</a>
+    </p>
+  </section>
+</Page>
+
+<style>
+  .note {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+</style>
