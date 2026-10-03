@@ -64,9 +64,9 @@ Native Windows/macOS vaults are required in CI; Linux producer tests require a r
 
 ### Validation
 
-- Windows x64 / Node 24.12.0: `npm run typecheck` passed; full `npm test` passed **65/65**, zero failed/skipped, approximately 102.4 seconds, with required access to the native vault.
+- Windows x64 / Node 24.12.0: `npm run typecheck` passed; final full `npm test` passed **66/66**, zero failed/skipped, approximately 98.1 seconds, with required access to the native vault. This includes the Unicode-token regression and synchronized fresh-start regression added after the initial 65-test run.
 - The package regression executed the independent installed runner and required its protected-configuration proof: session injection, frozen profile, sentinel exclusion and native Windows vault round trip.
 - Executed the first PowerShell example in [the configuration guide](configuring-routes.md) as written: three declared routes, team revision 1, a question with zero declared ceiling and frozen identities; no key or model call required.
-- Remote Windows/Linux/macOS results remain to be confirmed by this PR's checks. No Hotelix file was needed or modified in this increment; no real credential was used.
+- Remote Windows/Linux/macOS results are tracked in [PR #9's checks](https://github.com/francoisnoel62/Boardroom/pull/9/checks); use the latest commit's checks and generated installation proofs. No Hotelix file was needed or modified in this increment; no real credential was used.
 
 The initial CI found a latent startup race at `PRAGMA journal_mode = WAL`, before the first-reader test's ready message. SQLite can refuse this lock promotion without invoking its normal busy handler. The constructor now retries only idempotent local setup within a monotonic five-second bound and restores the normal 5,000 ms busy timeout afterward. Non-busy errors and domain operations are never replayed. The existing concurrent regression now synchronizes all four constructor entries and includes child diagnostics, making the original failure locally reproducible instead of depending on timing.
