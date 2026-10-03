@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -69,5 +69,83 @@ test('document citations cannot cross projects or be presented as source-text li
     assert.throws(() => app.resolveDocumentCitation('other-project', result.evidence.id, { kind: 'pdf-page', page: 1 }), /outside this project/);
     assert.throws(() => app.resolveDocumentCitation(project.id, result.evidence.id, { kind: 'docx-block', block: 1 }), /No extracted text/);
     assert.throws(() => app.resolveCitation(project.id, result.evidence.id, 1, 1), /document locator/);
+  } finally { app.close(); }
+});
+
+test('a saved document citation stays readable and flagged after its authorized original is deleted', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom deleted document '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const source = join(root, 'launch.pdf');
+  copyFileSync(new URL('../assets/validation/launch.pdf', import.meta.url), source);
+  let app = new Boardroom(join(root, 'data'));
+  const project = app.openDemo();
+  const { evidence } = await app.captureDocument(project.id, source, { authorized: true });
+  app.close();
+  unlinkSync(source);
+  app = new Boardroom(join(root, 'data'));
+  try {
+    const citation = app.resolveDocumentCitation(project.id, evidence.id, { kind: 'pdf-page', page: 2 });
+    assert.equal(citation.text, 'Launch scope: one integration.');
+    assert.equal(citation.originalChanged, true);
+  } finally { app.close(); }
+});
+
+test('document evidence refuses original or extraction snapshots that no longer match their digests', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom document integrity '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const data = join(root, 'data');
+  const pdf = join(root, 'launch.pdf');
+  const docx = join(root, 'launch.docx');
+  copyFileSync(new URL('../assets/validation/launch.pdf', import.meta.url), pdf);
+  copyFileSync(new URL('../assets/validation/launch.docx', import.meta.url), docx);
+  const app = new Boardroom(data);
+  try {
+    const project = app.openDemo();
+    const { evidence } = await app.captureDocument(project.id, pdf, { authorized: true });
+    const locator = { kind: 'pdf-page', page: 2 } as const;
+    const extraction = join(data, 'snapshots', evidence.extractionSha256!);
+    const savedExtraction = readFileSync(extraction);
+    writeFileSync(extraction, savedExtraction.toString('utf8').replace('one integration', 'five integrations'));
+    assert.throws(() => app.resolveDocumentCitation(project.id, evidence.id, locator), /Snapshot integrity check failed/);
+    writeFileSync(extraction, savedExtraction);
+    assert.equal(app.resolveDocumentCitation(project.id, evidence.id, locator).text, 'Launch scope: one integration.');
+    writeFileSync(join(data, 'snapshots', evidence.sha256), 'Different original bytes.');
+    assert.throws(() => app.resolveDocumentCitation(project.id, evidence.id, locator), /Snapshot integrity check failed/);
+    const digest = createHash('sha256').update(readFileSync(docx)).digest('hex');
+    writeFileSync(join(data, 'snapshots', digest), 'Different bytes under the same digest.');
+    await assert.rejects(app.captureDocument(project.id, docx, { authorized: true }), /Snapshot integrity check failed/);
+    // A refused capture leaves no evidence pointing at the conflicting bytes.
+    unlinkSync(join(data, 'snapshots', digest));
+    const recaptured = await app.captureDocument(project.id, docx, { authorized: true });
+    assert.equal(recaptured.evidence.revision, 1);
+    assert.equal(recaptured.extraction.status, 'complete');
+  } finally { app.close(); }
+});
+
+test('a missing document snapshot is refused with an explicit integrity error', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom missing document snapshot '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const data = join(root, 'data');
+  const source = join(root, 'launch.pdf');
+  copyFileSync(new URL('../assets/validation/launch.pdf', import.meta.url), source);
+  const app = new Boardroom(data);
+  try {
+    const project = app.openDemo();
+    const { evidence } = await app.captureDocument(project.id, source, { authorized: true });
+    unlinkSync(join(data, 'snapshots', evidence.extractionSha256!));
+    assert.throws(() => app.resolveDocumentCitation(project.id, evidence.id, { kind: 'pdf-page', page: 2 }),
+      /Snapshot integrity check failed: the saved snapshot is missing\./);
+  } finally { app.close(); }
+});
+
+test('document capture refuses formats other than PDF and DOCX', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom document format '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const source = join(root, 'notes.txt');
+  writeFileSync(source, 'Plain text notes.');
+  const app = new Boardroom(join(root, 'data'));
+  try {
+    const project = app.openDemo();
+    await assert.rejects(app.captureDocument(project.id, source, { authorized: true }), /PDF and DOCX files only/);
   } finally { app.close(); }
 });
