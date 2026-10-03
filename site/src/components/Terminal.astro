@@ -1,0 +1,108 @@
+---
+// Renders captured terminal text verbatim. Styling only wraps known patterns
+// in spans; it never adds, removes or rewrites a character of the capture.
+interface Props { title: string; screen: string; label: string }
+const { title, screen, label } = Astro.props;
+
+type Part = { text: string; tone?: 'strong' | 'dim' | 'tag' | 'accent' | 'APPROVED' | 'REJECTED' | 'INSUFFICIENT_EVIDENCE' };
+
+function partsOf(line: string): Part[] {
+  const header = /^(BOARDROOM)( \| .*)$/.exec(line);
+  if (header) return [{ text: header[1]!, tone: 'strong' }, { text: header[2]!, tone: 'dim' }];
+  const speaker = /^(\[[a-z-]+\])( )([^|]+)( \| .*)$/.exec(line);
+  if (speaker) return [{ text: speaker[1]!, tone: 'tag' }, { text: speaker[2]! }, { text: speaker[3]!, tone: 'strong' }, { text: speaker[4]!, tone: 'dim' }];
+  if (line.startsWith('Evidence: ')) return [{ text: line, tone: 'accent' }];
+  return line.split(/(APPROVED|REJECTED|INSUFFICIENT_EVIDENCE)/).filter(Boolean).map(text =>
+    text === 'APPROVED' || text === 'REJECTED' || text === 'INSUFFICIENT_EVIDENCE' ? { text, tone: text } : { text });
+}
+
+const lines = screen.split(/\r?\n/).map(partsOf);
+---
+<div class="terminal">
+  <div class="chrome" aria-hidden="true">
+    <span class="lights"><i></i><i></i><i></i></span>
+    <span class="title">{title}</span>
+  </div>
+  <pre tabindex="0" aria-label={label}><code>{lines.map(parts => <span class="line">{parts.map(part => part.tone ? <span class={`t-${part.tone}`}>{part.text}</span> : part.text)}{'\n'}</span>)}</code></pre>
+</div>
+
+<style>
+  .terminal {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--term-bg);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .chrome {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid rgb(120 147 141 / 0.2);
+  }
+
+  .chrome::after {
+    content: '';
+    width: 3.25rem;
+  }
+
+  .lights {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .lights i {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: rgb(196 211 214 / 0.18);
+  }
+
+  .title {
+    overflow: hidden;
+    color: var(--term-dim);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: var(--space-5);
+    color: var(--term-text);
+    font-size: clamp(0.62rem, 0.5rem + 0.42vw, 0.84rem);
+    line-height: 1.6;
+    scrollbar-color: rgb(120 147 141 / 0.4) transparent;
+  }
+
+  .t-strong {
+    color: #f5f4ec;
+    font-weight: 600;
+  }
+
+  .t-dim {
+    color: var(--term-dim);
+  }
+
+  .t-tag,
+  .t-accent {
+    color: #d8eeae;
+  }
+
+  .t-APPROVED {
+    color: #a9d88f;
+  }
+
+  .t-REJECTED {
+    color: #f5a898;
+  }
+
+  .t-INSUFFICIENT_EVIDENCE {
+    color: #f2cb72;
+  }
+</style>

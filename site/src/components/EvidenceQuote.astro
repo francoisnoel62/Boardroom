@@ -1,0 +1,36 @@
+---
+import type { Evidence } from '../data/story.ts';
+
+interface Props { evidence: Evidence }
+const { evidence } = Astro.props;
+const where = evidence.firstLine === evidence.lastLine ? `line ${evidence.firstLine}` : `lines ${evidence.firstLine}–${evidence.lastLine}`;
+---
+<figure class="evidence" data-evidence data-line={evidence.firstLine}>
+  <figcaption><span class="mono-label">{evidence.source} · {where}</span></figcaption>
+  <blockquote>
+    {evidence.lines.map(line => <p>{line}</p>)}
+  </blockquote>
+</figure>
+
+<style>
+  .evidence {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 var(--radius-s) var(--radius-s) 0;
+    background: var(--accent-soft);
+  }
+
+  .mono-label {
+    color: var(--accent);
+  }
+
+  blockquote {
+    margin: 0;
+    color: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    line-height: 1.55;
+  }
+</style>

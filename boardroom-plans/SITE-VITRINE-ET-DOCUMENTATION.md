@@ -1,6 +1,6 @@
 # Site vitrine, téléchargement gratuit et documentation — plan détaillé
 
-Date : 3 octobre 2026. Statut : proposition à valider ; aucune implémentation n'a commencé. [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
+Date : 3 octobre 2026. Statut : **phase 1 réalisée** le 3 octobre 2026 — fondations, design system, première page d'accueil et squelette de documentation dans [`site/`](../site/README.md), non déployés. Phases 2 à 6 à réaliser ; décisions D1–D10 en attente. [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
 
 Ce document est une **piste parallèle** aux neuf plans de livraison, pas un dixième jalon. Le site est une vitrine marketing statique et une documentation publique : il ne contredit pas la règle « pas de GUI/web » du produit, qui reste une application terminal locale. Comme le reste du travail de conception, ce plan est rédigé en français ; le site, sa documentation et ses exemples seront **en anglais**.
 
@@ -12,7 +12,7 @@ Ce document est une **piste parallèle** aux neuf plans de livraison, pas un dix
 
 **Idée directrice.** Le produit est sobre, local et fondé sur la preuve. Le site doit l'être aussi. Sa force ne viendra pas d'effets spectaculaires mais d'un **moment signature authentique** : la vraie réunion enregistrée, rejouée depuis l'enregistrement VT réel (`docs/media/recorded-example.cast`), synchronisée au défilement avec le récit « cinq intégrations → deux ingénieurs → une intégration → désaccord conservé ».
 
-**Recommandation technique.** Astro 7 + Starlight (documentation) + Tailwind CSS 4, site 100 % statique dans un dossier `site/` du même dépôt, recherche Pagefind locale, hébergement avec prévisualisation par PR, binaires distribués par GitHub Releases avec sommes de contrôle et attestations de provenance.
+**Recommandation technique.** Astro 7 + Starlight (documentation) + CSS natif à tokens, site 100 % statique dans un dossier `site/` du même dépôt, recherche Pagefind locale, hébergement avec prévisualisation par PR, binaires distribués par GitHub Releases avec sommes de contrôle et attestations de provenance.
 
 **Trois différenciateurs de niveau « senior » :**
 
@@ -120,7 +120,7 @@ Le récit suit une structure où **l'utilisateur est le héros** et BOARDROOM le
 
 - **Ton** : calme, éditorial, précis, confiant sans emphase. Phrases courtes. On montre, on ne vante pas.
 - **À proscrire** : *revolutionary, 10x, autonomous, AI-powered everything, unlimited, guaranteed, best-in-class*, ainsi que tout chiffre non sourcé.
-- **Statuts obligatoires** sur toute capacité : `Available` · `Preview` · `Planned — Plan 0X`. Une capacité future n'est jamais rédigée au présent.
+- **Statuts obligatoires** sur toute capacité : `Available` · `Preview` · `Planned — Plan 0X` · `Vision` (direction produit qu'aucun plan ne porte encore, comme l'équipe configurable). Une capacité future n'est jamais rédigée au présent.
 - **Fiction toujours étiquetée** : *Recorded example — scripted fictional fixture* reste visible près de chaque extrait.
 - **Gratuité honnête** : *Boardroom is free and open source. Live meetings use your own model provider keys; providers bill you directly.*
 - Relecture automatisée par Vale (§11) avec un vocabulaire maison.
@@ -398,9 +398,9 @@ Versions relevées sur npm le 2026-10-03, à re-vérifier au démarrage :
 |---|---|---|
 | Framework | **Astro 7.3** | Statique par défaut, zéro JS hors îlots, excellent pour un site de contenu, View Transitions natives |
 | Documentation | **Starlight 0.42** (peer `astro ^7.2.10`) | Accessibilité, Pagefind, Expressive Code, i18n, thème personnalisable, écosystème de plugins |
-| Styles | **Tailwind CSS 4.3** + tokens CSS | Design system rapide, thème partagé site/docs |
+| Styles | **CSS natif à tokens** (`tokens.css`) + styles scopés Astro | Retenu en phase 1 à la place de Tailwind 4.3 : Starlight impose ses propres couches CSS, et une dizaine de composants sur mesure restent plus lisibles et plus légers ainsi. Choix réversible |
 | Contenu | MDX (`@astrojs/mdx` 8) + collections de contenu typées (Zod) | Validation du frontmatter au build |
-| Replay terminal | `asciinema-player` 3.17 | Lit nativement le format v2 du `.cast` existant, thémable |
+| Replay terminal | Texte d'écran capturé rendu tel quel en phase 1 ; `asciinema-player` 3.17 pour les enregistrements plus longs | L'enregistrement actuel affiche l'écran en une seule mise à jour : son texte réel, accessible et net, suffit |
 | Animation | CSS d'abord, `motion` 14 dans les îlots | Poids minimal |
 | Recherche | Pagefind 1.5 | Statique, hors ligne, sans service |
 | Agents IA | `starlight-llms-txt` 0.12 | `llms.txt` / `llms-full.txt` |
@@ -425,7 +425,7 @@ site/
     styles/tokens.css
   public/install.sh  public/install.ps1   # copiés depuis scripts/ au build
   tests/                       # Playwright, axe, contrats de données
-  claims.yaml                  # registre des affirmations (§11.2)
+  src/data/claims.ts           # registre des affirmations (§11.2)
 ```
 
 Même dépôt plutôt qu'un dépôt séparé : une PR change le code et sa documentation ensemble, et la CI peut tester les commandes publiées contre le paquet construit dans la même exécution. Les dépendances du site restent isolées de celles de l'application (aucun impact sur le paquet distribué).
@@ -482,17 +482,15 @@ Le site est du code livré : ses comportements (résolution de la release, déte
 
 ### 11.2 Registre des affirmations
 
-`site/claims.yaml` liste chaque affirmation publique avec sa preuve :
+`site/src/data/claims.ts` liste chaque affirmation publique avec sa preuve (TypeScript typé plutôt que YAML, pour que la page et les tests partagent le même type) :
 
-```yaml
-- id: three-os-qualified
-  text: "Runs on macOS (Apple silicon), Windows x64 and Linux x64"
-  status: available
-  evidence: docs/installation-qualification.md
-- id: live-meetings
-  text: "Live meetings with your own models"
-  status: planned
-  plan: 02
+```ts
+{ id: 'three-platforms', text: 'Qualified on macOS (Apple silicon), Windows x64 and Linux x64',
+  status: 'available', evidence: ['docs/installation-qualification.md', '.github/workflows/ci.yml'] },
+{ id: 'live-meetings', text: 'Live meetings with three distinct models from at least two providers',
+  status: 'planned', evidence: [], plan: '02' },
+{ id: 'configurable-room', text: 'Choose the size, roles and models of your advisory team',
+  status: 'vision', evidence: ['docs/contributing.md', 'README.md'] },
 ```
 
 Un composant `<Claim id="…">` affiche le texte et son statut ; la CI échoue si une affirmation n'a pas de preuve résoluble ou si une capacité `planned` est rédigée comme disponible. C'est l'application directe, au marketing, de la culture de preuve du projet.

@@ -1,0 +1,4 @@
+.astro/
+playwright-report/
+test-results/
+.lighthouseci/

@@ -1,0 +1,1132 @@
+---
+import Claim from '../components/Claim.astro';
+import EvidenceQuote from '../components/EvidenceQuote.astro';
+import Paper from '../components/Paper.astro';
+import RoomDiagram from '../components/RoomDiagram.astro';
+import Seat from '../components/Seat.astro';
+import Terminal from '../components/Terminal.astro';
+import Verdict from '../components/Verdict.astro';
+import { captureTitle, exportedMemo, exportedPlan, sourceHash, sourceLines, story, terminalScreen } from '../data/demo.ts';
+import { phaseLabel, repository, sourceUrl } from '../data/labels.ts';
+import { publicStatus, roadmap } from '../data/roadmap.ts';
+import Site from '../layouts/Site.astro';
+
+const seats = [
+  { role: 'Product Owner', question: 'What is the smallest thing we can build that solves a problem worth solving?', example: true },
+  { role: 'Lead Developer', question: 'What will it take to make this real, and which constraint could break the plan?', example: true },
+  { role: 'Marketing Manager', question: 'Who needs this, how do we reach them, and what evidence says they will pay?', example: true },
+  { role: 'Logistics Expert', question: 'Can we deliver reliably, and where does the supply chain become fragile?', example: false },
+  { role: 'Finance Director', question: 'What can we afford to commit, and which assumptions determine the return?', example: false },
+];
+
+const principles = [
+  { title: 'Disagreement earns its place.', text: 'An objection that survives the discussion belongs in the final memo. Consensus is never required to end a meeting.' },
+  { title: 'Evidence stays inspectable.', text: 'Claims lead back to the exact source version behind them. Missing evidence remains visible.' },
+  { title: 'Human judgment has the final word.', text: 'You set the direction and make the call. Adviser confidence cannot overrule you.' },
+  { title: 'Access is yours to grant.', text: 'Local project memory, explicit permissions, preserved originals and deliberate spending limits are part of the design.' },
+];
+
+const stepTitle = (phase: keyof typeof phaseLabel, text: string) => {
+  const version = /^Proposal (v\d)/.exec(text)?.[1];
+  return version ? `${phaseLabel[phase]} ${version}` : phaseLabel[phase];
+};
+const citedBy = new Map(story.steps.flatMap(step => step.evidence ? [[step.evidence.firstLine, step.role] as const] : []));
+const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanDecision.slice(1);
+---
+<Site
+  title="Boardroom — Great decisions deserve a room"
+  description="An open-source decision room for builders. AI advisers examine the evidence, challenge your plan and keep their objections on the record. You make the call."
+>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">The moment before you build</p>
+        <h1 id="hero-title" class="display">Great decisions deserve a room.</h1>
+        <p class="lede">
+          Bring your toughest question to a team of AI advisers. They examine the evidence, challenge the plan and
+          keep their objections on the record. <strong>You make the call.</strong>
+        </p>
+        <div class="ctas">
+          <a class="button button--primary" href="/docs/quickstart/">Explore the recorded example</a>
+          <a class="button button--ghost" href="#story">See a decision change <span aria-hidden="true">↓</span></a>
+        </div>
+        <ul class="facts">
+          <li data-claim="three-platforms">Qualified on macOS (Apple silicon), Windows x64 and Linux x64</li>
+          <li data-claim="example-without-account">No account, API key or model download for the example</li>
+        </ul>
+      </div>
+      <div class="hero-art">
+        <RoomDiagram />
+        <p class="art-note">Illustration of the vision. Seats are examples.</p>
+      </div>
+    </div>
+
+    <figure class="container capture">
+      <Terminal title={captureTitle} screen={terminalScreen} label="Captured terminal screen of the recorded example" />
+      <figcaption>
+        Actual screen text from the packaged CLI in an OS pseudoterminal. The dialogue and model labels are fictional;
+        playback makes no model calls. <a href={sourceUrl('docs/media/README.md')} rel="noopener">Capture provenance</a>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="section tension" aria-labelledby="tension-title">
+    <div class="container">
+      <h2 id="tension-title" class="display statement">Before the first line of code, there is a decision.</h2>
+      <p class="tension-lede">
+        You can see the product. You can imagine the launch. Then come the questions that follow you long after you
+        close your laptop.
+      </p>
+      <ul class="questions">
+        <li>Is this the right problem?</li>
+        <li>Can we deliver it?</li>
+        <li>Will anyone care enough to pay?</li>
+      </ul>
+      <p class="tension-close">
+        For a technical founder, those questions often land on the same desk. Yours. <strong>Boardroom begins at
+        that moment.</strong>
+      </p>
+    </div>
+  </section>
+
+  <section id="room" class="section" aria-labelledby="room-heading">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">The room</p>
+        <h2 id="room-heading" class="display">Every ambition deserves its own team.</h2>
+        <p>A promising idea needs to survive more than one way of looking at the world. Build the room around the decision.</p>
+      </div>
+      <ul class="seats">
+        {seats.map(seat => (
+          <li class="seat-card">
+            <Seat role={seat.role} />
+            <p>{seat.question}</p>
+            <span class="mono-label">{seat.example ? 'In the recorded example' : 'Example seat'}</span>
+          </li>
+        ))}
+        <li class="seat-card seat-card--you">
+          <Seat role="You, the CEO" initials="You" accent />
+          <p>Given the tradeoffs, what are we willing to commit to?</p>
+          <span class="mono-label">Always at the head of the table</span>
+        </li>
+      </ul>
+      <div class="room-claim">
+        <Claim id="configurable-room" />
+        <p>The recorded example seats three advisers. The product direction is a team you size and staff yourself.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="story" class="section story" aria-labelledby="story-heading">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">The story</p>
+        <h2 id="story-heading" class="display">A launch that found its focus</h2>
+        <p>
+          A Product Owner, a Lead Developer and a Marketing Manager examine a SaaS launch. The proposal is exciting.
+          Then one line in the project context changes everything.
+        </p>
+      </div>
+      <p class="fixture-label"><span aria-hidden="true">●</span> Recorded example — scripted fictional fixture. No model calls.</p>
+
+      <div class="story-grid">
+        <ol class="steps">
+          {story.steps.map((step, index) => (
+            <li class="step" data-step={step.id} data-cites={step.evidence?.firstLine}>
+              <div class="step-head">
+                <span class="mono-label">{String(index + 1).padStart(2, '0')} · {stepTitle(step.phase, step.text)}</span>
+                <Seat role={step.role} model={step.model} />
+              </div>
+              <p class="step-text">{step.text.split(/(APPROVED|REJECTED|INSUFFICIENT_EVIDENCE)/).map(part =>
+                /^(APPROVED|REJECTED|INSUFFICIENT_EVIDENCE)$/.test(part) ? <span class={`tone-${part}`}>{part}</span> : part)}</p>
+              {step.evidence && <EvidenceQuote evidence={step.evidence} />}
+            </li>
+          ))}
+        </ol>
+
+        <aside class="source" aria-labelledby="source-title">
+          <div class="source-panel">
+            <div class="source-head">
+              <h3 id="source-title" class="mono-label">context.md · revision 1</h3>
+              <span class="mono-label">Fictional source</span>
+            </div>
+            <ol class="source-lines">
+              {sourceLines.map((line, index) => (
+                <li data-line={index + 1} class:list={{ cited: citedBy.has(index + 1) }}>
+                  <span class="line-number" aria-hidden="true">{index + 1}</span>
+                  <span class="line-text">{line || ' '}</span>
+                  {citedBy.has(index + 1) && <span class="cited-by">Cited by {citedBy.get(index + 1)}</span>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </aside>
+      </div>
+
+      <div class="outcome">
+        <div class="proposals" data-proposals>
+          <h3 class="outcome-title">How the proposal changed</h3>
+          <div class="proposal proposal--before">
+            <span class="mono-label">Proposal v1</span>
+            <p>{story.proposals.v1}</p>
+          </div>
+          <p class="changed-by"><span aria-hidden="true">↓</span> Changed by the staffing objection · context.md line 4</p>
+          <div class="proposal proposal--after">
+            <span class="mono-label">Proposal v2</span>
+            <p>{story.proposals.v2}</p>
+          </div>
+        </div>
+
+        <div class="views" data-final-views>
+          <h3 class="outcome-title">Final views on proposal v2</h3>
+          <ul>
+            {story.finalViews.map(view => (
+              <li><Seat role={view.role} /><Verdict verdict={view.verdict} /></li>
+            ))}
+          </ul>
+          <div class="open-question">
+            <span class="mono-label">Still open</span>
+            <p>{story.openQuestion}</p>
+          </div>
+          <div class="decision">
+            <span>Human decision</span>
+            <strong data-human-decision>{humanDecision}</strong>
+          </div>
+          <p class="views-note">Two approvals do not erase the uncertainty. Adviser views never decide for you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="record" class="section" aria-labelledby="record-heading">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">The record</p>
+        <h2 id="record-heading" class="display">Leave with a decision you can explain</h2>
+        <p>
+          Every meeting ends with a new plan and a decision memo: what to do next, why the proposal changed, which
+          evidence mattered and where disagreement remains.
+        </p>
+      </div>
+      <div class="papers">
+        <Paper name="plan.md" markdown={exportedPlan} />
+        <Paper name="memo.md" markdown={exportedMemo} />
+      </div>
+      <p class="record-note">
+        Retained export from the packaged CLI. Source <code>context.md</code>, revision 1 — SHA-256{' '}
+        <code class="hash">{sourceHash}</code>.{' '}
+        <a href={sourceUrl('docs/validation/recorded-export/memo.md')} rel="noopener">View the files</a>
+      </p>
+    </div>
+  </section>
+
+  <section id="principles" class="section" aria-labelledby="principles-heading">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Principles</p>
+        <h2 id="principles-heading" class="display">What a seat at the table requires</h2>
+      </div>
+      <ol class="principles">
+        {principles.map((principle, index) => (
+          <li>
+            <span class="mono-label">{String(index + 1).padStart(2, '0')}</span>
+            <h3>{principle.title}</h3>
+            <p>{principle.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section id="trust" class="section" aria-labelledby="trust-heading">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Your data</p>
+        <h2 id="trust-heading" class="display">What stays on your machine</h2>
+        <p>Boardroom is a local application. You decide what it reads, and every new file goes somewhere new.</p>
+      </div>
+      <div class="trust">
+        <div class="trust-col">
+          <h3>On your machine</h3>
+          <ul>
+            <li>Projects and the sources you explicitly authorize</li>
+            <li>Exact source snapshots, identified by SHA-256</li>
+            <li>Playback history and export receipts</li>
+            <li>New plans and decision memos, never overwriting originals</li>
+          </ul>
+          <Claim id="exact-citations" />
+        </div>
+        <div class="trust-col">
+          <h3>Sent to the providers you choose</h3>
+          <ul>
+            <li>Selected meeting context, once live meetings exist</li>
+            <li>Through the model accounts you configure, at their pricing</li>
+          </ul>
+          <Claim id="live-meetings" />
+        </div>
+        <div class="trust-col">
+          <h3>Never</h3>
+          <ul>
+            <li>A Boardroom account or hosted Boardroom service</li>
+            <li>Telemetry from the application</li>
+          </ul>
+          <Claim id="no-telemetry" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="engineering" class="section" aria-labelledby="engineering-heading">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Engineering</p>
+        <h2 id="engineering-heading" class="display">Built like infrastructure</h2>
+        <p>A decision tool has to be trustworthy before it is clever. Each statement below links to the evidence behind it.</p>
+      </div>
+      <ul class="proofs">
+        {['three-platforms', 'no-node-required', 'separate-exports', 'example-without-account'].map(id => (
+          <li><Claim id={id} showEvidence /></li>
+        ))}
+      </ul>
+      <figure class="architecture">
+        <p class="visually-hidden">
+          The CLI and its Ink renderer call the application service, which owns state in a domain SQLite database with
+          immutable source snapshots and writes each new Markdown plan and decision memo. Separately, the doctor command
+          runs a LangGraph probe against the official SQLite checkpointer.
+        </p>
+        <div class="arch" aria-hidden="true">
+          <span class="node">CLI · Ink</span>
+          <span class="arrow">→</span>
+          <span class="node node--core">Application service<small>owns state</small></span>
+          <span class="arrow">→</span>
+          <span class="node">Domain SQLite<small>+ immutable snapshots</small></span>
+          <span class="branch">↳</span>
+          <span class="node node--output">New Markdown plan + decision memo</span>
+          <span class="node node--probe">doctor</span>
+          <span class="arrow arrow--probe">→</span>
+          <span class="node node--probe">Separate LangGraph probe</span>
+          <span class="arrow arrow--probe">→</span>
+          <span class="node node--probe">Official SQLite checkpointer</span>
+        </div>
+        <figcaption>
+          The terminal renders results; the application service owns state.{' '}
+          <a href={sourceUrl('docs/architecture.md')} rel="noopener">Architecture and tradeoffs</a>{' · '}
+          <a href={sourceUrl('docs/plan-01-acceptance.md')} rel="noopener">Acceptance evidence</a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="roadmap" class="section" aria-labelledby="roadmap-heading">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Roadmap</p>
+        <h2 id="roadmap-heading" class="display">Where Boardroom stands</h2>
+        <p>Nine plans, each with its own acceptance gate. Progress is reported only once it is proven.</p>
+      </div>
+      <ol class="plans">
+        {roadmap.map((plan, index, plans) => {
+          const label = publicStatus(plan, index, plans);
+          return (
+            <li class="plan" data-plan={plan.id} data-state={label.toLowerCase().replaceAll(' ', '-')}>
+              <span class="mono-label">Plan {plan.id}</span>
+              <h3>{plan.title}</h3>
+              <p>{plan.outcome}</p>
+              <div class="plan-foot">
+                <span class="plan-status" data-status>{label}</span>
+                {plan.status === 'accepted-with-reservations' && (
+                  <a class="plan-link" href={sourceUrl('docs/plan-01-acceptance.md')} rel="noopener">Read the reservations <span aria-hidden="true">↗</span></a>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section closing" aria-labelledby="closing-heading">
+    <div class="container closing-inner">
+      <h2 id="closing-heading" class="display">Bring the question that matters.</h2>
+      <p>Start with a fictional launch, follow the objection, and inspect the resulting plan.</p>
+      <div class="ctas">
+        <a class="button button--primary" href="/docs/quickstart/">Explore the recorded example</a>
+        <a class="button button--ghost" href={repository} rel="noopener">Follow the project on GitHub</a>
+      </div>
+    </div>
+  </section>
+</Site>
+
+<script>
+  // Highlights the source line cited by the step currently in view.
+  const steps = [...document.querySelectorAll<HTMLElement>('[data-step]')];
+  const lines = new Map([...document.querySelectorAll<HTMLElement>('[data-line]')].map(line => [line.dataset.line, line]));
+  const activate = (step: HTMLElement) => {
+    for (const other of steps) other.toggleAttribute('data-active', other === step);
+    for (const line of lines.values()) line.toggleAttribute('data-active', line.dataset.line === step.dataset.cites);
+  };
+  const observer = new IntersectionObserver(entries => {
+    const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (visible) activate(visible.target as HTMLElement);
+  }, { rootMargin: '-35% 0px -45% 0px', threshold: [0, 0.5, 1] });
+  for (const step of steps) observer.observe(step);
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    padding-block: var(--space-8) var(--space-8);
+    background: var(--glow);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    align-items: center;
+    gap: var(--space-7);
+  }
+
+  .hero-copy {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  h1 {
+    font-size: var(--step-4);
+  }
+
+  .lede {
+    max-width: 36rem;
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  .lede strong {
+    color: var(--text-strong);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .facts {
+    display: grid;
+    gap: var(--space-2);
+    padding: 0;
+    color: var(--text-muted);
+    font-size: var(--step--1);
+    list-style: none;
+  }
+
+  .facts li {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .facts li::before {
+    content: '✓';
+    color: var(--approved);
+    font-weight: 700;
+  }
+
+  .hero-art {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .art-note {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  .capture {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+  }
+
+  .capture figcaption,
+  .architecture figcaption,
+  .record-note {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  figcaption a,
+  .record-note a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Tension */
+  .tension {
+    text-align: center;
+  }
+
+  .statement {
+    max-width: 18ch;
+    margin-inline: auto;
+    font-size: var(--step-3);
+  }
+
+  .tension-lede,
+  .tension-close {
+    max-width: 38rem;
+    text-wrap: balance;
+    margin: var(--space-5) auto 0;
+    font-size: var(--step-1);
+  }
+
+  .tension-close strong {
+    color: var(--text-strong);
+  }
+
+  .questions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-7);
+    padding: 0;
+    list-style: none;
+  }
+
+  .questions li {
+    display: grid;
+    place-items: center;
+    padding: var(--space-6) var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--surface-1);
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    line-height: 1.15;
+  }
+
+  /* Room */
+  .seats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .seat-card {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--surface-1);
+  }
+
+  .seat-card p {
+    color: var(--text);
+  }
+
+  .seat-card--you {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: linear-gradient(160deg, var(--accent-soft), var(--surface-1) 60%);
+  }
+
+  .room-claim {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 40rem;
+    margin-top: var(--space-6);
+    padding: var(--space-5);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-m);
+  }
+
+  .room-claim > p {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  /* Story */
+  .fixture-label {
+    display: inline-flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .fixture-label span {
+    color: var(--insufficient);
+  }
+
+  .story-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+
+  .steps {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .step {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--surface-1);
+    transition: border-color var(--duration) var(--ease-out), background-color var(--duration) var(--ease-out), transform var(--duration) var(--ease-out);
+  }
+
+  .step[data-active] {
+    border-left-color: var(--accent);
+    background: var(--surface-2);
+    transform: translateX(4px);
+  }
+
+  .step-head {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .step-text {
+    color: var(--text-strong);
+    font-size: var(--step-1);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .tone-APPROVED {
+    color: var(--approved);
+  }
+
+  .tone-REJECTED {
+    color: var(--rejected);
+  }
+
+  .tone-INSUFFICIENT_EVIDENCE {
+    color: var(--insufficient);
+  }
+
+  .source {
+    position: sticky;
+    top: 6rem;
+  }
+
+  .source-panel {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--term-bg);
+  }
+
+  .source-head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid rgb(120 147 141 / 0.2);
+  }
+
+  .source-head .mono-label {
+    color: var(--term-dim);
+    font-weight: 400;
+  }
+
+  .source-lines {
+    margin: 0;
+    padding: var(--space-3) 0;
+    list-style: none;
+    color: var(--term-text);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+
+  .source-lines li {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0 var(--space-2);
+    padding: var(--space-1) var(--space-4) var(--space-1) 0;
+    border-left: 2px solid transparent;
+    transition: background-color var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+  }
+
+  .line-number {
+    color: var(--term-dim);
+    text-align: right;
+    user-select: none;
+  }
+
+  .source-lines li.cited {
+    border-left-color: rgb(216 238 174 / 0.4);
+    background: rgb(216 238 174 / 0.05);
+  }
+
+  .source-lines li[data-active] {
+    border-left-color: #d8eeae;
+    background: rgb(216 238 174 / 0.13);
+  }
+
+  .cited-by {
+    grid-column: 2;
+    color: #d8eeae;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+
+  .outcome {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--space-5);
+    margin-top: var(--space-7);
+  }
+
+  .proposals,
+  .views {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  .outcome-title {
+    font-size: var(--step-1);
+    font-weight: 600;
+  }
+
+  .proposal {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-m);
+  }
+
+  .proposal--before {
+    border: 1px dashed var(--line-strong);
+  }
+
+  .proposal--before p {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in srgb, var(--rejected) 70%, transparent);
+  }
+
+  .proposal--after {
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+    background: var(--accent-soft);
+  }
+
+  .proposal--after p {
+    color: var(--text-strong);
+    font-weight: 500;
+  }
+
+  .changed-by {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .views ul {
+    display: grid;
+    gap: var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .views li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .open-question {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border-left: 2px solid var(--insufficient);
+    background: color-mix(in srgb, var(--insufficient) 10%, transparent);
+  }
+
+  .open-question p {
+    color: var(--text-strong);
+  }
+
+  .decision {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-m);
+    background: var(--surface-0);
+    color: var(--text);
+  }
+
+  .decision strong {
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 400;
+  }
+
+  .views-note {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  /* Record */
+  .papers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+
+  .record-note {
+    margin-top: var(--space-6);
+  }
+
+  .hash {
+    overflow-wrap: anywhere;
+  }
+
+  /* Principles */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .principles li {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  .principles h3 {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 400;
+    line-height: 1.1;
+  }
+
+  /* Trust */
+  .trust {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto 1fr auto;
+    gap: var(--space-4);
+  }
+
+  .trust-col {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  .trust-col h3 {
+    font-size: var(--step-1);
+    font-weight: 600;
+  }
+
+  .trust-col ul {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    padding-left: 1.1rem;
+  }
+
+  .trust-col :global(.claim) {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+
+  /* Engineering */
+  .proofs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .proofs li {
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--surface-1);
+  }
+
+  .architecture {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .arch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr) auto minmax(0, 1.2fr);
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--term-bg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .node {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid rgb(120 147 141 / 0.45);
+    border-radius: var(--radius-s);
+    background: #142230;
+    color: var(--term-text);
+    text-align: center;
+  }
+
+  .node small {
+    color: var(--term-dim);
+    font-size: 0.72rem;
+  }
+
+  .node--core {
+    border-color: #d8eeae;
+  }
+
+  .arrow,
+  .branch {
+    color: var(--term-dim);
+    font-size: 1.15rem;
+  }
+
+  .branch {
+    grid-column: 3;
+    justify-self: center;
+    line-height: 1;
+  }
+
+  .node--output {
+    grid-column: 3 / span 3;
+    justify-self: start;
+    border-style: dashed;
+  }
+
+  .node--probe {
+    margin-top: var(--space-4);
+    background: transparent;
+    color: var(--term-dim);
+  }
+
+  .arrow--probe {
+    margin-top: var(--space-4);
+  }
+
+  /* Roadmap */
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    padding: 0;
+    list-style: none;
+    counter-reset: plan;
+  }
+
+  .plan {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+    background: var(--surface-1);
+  }
+
+  .plan h3 {
+    font-size: var(--step-0);
+    font-weight: 600;
+  }
+
+  .plan p {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  .plan-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .plan-status {
+    padding: 0.15em 0.65em;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  .plan-link {
+    color: var(--accent);
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .plan-link:hover {
+    text-decoration: underline;
+  }
+
+  .plan[data-state='accepted-with-reservations'],
+  .plan[data-state='accepted'] {
+    border-color: color-mix(in srgb, var(--approved) 45%, transparent);
+  }
+
+  .plan[data-state='accepted-with-reservations'] .plan-status,
+  .plan[data-state='accepted'] .plan-status {
+    border-color: color-mix(in srgb, var(--approved) 45%, transparent);
+    color: var(--approved);
+  }
+
+  .plan[data-state='next'] {
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: linear-gradient(160deg, var(--accent-soft), var(--surface-1) 65%);
+  }
+
+  .plan[data-state='next'] .plan-status {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Closing */
+  .closing {
+    background: var(--glow);
+    text-align: center;
+  }
+
+  .closing-inner {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-5);
+  }
+
+  .closing h2 {
+    max-width: 16ch;
+    font-size: var(--step-3);
+  }
+
+  .closing p {
+    font-size: var(--step-1);
+  }
+
+  .closing .ctas {
+    justify-content: center;
+  }
+
+  @media (max-width: 62rem) {
+    .hero-grid,
+    .story-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hero-art {
+      max-width: 28rem;
+      margin-inline: auto;
+    }
+
+    .source {
+      position: static;
+      order: -1;
+    }
+
+    .seats,
+    .trust,
+    .plans {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 44rem) {
+    .questions,
+    .seats,
+    .outcome,
+    .papers,
+    .principles,
+    .trust,
+    .plans,
+    .proofs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .trust-col {
+      grid-row: auto;
+    }
+
+    .arch {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: stretch;
+    }
+
+    .arch .arrow,
+    .arch .branch {
+      justify-self: center;
+      rotate: 90deg;
+    }
+
+    .branch,
+    .node--output {
+      grid-column: auto;
+      justify-self: stretch;
+    }
+
+    .branch {
+      rotate: 0deg;
+    }
+
+    .step {
+      padding: var(--space-4);
+    }
+
+    .section {
+      padding-block: var(--space-8);
+    }
+  }
+</style>

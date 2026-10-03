@@ -1,0 +1,78 @@
+/* Maps the BOARDROOM tokens onto Starlight's theme variables. */
+:root,
+:root[data-theme='dark'] {
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+
+  --sl-color-accent-low: #273619;
+  --sl-color-accent: #b9d68a;
+  --sl-color-accent-high: #d8eeae;
+  --sl-color-white: #f5f4ec;
+  --sl-color-gray-1: #e2eae6;
+  --sl-color-gray-2: #c4d3d6;
+  --sl-color-gray-3: #9aaeb2;
+  --sl-color-gray-4: #64797e;
+  --sl-color-gray-5: #28434a;
+  --sl-color-gray-6: #142230;
+  --sl-color-black: #101924;
+
+  --sl-color-orange-low: #3a2f14;
+  --sl-color-orange: #f2cb72;
+  --sl-color-orange-high: #f9e6bb;
+  --sl-color-blue-low: #1b363c;
+  --sl-color-blue: #8fc3c9;
+  --sl-color-blue-high: #d3eaed;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #dfe9c8;
+  --sl-color-accent: #43600f;
+  --sl-color-accent-high: #2a3d08;
+  --sl-color-white: #101924;
+  --sl-color-gray-1: #1d3039;
+  --sl-color-gray-2: #2c3b44;
+  --sl-color-gray-3: #52636a;
+  --sl-color-gray-4: #7d8e93;
+  --sl-color-gray-5: #d5dbd3;
+  --sl-color-gray-6: #edece2;
+  --sl-color-gray-7: #f5f4ec;
+  --sl-color-black: #fbfaf5;
+
+  --sl-color-orange-low: #f7e9c8;
+  --sl-color-orange: #7a4e00;
+  --sl-color-orange-high: #3f2800;
+  --sl-color-blue-low: #ddecee;
+  --sl-color-blue: #2f6670;
+  --sl-color-blue-high: #143a41;
+}
+
+.sl-markdown-content h1,
+h1#_top {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+
+h1#_top {
+  font-size: clamp(2.4rem, 1.9rem + 2vw, 3.4rem);
+}
+
+/* The docs header reads like the site's wordmark. */
+.site-title {
+  gap: 0.75rem;
+  color: var(--sl-color-white);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.site-title img {
+  width: auto;
+  height: 1.75rem;
+}
+
+.page-status {
+  margin-top: 0.75rem;
+}

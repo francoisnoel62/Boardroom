@@ -1,0 +1,83 @@
+---
+title: Quickstart
+description: Build BOARDROOM from source and explore the recorded example, with no account or model key.
+status: available
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Explore the recorded example: a fictional SaaS launch in which a staffing objection narrows the plan, while one adviser keeps an open question on the record.
+
+<Aside type="caution" title="No published release yet">
+  BOARDROOM has no public release. Until one exists, build it from source as shown below. Packaged candidates for each platform are produced by the project's CI.
+</Aside>
+
+## Prerequisites
+
+- **Node 24.12.0** and npm, for the development checkout.
+- A terminal on macOS (Apple silicon), Windows x64 or Linux x64.
+- No account, API key or model download.
+
+## Explore the recorded example
+
+<Steps>
+
+1. Get the source and install its pinned dependencies, including the native SQLite driver.
+
+   ```sh
+   git clone https://github.com/francoisnoel62/Boardroom.git
+   cd Boardroom
+   npm ci
+   npm run build
+   ```
+
+2. Read the recorded discussion. Repeating the command resumes from the saved position; add `--next` to read one intervention at a time.
+
+   ```sh
+   node dist/cli.js demo --data-dir .boardroom/example
+   ```
+
+3. Inspect the saved source line behind the staffing objection.
+
+   ```sh
+   node dist/cli.js evidence --line 4 --data-dir .boardroom/example
+   ```
+
+4. Export a new plan and decision memo, then review what happened.
+
+   ```sh
+   node dist/cli.js export --output .boardroom/exports --data-dir .boardroom/example
+   node dist/cli.js history --data-dir .boardroom/example
+   node dist/cli.js decision --data-dir .boardroom/example
+   ```
+
+</Steps>
+
+## Run a packaged candidate
+
+`npm run package` builds a directory containing its own Node runtime for the current platform. Open a terminal in the directory it prints:
+
+<Tabs syncKey="os">
+  <TabItem label="macOS / Linux">
+
+    ```sh
+    ./boardroom demo
+    ./boardroom evidence --line 4
+    ./boardroom export --output ./exports
+    ./boardroom doctor --json
+    ```
+
+  </TabItem>
+  <TabItem label="Windows">
+
+    ```powershell
+    .\boardroom.cmd demo
+    .\boardroom.cmd evidence --line 4
+    .\boardroom.cmd export --output .\exports
+    .\boardroom.cmd doctor --json
+    ```
+
+  </TabItem>
+</Tabs>
+
+The candidate needs no installed Node. It builds for the current host platform only and publishes nothing.

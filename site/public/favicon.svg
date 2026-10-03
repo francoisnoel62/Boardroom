@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <style>
+    .ring { stroke: #6b827d; } .table { fill: #e1e6dc; stroke: #6b827d; } .seat { fill: #2c3b44; } .you { fill: #43600f; }
+    @media (prefers-color-scheme: dark) {
+      .ring { stroke: #78938d; } .table { fill: #28434a; stroke: #78938d; } .seat { fill: #c4d3d6; } .you { fill: #d8eeae; }
+    }
+  </style>
+  <circle class="ring" cx="16" cy="16" r="14" stroke-width="1.2" stroke-dasharray="1.5 3"/>
+  <rect class="table" x="9.5" y="9" width="13" height="14" rx="5.5" stroke-width="1.2"/>
+  <circle class="seat" cx="16" cy="4.6" r="2.1"/>
+  <circle class="seat" cx="4.6" cy="16" r="2.1"/>
+  <circle class="seat" cx="27.4" cy="16" r="2.1"/>
+  <circle class="you" cx="16" cy="27.4" r="2.6"/>
+</svg>

@@ -1,0 +1,9 @@
+---
+// Adds the page's availability status under every documentation title.
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import StatusPill from '../StatusPill.astro';
+
+const { status, plan } = Astro.locals.starlightRoute.entry.data;
+---
+<Default />
+<p class="page-status"><StatusPill status={status} plan={plan} /></p>

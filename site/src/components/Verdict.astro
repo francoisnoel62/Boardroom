@@ -1,0 +1,50 @@
+---
+import { verdictLabel } from '../data/labels.ts';
+import type { Verdict } from '../data/story.ts';
+
+interface Props { verdict: Verdict }
+const { verdict } = Astro.props;
+// Shape as well as colour distinguishes each verdict.
+const icon = { APPROVED: '✓', REJECTED: '✕', INSUFFICIENT_EVIDENCE: '?' }[verdict];
+---
+<span class="verdict" data-kind={verdict}><span class="icon" aria-hidden="true">{icon}</span><span data-verdict>{verdictLabel[verdict]}</span></span>
+
+<style>
+  .verdict {
+    --tone: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.25em 0.75em 0.25em 0.3em;
+    border: 1px solid color-mix(in srgb, var(--tone) 55%, transparent);
+    border-radius: var(--radius-pill);
+    color: var(--tone);
+    font-size: var(--step--1);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .icon {
+    display: inline-grid;
+    place-items: center;
+    width: 1.4em;
+    height: 1.4em;
+    border-radius: 50%;
+    background: var(--tone);
+    color: var(--surface-0);
+    font-size: 0.8em;
+    line-height: 1;
+  }
+
+  [data-kind='APPROVED'] {
+    --tone: var(--approved);
+  }
+
+  [data-kind='REJECTED'] {
+    --tone: var(--rejected);
+  }
+
+  [data-kind='INSUFFICIENT_EVIDENCE'] {
+    --tone: var(--insufficient);
+  }
+</style>
