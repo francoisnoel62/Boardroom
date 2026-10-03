@@ -1,5 +1,7 @@
 # Local recorded and prepared-question architecture
 
+Increment 3 introduces a durable call controller shared by future live phases. Each handle reserves its maximum cost and deadline atomically before any external boundary is entered. Execution claims the handle once; settlement retains unknown billing and publishes bounded metadata events. The same SQLite connection performs domain/event transactions, while provider awaits occur outside transactions. See [call control](controlling-calls.md). Active durations merge intervals on one monotonic process clock; independent clock intervals remain conservative sums. No provider adapters or automatic replay are added in this increment.
+
 Status: Plan 01 accepted with reservations, updated 2026-10-03. [Acceptance evidence](plan-01-acceptance.md) covers the local recorded workflow and three-platform installation campaign. Live meetings and public release remain later milestones.
 
 The first Plan 02 increment adds local real-project creation and frozen-question preparation. [Prepared-question workflow](preparing-a-question.md) and [TDD evidence](plan-02-progress.md) describe its limits. It makes no provider calls and does not yet use a meeting graph.

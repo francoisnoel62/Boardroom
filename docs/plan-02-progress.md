@@ -1,5 +1,13 @@
 # Plan 02 implementation evidence
 
+## Increment 3 — durable call control
+
+Nine public-service/process tests exercise real SQLite, real files, a minimal real LangGraph and an external deterministic provider boundary. Observed red cycles: route pricing rejected as unknown; execution handle absent; stop API absent; invalid metering accepted; monotonic waiting/overlap returned real elapsed time instead of 200 ms; CLI execution command unknown. Each corresponding test passed after implementation. Correction, timeout, pool protection and four-process affordability also pass. The crash test kills processes after durable reservation and reopening does not reconstruct execution handles.
+
+Receipts contain bounded metadata only. Pricing, scope, available budget and active-time admission are checked before saving an intention. Missing usage and ambiguous failure keep the reservation; cancellation does not presume zero remote billing. Ordinary calls preserve revision/conclusion funds/time. Separate call deadlines are distinct from the meeting's active-duration target. A correction gets a new charged intention. CLI configuration/inspection/stop is tested across actual independent processes; provider boundary errors and request sentinels are absent from saved receipt/history metadata.
+
+See [the receipt guide](controlling-calls.md). Real provider/account verification remains outside this increment. Final local and remote validation are recorded in its PR.
+
 ## Increment 1 — real projects and frozen text context
 
 Scope: application service, CLI processes and the installed package, as agreed in the [ten-PR implementation plan](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md). No provider connection or model call is implemented in this increment. Hotelix was offered as a read-only local smoke-test project; automated tests use disposable files and do not depend on that directory.
