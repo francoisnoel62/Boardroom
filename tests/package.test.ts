@@ -81,4 +81,8 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(livePreparation.noModelCalls, true);
   assert.equal(livePreparation.originalPreserved, true);
   assert.equal(livePreparation.frozenPassage, 'Team: two engineers; four weeks available for the launch.');
+  const protectedConfiguration = JSON.parse(readFileSync(join(root, 'installation evidence', 'protected-configuration.json'), 'utf8'));
+  assert.equal(protectedConfiguration.sessionInjection, 'verified');
+  assert.equal(protectedConfiguration.frozenTeam, 'verified');
+  assert.equal(protectedConfiguration.sentinelAbsent, true);
 });

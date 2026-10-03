@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FrozenTeamSchema } from './routes.ts';
 
 export const ProjectInputSchema = z.strictObject({
   name: z.string().trim().min(1).max(200),
@@ -27,6 +28,10 @@ const MeetingFieldsSchema = z.strictObject({
 });
 export const MeetingInputSchema = MeetingFieldsSchema.refine(
   value => value.advisers.some(adviser => adviser.id === value.proposalAuthorId), 'Proposal author must be a selected adviser.');
+export const TeamMeetingInputSchema = MeetingFieldsSchema.omit({ advisers: true, proposalAuthorId: true }).extend({
+  teamId: z.string().min(1),
+});
+export type TeamMeetingInput = z.input<typeof TeamMeetingInputSchema>;
 export const FrozenContextSchema = z.strictObject({
   schemaVersion: z.literal(1), version: z.literal(1), projectId: z.string().min(1),
   passages: z.array(PassageSelectionSchema.extend({
@@ -36,6 +41,7 @@ export const FrozenContextSchema = z.strictObject({
 export const LiveMeetingSchema = MeetingFieldsSchema.omit({ passages: true, language: true }).extend({
   schemaVersion: z.literal(1), id: z.string().uuid(), mode: z.literal('live'), status: z.literal('prepared'),
   language: z.string().min(1), createdAt: z.iso.datetime(), context: FrozenContextSchema,
+  team: FrozenTeamSchema.optional(),
 }).refine(value => value.advisers.some(adviser => adviser.id === value.proposalAuthorId),
   'Proposal author must be a selected adviser.');
 export type MeetingInput = z.input<typeof MeetingInputSchema>;
