@@ -1,0 +1,19 @@
+BOARDROOM | Recorded example — scripted fictional fixture; no model calls.
+
+[proposal] Product Owner | Fictional model A — scripted fixture
+Proposal v1: launch five integrations and self-service billing in four weeks.
+
+[objection] Lead Developer | Fictional model B — scripted fixture
+Two engineers cannot credibly deliver that scope in four weeks. Start with one integration and a supervised pilot.
+Evidence: context.md:4-4
+
+[objection] Marketing Manager | Fictional model C — scripted fixture
+The acquisition channel is unvalidated. Invite five design partners before funding a public launch.
+Evidence: context.md:6-6
+
+[revision] Product Owner | Fictional model A — scripted fixture
+Proposal v2: one integration, supervised onboarding, and five design partners. Defer self-service billing and the public launch.
+
+[final-views] Marketing Manager | Fictional model C — scripted fixture
+Final views on v2: Product Owner APPROVED; Lead Developer APPROVED; Marketing Manager INSUFFICIENT_EVIDENCE. Willingness to pay remains untested. Human decision: pending.
+

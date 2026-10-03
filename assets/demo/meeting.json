@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "messages": [
+    {
+      "id": "initial-proposal", "role": "Product Owner", "model": "Fictional model A — scripted fixture",
+      "phase": "proposal", "text": "Proposal v1: launch five integrations and self-service billing in four weeks."
+    },
+    {
+      "id": "staffing-objection", "role": "Lead Developer", "model": "Fictional model B — scripted fixture",
+      "phase": "objection", "text": "Two engineers cannot credibly deliver that scope in four weeks. Start with one integration and a supervised pilot.",
+      "citation": { "firstLine": 4, "lastLine": 4 }
+    },
+    {
+      "id": "demand-objection", "role": "Marketing Manager", "model": "Fictional model C — scripted fixture",
+      "phase": "objection", "text": "The acquisition channel is unvalidated. Invite five design partners before funding a public launch.",
+      "citation": { "firstLine": 6, "lastLine": 6 }
+    },
+    {
+      "id": "revised-proposal", "role": "Product Owner", "model": "Fictional model A — scripted fixture",
+      "phase": "revision", "text": "Proposal v2: one integration, supervised onboarding, and five design partners. Defer self-service billing and the public launch."
+    },
+    {
+      "id": "final-views", "role": "Marketing Manager", "model": "Fictional model C — scripted fixture",
+      "phase": "final-views", "text": "Final views on v2: Product Owner APPROVED; Lead Developer APPROVED; Marketing Manager INSUFFICIENT_EVIDENCE. Willingness to pay remains untested. Human decision: pending."
+    }
+  ],
+  "plan": "# Launch Ledger — plan v2\n\nRecorded example — scripted fictional fixture. No model calls.\n\nRun a four-week supervised pilot with one integration and five design partners. Defer self-service billing and public launch.\n\nThe staffing objection changed the scope (context.md, line 4). Validate willingness to pay before expanding.\n",
+  "memo": "# Decision memo\n\nRecorded example — scripted fictional fixture. No model calls.\n\nProposal v1: five integrations and self-service billing in four weeks.\nProposal v2: one integration and a supervised pilot after the staffing objection (context.md, line 4).\n\nProduct Owner: APPROVED on v2.\nLead Developer: APPROVED on v2.\nMarketing Manager: INSUFFICIENT_EVIDENCE on v2; willingness to pay remains untested (context.md, line 6).\n\nHuman decision: pending. Adviser views do not decide for the human.\n"
+}
