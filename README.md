@@ -4,7 +4,7 @@
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 in progress.** You can explore a fictional recorded example, inspect an immutable source revision, export a plan and memo, and reopen your progress. Live AI meetings are planned for the next milestone.
+**Current build: Plan 01 in progress.** You can explore a fictional recorded example, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress. Live AI meetings are planned for the next milestone.
 
 [Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](docs/architecture.md) · [Validation and remaining work](docs/plan-01-progress.md)
 
@@ -26,7 +26,7 @@ No account, API key, or model download is needed for playback.
 
 ### From the development checkout
 
-Prerequisites: **Node 24.12.0**, npm, and the dependencies installed by `npm ci`. The native SQLite driver is required. These commands have been exercised on Windows x64; other platforms await CI and clean-machine qualification.
+Prerequisites: **Node 24.12.0**, npm, and the dependencies installed by `npm ci`. The native SQLite driver is required. The recorded workflow passes CI on Windows x64, Linux x64, and macOS arm64. Clean-machine installation qualification remains outstanding.
 
 ```sh
 npm ci
@@ -57,7 +57,27 @@ On Windows, open PowerShell in that printed directory:
 
 The default data directory is `%LOCALAPPDATA%\Boardroom` on Windows, `~/Library/Application Support/Boardroom` on macOS, and `$XDG_DATA_HOME/boardroom` (or `~/.local/share/boardroom`) on Linux. Data remains outside the candidate directory. `--data-dir` overrides this location.
 
-The Windows x64 candidate has been launched with an empty `PATH` from a directory containing spaces and Unicode. A clean machine without Node, macOS, and Linux have **not yet been validated**. There are no published downloads or signed installers yet.
+The packaged recorded workflow passes empty-`PATH`, space/Unicode-path tests on Windows x64, Linux x64, and macOS arm64 in [PR 1's CI](https://github.com/francoisnoel62/Boardroom/pull/1/checks). A clean machine without Node has **not yet been validated**. There are no published releases or signed installers yet.
+
+## Inspect PDF and DOCX evidence
+
+Explicitly authorize the single file you want to read:
+
+```sh
+node dist/cli.js document --source assets/validation/launch.pdf --allow-source --data-dir .boardroom/documents
+node dist/cli.js document --source assets/validation/launch.docx --allow-source --data-dir .boardroom/documents
+```
+
+Each command prints a saved evidence ID. Use that ID to reopen an exact physical PDF page or saved DOCX text block:
+
+```sh
+node dist/cli.js evidence --id <pdf-evidence-id> --page 2 --data-dir .boardroom/documents
+node dist/cli.js evidence --id <docx-evidence-id> --block 2 --data-dir .boardroom/documents
+```
+
+In a Windows candidate, replace `node dist/cli.js` with `.\boardroom.cmd`. Add `--json` for structured output. A failed extraction exits with code `2` and a visible explanation; partial extraction keeps its warnings. PDF page references are physical page numbers. DOCX blocks are saved extraction blocks, **not Word page numbers**. Original bytes and extracted text are saved separately, so later edits do not rewrite a citation.
+
+This increment supports textual PDFs and DOCX text extraction. It does not perform OCR or preserve complex layout, images, and formatting. The [fictional fixtures](assets/validation/README.md) describe exactly what the automated checks cover. `doctor --json` also extracts those files from the candidate's actual dependencies and assets.
 
 ## What happens to your data
 
@@ -90,12 +110,12 @@ npm test
 
 Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](docs/plan-01-progress.md) records the observed failures and passing behaviors.
 
-A GitHub Actions workflow is configured for Windows, Linux, and macOS. It has **not been run on a remote repository**; no CI success badge or cross-platform support claim is made.
+A GitHub Actions workflow runs the deterministic integration/E2E suite and packages candidates on Windows x64, Linux x64, and macOS arm64. The [first PR's matrix is green](https://github.com/francoisnoel62/Boardroom/pull/1/checks). The PDF/DOCX extension has 19 passing local tests; its own remote checks are tracked on the follow-up PR. CI packaging evidence does not replace the clean-machine installation campaign.
 
 ## Next milestones
 
-Plan 01 still requires document extraction, terminal interaction qualification, protection experiments, further durable contracts, and a three-platform installation campaign. Plan 02 adds the first real decision using three distinct models from at least two providers. [All nine plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their acceptance gates.
+Plan 01 still requires broader document qualification, terminal interaction qualification, protection experiments, further durable contracts, and a three-platform installation campaign. Plan 02 adds the first real decision using three distinct models from at least two providers. [All nine plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their acceptance gates.
 
 The project is currently a development checkout, not a public release. Its project license and release/signing arrangements await a decision. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 
-To contribute during development, use the approved spec and milestone acceptance criteria, reproduce changes through public interfaces, and start each behavior change with a failing test. Include the relevant validation and update the documentation. No public issue tracker has been configured yet.
+To contribute during development, use the approved spec and milestone acceptance criteria, reproduce changes through public interfaces, and start each behavior change with a failing test. Include the relevant validation and update the documentation. See the [small dependent PR workflow](docs/contributing.md) used on the [public repository](https://github.com/francoisnoel62/Boardroom).

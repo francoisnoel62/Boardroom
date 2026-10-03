@@ -23,7 +23,13 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.match(run('evidence'), /Team: two engineers/);
   const exported = JSON.parse(run('export', '--output', join(root, 'output'), '--json'));
   assert.match(readFileSync(exported.plan, 'utf8'), /Recorded example/);
-  assert.equal(JSON.parse(run('doctor', '--json')).checkpointReopen, 'verified');
+  const diagnostics = JSON.parse(run('doctor', '--json'));
+  assert.equal(diagnostics.checkpointReopen, 'verified');
+  assert.deepEqual(diagnostics.pdfDocx, { pdf: 'verified', docx: 'verified' });
+  const pdf = JSON.parse(run('document', '--source', join(candidate, 'assets', 'validation', 'launch.pdf'), '--allow-source', '--json'));
+  const docx = JSON.parse(run('document', '--source', join(candidate, 'assets', 'validation', 'launch.docx'), '--allow-source', '--json'));
+  assert.equal(JSON.parse(run('evidence', '--id', pdf.evidence.id, '--page', '2', '--json')).text, 'Launch scope: one integration.');
+  assert.equal(JSON.parse(run('evidence', '--id', docx.evidence.id, '--block', '2', '--json')).text, 'Budget: €500 for the café pilot.');
   assert.match(run('demo', '--terminal'), /INSUFFICIENT_EVIDENCE/);
   const manifest = JSON.parse(readFileSync(join(candidate, 'manifest.json'), 'utf8'));
   assert.equal(manifest.runtime, process.version);

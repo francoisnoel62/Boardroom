@@ -1,25 +1,27 @@
 # Local recorded-example architecture
 
-Status: first Plan 01 increment, 2026-10-01. Public distribution and the complete milestone are not accepted yet.
+Status: recorded-workflow and PDF/DOCX increments of Plan 01, 2026-10-01. The complete milestone and public release are not accepted yet.
 
 ## Public boundaries
 
 The approved plan defines the seams: application commands, the terminal/CLI, and the distributed package. Tests use those boundaries rather than querying private tables or mocking internal services.
 
-`Boardroom` opens a fictional project, captures explicitly authorized UTF-8 sources, resolves saved citations, advances recorded playback, and creates new exports. The CLI passes commands and displays results. Ink renders the transcript; it does not own domain state. The current terminal is command-oriented; interactive streaming, typing, multiline paste, resize, and cancellation still require their own implementation and qualification.
+`Boardroom` opens a fictional project, captures explicitly authorized UTF-8/PDF/DOCX sources, resolves saved citations, advances recorded playback, and creates new exports. PDF/DOCX extraction runs on the exact bytes read after source consent. The CLI passes commands and displays results. Ink renders the transcript; it does not own domain state. The current terminal is command-oriented; interactive streaming, typing, multiline paste, resize, and cancellation still require their own implementation and qualification.
 
 ## Durable data
 
 - `domain.sqlite`: versioned, schema-validated project, evidence, and recorded-meeting records; WAL with a finite busy timeout. Writes are short synchronous statements. The current recording is stored in the meeting record, so updating bundled assets does not rewrite an existing recording.
-- `snapshots/<sha256>`: original UTF-8 bytes saved with exclusive creation. Citations validate the snapshot hash and expose revision, original location, and line range. Invalid UTF-8 is rejected instead of silently replacing characters.
+- `snapshots/<sha256>`: original bytes saved with exclusive creation. Document evidence adds a separate content-addressed, schema-validated extraction JSON. Citation resolution validates both original and extraction snapshot hashes. Text references use saved line ranges; PDFs use physical pages and DOCX uses saved text blocks. Invalid UTF-8 is rejected by the plain-text extractor.
 - `checkpoints.sqlite`: the separate technical probe uses the official `SqliteSaver`; a minimal graph increments a count and reopens its saved state. It is not the replay engine or a live meeting.
 - Export directories: unique `boardroom-recorded-*` directories containing exclusively created `plan.md` and `memo.md`. Exports include saved evidence identity and preserve disagreement and the pending human decision.
 
-There is no network/human wait inside a SQLite transaction. The present synchronous application service serializes its local operations; it does not yet implement the future asynchronous write coordinator or action reconciliation. Durable action receipts, migrations beyond this initial schema, and the live-domain contracts remain outstanding.
+There is no network/human wait inside a SQLite transaction. Document parsing finishes before a short immediate transaction rechecks evidence identity and allocates its revision. Concurrent captures of identical bytes reuse one durable identity; they do not leave competing revision-1 records. A full asynchronous write coordinator, durable action receipts, migrations beyond this initial schema, and the live-domain contracts remain outstanding.
 
 ## Dependency and runtime decision
 
 The actual qualified local combination is Node **24.12.0**, Ink **7.1.1**, React **19.2.4**, LangGraph **1.4.18**, the official SQLite checkpointer **1.0.4**, and `better-sqlite3` **12.10.0**. Exact top-level versions and transitive resolutions are in `package.json` and `package-lock.json`.
+
+The document increment adds PDF.js (`pdfjs-dist` **6.3.289**) and Mammoth **1.13.0**, checked against their current npm manifests. PDF.js uses its Node-compatible legacy build, bundled worker, CMaps, standard fonts, and WASM asset paths. Assets are resolved relative to the installed application, with Windows path separators normalized for PDF.js. PDF.js reads a byte array rather than an arbitrary URL and never renders scripts. Mammoth raw-text extraction reads only the supplied DOCX buffer; HTML is neither rendered nor executed. [Official PDF.js Node example](https://raw.githubusercontent.com/mozilla/pdf.js/master/examples/node/getinfo.mjs), [Mammoth raw-text API and limitations](https://github.com/mwilliamson/mammoth.js).
 
 The official checkpointer declares `better-sqlite3 ^12.10.0`. Keeping 12.10.0 lets the application and checkpointer use the same compatible native driver instead of silently selecting a different major version. [Official checkpointer manifest](https://raw.githubusercontent.com/langchain-ai/langgraphjs/main/libs/checkpoint-sqlite/package.json). Ink's stable package supports this Node/React combination; the upstream README also documents its rendering API. [Ink](https://github.com/vadimdemedes/ink).
 
@@ -33,7 +35,7 @@ Initial targets: Windows x64, Linux x64, and macOS arm64. Other architectures ar
 
 The workflow uses the currently documented v7 actions and the documented macOS arm64 runner label: [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [upload-artifact](https://github.com/actions/upload-artifact), and [GitHub-hosted runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). Artifact permission/executable-mode preservation on Unix remains part of distribution qualification.
 
-Only Windows x64 has local automated evidence at this stage. Empty-PATH process tests show that the candidate invokes its own Node; they do not substitute for a clean-machine installation test. No paid infrastructure or provider account is needed for the present tests.
+The recorded workflow has passed [PR 1's remote CI](https://github.com/francoisnoel62/Boardroom/pull/1/checks) on all three targets. The document increment has local Windows x64 evidence; its follow-up CI must qualify the added extraction dependencies on each target. Empty-PATH process tests show that the candidate invokes its own Node; they do not substitute for a clean-machine installation test. No paid infrastructure or provider account is needed for the present tests.
 
 ## Protection and provenance limits
 
@@ -41,4 +43,4 @@ Authorization is checked before reading an external source. Evidence resolution 
 
 Snapshots and exports preserve original bytes but remain ordinary local files owned by the user. Saved source paths may reveal local directory names. The current exports describe only the bundled fictional source and do not include credentials.
 
-The demo is a handwritten scripted fixture with fictional model labels. It proves the reading/export workflow, not provider integration or the quality of an actual AI debate. PDF.js, Mammoth, local embeddings, provider streaming, and filtered trace export are not installed or verified by this increment.
+The demo is a handwritten scripted fixture with fictional model labels. It proves the reading/export workflow, not provider integration or the quality of an actual AI debate. Textual PDF/DOCX extraction is verified against the documented fictional fixtures, including empty/malformed inputs. DOCX raw text does not preserve original layout or Word pagination. Empty PDF pages are reported as possibly blank/scanned, with OCR unavailable. Partial and failed extraction stay visible, and citations cannot substitute raw PDF bytes for an extracted-text line reference. Local embeddings, provider streaming, and filtered trace export remain unavailable.
