@@ -4,7 +4,7 @@
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 in progress.** You can explore a fictional recorded example, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. Live AI meetings are planned for the next milestone.
+**Current build: Plan 01 in progress.** You can explore a fictional recorded example, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. A separate terminal check lets you try input during a fictional stream. Live AI meetings are planned for the next milestone.
 
 [Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](docs/architecture.md) · [Validation and remaining work](docs/plan-01-progress.md)
 
@@ -80,6 +80,18 @@ node dist/cli.js evidence --id <docx-evidence-id> --block 2 --data-dir .boardroo
 In a Windows candidate, replace `node dist/cli.js` with `.\boardroom.cmd`. Add `--json` for structured output. A failed extraction exits with code `2` and a visible explanation; partial extraction keeps its warnings. PDF page references are physical page numbers. DOCX blocks are saved extraction blocks, **not Word page numbers**. Original bytes and extracted text are saved separately, so later edits do not rewrite a citation.
 
 This increment supports textual PDFs and DOCX text extraction. It does not perform OCR or preserve complex layout, images, and formatting. The [fictional fixtures](assets/validation/README.md) describe exactly what the automated checks cover. `doctor --json` also extracts those files from the candidate's actual dependencies and assets.
+
+## Try input during a fictional stream
+
+Run this in an interactive terminal:
+
+```sh
+node dist/cli.js terminal-check
+```
+
+In a Windows candidate, use `.\boardroom.cmd terminal-check`. Type while the sample updates, paste several lines, resize the window, and press Enter to submit the scratch draft. Backspace removes one whole character, including combined accents and emoji. Escape or Ctrl+C cancels with exit code `130` and restores the terminal modes.
+
+The screen is labeled **Technical validation — fictional stream**. Input stays in memory; it does not create project data, advance playback, or call a model. Pasted line endings are normalized, and terminal control bytes are removed before display. Piped input is refused. This is a small input probe, not a live meeting or a full text editor.
 
 ## What happens to your data
 

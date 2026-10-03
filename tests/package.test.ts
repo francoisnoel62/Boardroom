@@ -5,8 +5,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { openTerminal } from './support/terminal.ts';
 
-test('the local candidate runs its own Node and native SQLite from a Unicode path with an empty PATH', (t) => {
+test('the local candidate runs its own Node and native SQLite from a Unicode path with an empty PATH', async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'Boardroom package '));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const candidate = join(root, 'paquet François avec espaces');
@@ -37,6 +38,19 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(JSON.parse(run('evidence', '--id', pdf.evidence.id, '--page', '2', '--json')).text, 'Launch scope: one integration.');
   assert.equal(JSON.parse(run('evidence', '--id', docx.evidence.id, '--block', '2', '--json')).text, 'Budget: €500 for the café pilot.');
   assert.match(run('demo', '--terminal'), /INSUFFICIENT_EVIDENCE/);
+  const beforeTerminal = JSON.parse(run('history', '--json'));
+  const terminal = openTerminal(t, [cli, 'terminal-check', '--data-dir', data], { executable: runtime, cwd: root, env });
+  await terminal.waitFor(/Stream tick: [1-9]/);
+  terminal.write('\x1b[200~Capacity:\r\ncafé 😀\x1b[201~');
+  await terminal.waitFor(/Draft: Capacity:\ncafé 😀/);
+  terminal.resize(44, 18);
+  await terminal.waitFor(/Window: 44x18/);
+  terminal.write('\r');
+  terminal.resize(100, 30);
+  await terminal.waitFor(/Accepted: "Capacity:\\ncafé 😀"/);
+  terminal.write('\x1b');
+  assert.equal((await terminal.finish()).exitCode, 130);
+  assert.deepEqual(JSON.parse(run('history', '--json')), beforeTerminal);
   const manifest = JSON.parse(readFileSync(join(candidate, 'manifest.json'), 'utf8'));
   assert.equal(manifest.runtime, process.version);
   assert.equal(manifest.platform, process.platform);

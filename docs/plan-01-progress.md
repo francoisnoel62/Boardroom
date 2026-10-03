@@ -1,6 +1,6 @@
 # Plan 01 — implementation evidence
 
-Date: 2026-10-01. Status: **started; not accepted**. This report records the local workflow, PDF/DOCX, and durable-history increments. All unchecked milestone acceptance criteria remain in force.
+Updated: 2026-10-03. Status: **started; not accepted**. This report records the local workflow, PDF/DOCX, durable-history, and terminal-validation increments. All unchecked milestone acceptance criteria remain in force.
 
 ## Red → green record
 
@@ -36,6 +36,14 @@ Each behavior below was introduced after executing its failing test. Run the res
 | History CLI | `history` was an unknown command | New processes inspect text/JSON outcomes without executing pending intent |
 | Concurrent first readers | Four readers received only one distinct message ID | Serialized first creation and playback deliver four successive messages |
 | Consistent history | An operation appeared without its prepared event | A read transaction keeps events and receipts on one snapshot during concurrent exports |
+| TTY boundary | `terminal-check` was unknown | Piped input is refused before any project data is created |
+| Input during streaming | PTY showed help instead of the validation screen | Typed input can be submitted while the fictional sample continues |
+| Cancellation | Escape did not exit the process | Escape and Ctrl+C stop the sample, exit with code 130, and restore the cursor |
+| Unicode editing | Backspace left the combined accent unchanged | Whole graphemes are removed without breaking Unicode input |
+| Multiline paste | Submission retained CRLF rather than normalized LF | Bracketed paste stays one draft, normalizes newlines, and restores paste mode on exit |
+| Window resize | Current dimensions were absent | Narrower/wider PTY windows update dimensions and preserve an editable Unicode draft |
+| Pasted controls | ANSI bytes changed the displayed draft's styling | Control bytes are removed and do not cancel or issue terminal commands |
+| Interactive TTY in CI | Candidate PTY stayed blank with `CI=true`; reproduced locally | Explicit interactive rendering keeps input and sample updates visible in a real TTY |
 
 The package copy initially failed using Node's recursive `cpSync` on this Windows environment. Copying files and directories individually resolved the observed failure; the same package E2E then passed. This is not a claim that all Windows environments have that issue.
 
@@ -57,10 +65,20 @@ Additive compatibility was also checked against data created by the retained PR 
 
 The README transcript is captured from the compiled CLI with a fresh local demonstration data directory. Its SVG is a static rendering of that actual text, not a photograph of a terminal window. Fictional model labels are visibly identified.
 
+## Terminal-validation increment — PR 4
+
+`terminal-check` runs a fictional sample in an actual terminal, using the existing Ink runtime. Scratch input is in memory only. Seven new CLI/PTY tests cover TTY refusal, input during updates, Unicode backspace, multiline paste, narrower/wider resize, pasted control bytes, and Escape/Ctrl+C cancellation. The candidate journey also exercises the probe through its copied Node with empty PATH and checks unchanged project history.
+
+Local result: **34 tests passed**, none skipped, including the bundled-runtime PTY journey; type checking passed. This extends the 27-test PR 3 baseline. The GitHub Actions matrix runs the same suite on Windows x64, Linux x64, and macOS arm64; its result must be checked independently.
+
+The first remote run exposed Ink's default noninteractive rendering when `CI=true`, even inside a real PTY. Extending the existing input test with that environment reproduced the blank screen locally. Explicit interactive rendering at the TTY-only command boundary makes the same seven terminal tests pass, including ongoing updates after typing. The bundled-runtime journey also passes locally with `CI=true`, empty PATH, and unchanged project history. The candidate test retains the CI environment rather than disabling it.
+
+The test driver is Microsoft `node-pty` 1.2.0-beta.15, with system ConPTY on Windows, plus `@xterm/headless` 6.0.0 to interpret actual VT output. The earlier stable driver retained Windows workers after exit; the selected beta completed the same cleanup checks. No production dependency or provider access was added. This proof concerns the documented sample and window sizes; it does not qualify every terminal, IME, editing operation, or real provider stream. Remote results are tracked on [PR 4](https://github.com/francoisnoel62/Boardroom/pull/4/checks).
+
 ## Still required before accepting Plan 01
 
 - Clean-machine packages on Windows x64, Linux x64, and macOS arm64; execute the CI matrix, review native packaging and launcher behavior on each.
-- Interactive streaming input, multiline paste, resizing, Unicode, and cancellation with real terminal automation.
+- Broader terminal/editor qualification and the real-provider streaming gate in Plan 02. The separate fictional-stream probe now covers input, multiline paste, resizing, Unicode, and cancellation through real PTYs and the packaged runtime.
 - Broader document/font/layout qualification and optional embedding candidate qualification. The basic packaged worker/assets, DOCX text, and empty/malformed cases have passed the three-target CI matrix.
 - Live context/proposal/stance contracts and general command/MCP action contracts. Versioned playback/export events, operation IDs, receipts, and additive storage compatibility are implemented; a migration runner, recovery reconciliation, and further crash/disk-fault qualification remain.
 - Protection experiments for commands and local/remote MCP: protected temporary originals, outside-copy files, filesystem/network restrictions, platform prerequisites. All such tools remain blocked in the product.

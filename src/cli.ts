@@ -21,6 +21,7 @@ Usage:
   boardroom history [--json]             Inspect playback events and export receipts
   boardroom status                      Show local capabilities
   boardroom doctor [--json]              Run separate local storage probes
+  boardroom terminal-check              Try input during a fictional stream (TTY only)
 
 Options: --data-dir <directory>, --terminal (Ink rendering), --json, --help
 `;
@@ -44,6 +45,12 @@ try {
   const command = positionals[0];
   if (values.help || !command) {
     console.log(help);
+  } else if (command === 'terminal-check' && positionals.length === 1) {
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+      throw new Error('Terminal validation requires an interactive terminal for input and output.');
+    }
+    const { runTerminalValidation } = await import('./terminal-validation.tsx');
+    await runTerminalValidation();
   } else {
     if (!['demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history'].includes(command) || positionals.length !== 1) {
       throw new Error('Unknown command. Run boardroom --help.');
