@@ -22,6 +22,7 @@ import type { CallReceipt } from './call-domain.ts';
 import { FramingStateSchema, type FramingBody } from './framing-domain.ts';
 import type { LiveFraming } from './live-framing.ts';
 import type { LiveDeliberation } from './live-deliberation.ts';
+import type { LiveDebate } from './live-debate.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -34,6 +35,8 @@ export class Boardroom {
   private framingLoading?: Promise<LiveFraming>;
   private deliberation?: LiveDeliberation;
   private deliberationLoading?: Promise<LiveDeliberation>;
+  private debate?: LiveDebate;
+  private debateLoading?: Promise<LiveDebate>;
   readonly dataDirectory: string;
 
   constructor(dataDirectory: string, options: { monotonicNow?: () => number; fetch?: typeof fetch } = {}) {
@@ -42,10 +45,11 @@ export class Boardroom {
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
     this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow,
       (project, id, input) => {
-        if (input.phase !== 'analysis' && input.phase !== 'revision') return;
+        if (!['analysis', 'revision', 'confrontation'].includes(input.phase)) return;
         this.getMeeting(project, id);
         const state = FramingStateSchema.safeParse(this.load('framing-state', id));
         if (!state.success || state.data.status !== 'approved' || state.data.approvedVersion !== state.data.latestVersion
+          || (input.phase !== 'analysis' && input.framingVersion !== state.data.approvedVersion)
           || (input.phase === 'analysis' && input.subjectVersion !== state.data.approvedVersion)) throw new PublicError('Work requires the current approved framing.');
       });
     this.http = options.fetch ?? globalThis.fetch;
@@ -62,9 +66,11 @@ export class Boardroom {
       const stored = this.load('framing-state', id);
       if (stored) {
         const state = FramingStateSchema.parse(stored);
-        this.save('framing-state', id, { ...state, status: 'stopped' });
-        this.appendEvent({ schemaVersion: 1, type: 'framing.stopped', projectId: project, meetingId: id,
-          ...(state.latestVersion ? { version: state.latestVersion } : {}), occurredAt: new Date().toISOString() });
+        if (!conclude || state.status !== 'approved') {
+          this.save('framing-state', id, { ...state, status: 'stopped' });
+          this.appendEvent({ schemaVersion: 1, type: 'framing.stopped', projectId: project, meetingId: id,
+            ...(state.latestVersion ? { version: state.latestVersion } : {}), occurredAt: new Date().toISOString() });
+        }
       }
       return execution;
     }).immediate();
@@ -95,6 +101,14 @@ export class Boardroom {
     return (await this.deliberationService()).analyse(project, id, store);
   }
   async inspectAnalyses(project: string, id: string) { return (await this.deliberationService()).inspect(project, id); }
+  private debateService() {
+    this.debateLoading ??= import('./live-debate.ts').then(({ LiveDebate }) => {
+      this.debate = new LiveDebate(this.db, this, event => this.appendEvent(event)); return this.debate;
+    });
+    return this.debateLoading;
+  }
+  async debateMeeting(project: string, id: string, store: SecretStore) { return (await this.debateService()).debate(project, id, store); }
+  async inspectDebate(project: string, id: string) { return (await this.debateService()).inspect(project, id); }
 
   configureSupportedRoute(input: { id: string; providerId: string; modelId: string }) {
     return this.configureRoute(supportedRoute(input));
@@ -664,5 +678,5 @@ export class Boardroom {
       .run(kind, id, JSON.stringify(value));
   }
 
-  close(): void { this.deliberation?.close(); this.framing?.close(); this.db.close(); }
+  close(): void { this.debate?.close(); this.deliberation?.close(); this.framing?.close(); this.db.close(); }
 }

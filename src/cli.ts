@@ -41,6 +41,8 @@ Usage:
   boardroom meeting-stop --project <id> --id <meeting-id>  Stop and preserve saved framing
   boardroom meeting-analyse --project <id> --id <meeting-id> --allow-provider [--session]  Three independent analyses
   boardroom meeting-analyses --project <id> --id <meeting-id>  Inspect saved analyses and missing advisers
+  boardroom meeting-debate --project <id> --id <meeting-id> --allow-provider [--session]  Confront and revise
+  boardroom meeting-proposals --project <id> --id <meeting-id>  Inspect proposal versions and objections
   boardroom execution-configure --project <id> --id <meeting-id> --input <json-file>  Freeze protected reserves
   boardroom calls --project <id> --id <meeting-id>  Inspect budgets, time and call receipts
   boardroom execution-stop --project <id> --id <meeting-id>  Stop pending and in-flight work
@@ -101,12 +103,12 @@ try {
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+    if (!['meeting-debate', 'meeting-proposals', 'meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new PublicError('Unknown command. Run boardroom --help.');
     }
     if (['route-configure', 'team-configure'].includes(command) && !values.input) throw new PublicError('Configuration requires --input <json-file>.');
     if (command.startsWith('credential-') && !values.route) throw new PublicError('Credential commands require --route <route-id>.');
-    if (values.session && !['meeting-analyse', 'credential-check', 'provider-preflight', 'meeting-start'].includes(command)) throw new PublicError('Session injection requires a credential check or explicit provider operation.');
+    if (values.session && !['meeting-debate', 'meeting-analyse', 'credential-check', 'provider-preflight', 'meeting-start'].includes(command)) throw new PublicError('Session injection requires a credential check or explicit provider operation.');
     if (['meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop'].includes(command)) {
       if (!values.project || !values.id) throw new PublicError('Framing commands require --project and --id.');
       if (command === 'meeting-start' && !values['allow-provider']) throw new PublicError('Paid framing requires explicit --allow-provider.');
@@ -138,10 +140,10 @@ try {
     if (command === 'evidence' && !values.id && (values.page || values.block)) throw new PublicError('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (command === 'meeting-analyse' || command === 'meeting-analyses') {
+      if (['meeting-analyse', 'meeting-analyses', 'meeting-debate', 'meeting-proposals'].includes(command)) {
         if (!values.project || !values.id) throw new PublicError('Analysis commands require --project and --id.');
         let result;
-        if (command === 'meeting-analyse') {
+        if (command === 'meeting-analyse' || command === 'meeting-debate') {
           if (!values['allow-provider']) throw new PublicError('Paid analyses require explicit --allow-provider.');
           const store = values.session ? new SessionSecretStore() : new HostSecretStore();
           try {
@@ -154,10 +156,10 @@ try {
                 await app.setRouteCredential(route.id, keys[route.id], store);
               }
             }
-            result = await app.analyseMeeting(values.project, values.id, store);
+            result = command === 'meeting-debate' ? await app.debateMeeting(values.project, values.id, store) : await app.analyseMeeting(values.project, values.id, store);
           } finally { if (store instanceof SessionSecretStore) store.clear(); }
           if (result.status !== 'complete') process.exitCode = 2;
-        } else result = await app.inspectAnalyses(values.project, values.id);
+        } else result = command === 'meeting-proposals' ? await app.inspectDebate(values.project, values.id) : await app.inspectAnalyses(values.project, values.id);
         console.log(JSON.stringify(result, null, values.json ? undefined : 2));
       } else if (['meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop'].includes(command)) {
         let result;

@@ -35,6 +35,21 @@ function setup(t: TestContext, monotonicNow?: () => number) {
 const limits = { maxInputTokens: 100, maxOutputTokens: 100, maxDurationMs: 1000 };
 const reserves = { revisionMicros: 200, conclusionMicros: 200, revisionMs: 1000, conclusionMs: 1000 };
 
+test('stop or conclusion arriving between polls rejects ordinary completion but keeps known metering', async t => {
+  const { app, project, meeting } = setup(t);
+  try {
+    app.configureExecution(project.id, meeting.id, reserves);
+    const call = app.reserveCall(project.id, meeting.id, { adviserId: 'po', phase: 'preflight', contextVersion: 1,
+      subjectVersion: 1, pool: 'work', limits });
+    const result = await call.execute({ text: 'A' }, async () => {
+      app.requestConclusion(project.id, meeting.id);
+      return { text: 'Late completion', usage: { inputTokens: 1, outputTokens: 1 } };
+    });
+    assert.equal(result.text, undefined); assert.equal(result.receipt.reason, 'cancelled');
+    assert.equal(result.receipt.knownCostMicros, 3);
+  } finally { app.close(); }
+});
+
 test('work cannot consume a protected pool and CLI receipts survive independent processes', t => {
   const { app, project, meeting, root } = setup(t);
   const inputFile = join(root, 'reserves.json'); writeFileSync(inputFile, JSON.stringify(reserves));
