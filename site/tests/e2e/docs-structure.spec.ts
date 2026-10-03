@@ -11,7 +11,8 @@ test('the documentation is organised by purpose', async ({ page, isMobile }) => 
 
 test('every documentation page states its availability', async ({ page }) => {
   await page.goto('/docs/');
-  const links = await page.locator('a[href^="/docs/"]').evaluateAll(anchors =>
+  // Rendered pages only: the Markdown copies of each page are plain text.
+  const links = await page.locator('a[href^="/docs/"]:not([href$=".md"])').evaluateAll(anchors =>
     [...new Set(anchors.map(anchor => anchor.getAttribute('href')!.split('#')[0]!))]);
   expect(links.length).toBeGreaterThan(20);
   for (const link of links) {

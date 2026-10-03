@@ -30,6 +30,7 @@ export default defineConfig({
       customCss: ['./src/styles/fonts.css', './src/styles/tokens.css', './src/styles/docs.css'],
       components: {
         PageTitle: './src/components/docs/PageTitle.astro',
+        Footer: './src/components/docs/Footer.astro',
       },
       sidebar: [
         { label: 'Get started', items: ['docs', 'docs/quickstart', 'docs/install', 'docs/first-real-meeting'] },

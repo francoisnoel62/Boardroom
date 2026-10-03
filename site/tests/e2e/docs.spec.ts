@@ -36,3 +36,21 @@ test('code blocks never need horizontal scrolling that a keyboard cannot reach',
     .map(block => block.textContent?.slice(0, 60)));
   expect(unreachable).toEqual([]);
 });
+
+test('every documentation page can be read as Markdown, generated tables included', async ({ page, request }) => {
+  await page.goto('/docs/reference/cli/');
+  const link = page.getByRole('link', { name: 'View as Markdown' });
+  await expect(link).toHaveAttribute('href', '/docs/reference/cli.md');
+  await expect(page.getByRole('button', { name: 'Copy page as Markdown' })).toBeVisible();
+  const markdown = await (await request.get('/docs/reference/cli.md')).text();
+  expect(markdown.startsWith('# CLI\n')).toBe(true);
+  expect(markdown).toContain('| `boardroom demo [--next]` | Read or resume the recorded example |');
+  expect(markdown).not.toContain('import ');
+  expect(markdown).not.toContain('<CommandTable');
+});
+
+test('each documentation page asks for feedback with the page prefilled', async ({ page }) => {
+  await page.goto('/docs/quickstart/');
+  const feedback = page.getByRole('link', { name: 'Tell us on GitHub' });
+  await expect(feedback).toHaveAttribute('href', /issues\/new\?title=Docs\+feedback%3A\+Quickstart/);
+});
