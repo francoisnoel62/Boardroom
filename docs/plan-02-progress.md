@@ -125,3 +125,19 @@ Additional public-boundary cases cover the internal two-cycle bound, rejected am
 Inherited PR6 commit bcb317488d24cca233cedde3e38599087a0f4a77 passed all six verify/installed jobs in both push https://github.com/francoisnoel62/Boardroom/actions/runs/37118705701 and PR https://github.com/francoisnoel62/Boardroom/actions/runs/37118708487 runs on Windows x64, Linux x64 and macOS arm64; GitGuardian passed.
 
 Validation finale PR7 : typecheck/build et npm test **107/107**, zéro échec/skip, Windows x64 / Node 24.12.0, 112 s ; coffre natif requis et paquet installé inclus. Liens Markdown locaux et git diff --check passent.
+
+## Increment 8 — final views, human decisions and partial live exports
+
+Based on PR7 (#14). Three individual structured views bind the same immutable proposal version/hash, with strict verdicts, confidence bounds and frozen references. Human decisions capture reviewed/resulting versions and available/missing view identities separately; modifications create human-authored versions and preserve old views as stale. Exclusive exports include complete or partial domain snapshots, sources, changes/objections, known/held unknown usage, plus durable intentions and per-file receipts. Checkpoints store identities only; no replay.
+
+Observed red → green:
+- `node --test tests/live-decisions.test.ts`: missing `collectFinalViews`, then missing `recordHumanDecision`, then missing `exportLiveMeeting` at each successive public journey boundary → green integration graph/SQLite/decision/export, including a human acceptance contrary to three rejections and two exclusive exports after reopen.
+- `--test-name-pattern='cannot freeze'`: final views were admitted while ordinary debate could still revise the proposal → green gate requiring finished debate or explicit conclusion.
+- `--test-name-pattern='stopping after completed'`: stopped unchanged proposal incorrectly made completed views stale → green currency based on immutable proposal and approved framing identity, not execution activity.
+- `node --test tests/live-decisions-cli.test.ts`: unknown `meeting-views` → green actual full CLI journey through differing verdicts, deferral and both live exports.
+
+Additional boundary checks cover confidence 101 rejection with one correction, missing versus INSUFFICIENT_EVIDENCE, stale retained views, all five human choices, version refusal, zero-budget/no-proposal exports, known source-key/pattern redaction, original preservation and a failed export handle refusing replay. Artifacts flag review before sharing; unknown unrelated secrets cannot be universally detected. No paid calls or Hotelix changes; account qualification remains open.
+
+PR7 commit 1922b4ae21ee0c8810c377ff92e88bb3d139bb42 passed all six producer/installed jobs on Windows x64, Linux x64 and macOS arm64 in both https://github.com/francoisnoel62/Boardroom/actions/runs/37119208807 and https://github.com/francoisnoel62/Boardroom/actions/runs/37119212124. GitGuardian passed.
+
+Validation finale PR8 : typecheck/build et npm test **113/113**, zéro échec/skip, Windows x64 / Node 24.12.0, 150,8 s ; coffre natif et paquet installé inclus. Liens Markdown locaux et git diff --check passent.
