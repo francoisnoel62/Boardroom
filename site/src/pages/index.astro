@@ -1,4 +1,6 @@
 ---
+import Architecture from '../components/Architecture.astro';
+import RepoStats from '../components/RepoStats.astro';
 import Claim from '../components/Claim.astro';
 import EvidenceQuote from '../components/EvidenceQuote.astro';
 import Paper from '../components/Paper.astro';
@@ -35,7 +37,7 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
 ---
 <Site
   title="Boardroom — Great decisions deserve a room"
-  description="An open-source decision room for builders. AI advisers examine the evidence, challenge your plan and keep their objections on the record. You make the call."
+  description="A local decision room for builders, built in the open. AI advisers examine the evidence, challenge your plan and keep their objections on the record. You make the call."
 >
   <section class="hero" aria-labelledby="hero-title">
     <div class="container hero-grid">
@@ -62,7 +64,7 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
     </div>
 
     <figure class="container capture">
-      <Terminal title={captureTitle} screen={terminalScreen} label="Captured terminal screen of the recorded example" />
+      <Terminal title={captureTitle} screen={terminalScreen} label="Captured terminal screen of the recorded example" replay />
       <figcaption>
         Actual screen text from the packaged CLI in an OS pseudoterminal. The dialogue and model labels are fictional;
         playback makes no model calls. <a href={sourceUrl('docs/media/README.md')} rel="noopener">Capture provenance</a>
@@ -283,37 +285,14 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
         <h2 id="engineering-heading" class="display">Built like infrastructure</h2>
         <p>A decision tool has to be trustworthy before it is clever. Each statement below links to the evidence behind it.</p>
       </div>
+      <RepoStats />
       <ul class="proofs">
         {['three-platforms', 'no-node-required', 'separate-exports', 'example-without-account'].map(id => (
           <li><Claim id={id} showEvidence /></li>
         ))}
       </ul>
-      <figure class="architecture">
-        <p class="visually-hidden">
-          The CLI and its Ink renderer call the application service, which owns state in a domain SQLite database with
-          immutable source snapshots and writes each new Markdown plan and decision memo. Separately, the doctor command
-          runs a LangGraph probe against the official SQLite checkpointer.
-        </p>
-        <div class="arch" aria-hidden="true">
-          <span class="node">CLI · Ink</span>
-          <span class="arrow">→</span>
-          <span class="node node--core">Application service<small>owns state</small></span>
-          <span class="arrow">→</span>
-          <span class="node">Domain SQLite<small>+ immutable snapshots</small></span>
-          <span class="branch">↳</span>
-          <span class="node node--output">New Markdown plan + decision memo</span>
-          <span class="node node--probe">doctor</span>
-          <span class="arrow arrow--probe">→</span>
-          <span class="node node--probe">Separate LangGraph probe</span>
-          <span class="arrow arrow--probe">→</span>
-          <span class="node node--probe">Official SQLite checkpointer</span>
-        </div>
-        <figcaption>
-          The terminal renders results; the application service owns state.{' '}
-          <a href={sourceUrl('docs/architecture.md')} rel="noopener">Architecture and tradeoffs</a>{' · '}
-          <a href={sourceUrl('docs/plan-01-acceptance.md')} rel="noopener">Acceptance evidence</a>
-        </figcaption>
-      </figure>
+      <Architecture />
+      <p class="engineering-more"><a href="/engineering/">How Boardroom is built, decision by decision <span aria-hidden="true">→</span></a></p>
     </div>
   </section>
 
@@ -342,6 +321,74 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
           );
         })}
       </ol>
+    </div>
+  </section>
+
+  <section id="faq" class="section" aria-labelledby="faq-heading">
+    <div class="container faq-grid">
+      <div class="section-heading">
+        <p class="eyebrow">FAQ</p>
+        <h2 id="faq-heading" class="display">Questions worth asking</h2>
+        <p>Short answers, with what is available today kept apart from what is planned.</p>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Is Boardroom free?</summary>
+          <div class="answer">
+            <p>
+              The recorded example costs nothing and needs no account. Boardroom itself has no account, subscription or
+              payment. Live meetings will use your own model provider accounts, billed by those providers.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Is it open source?</summary>
+          <div class="answer">
+            <p>
+              The source is public on GitHub. Its license is still awaiting a decision, so it is not yet open source in the
+              legal sense.
+            </p>
+            <Claim id="open-source-license" />
+          </div>
+        </details>
+        <details>
+          <summary>Can I download it?</summary>
+          <div class="answer">
+            <p>
+              Not as a published release yet. You can <a href="/docs/quickstart/">build it from source</a> today; the
+              project's CI produces a packaged candidate for each qualified platform.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Do I need an API key?</summary>
+          <div class="answer">
+            <p>
+              Not for the recorded example. Live meetings will use the model keys you supply. Official ChatGPT and Claude
+              subscription routes are being studied and will be announced only once tested end to end.
+            </p>
+            <Claim id="live-meetings" />
+          </div>
+        </details>
+        <details>
+          <summary>What leaves my machine?</summary>
+          <div class="answer">
+            <p>
+              Today, nothing: playback makes no model or cloud calls, and the application sends no telemetry. Live
+              meetings will send selected context to the providers you configure. <a href="/docs/your-data/">Read how your data is handled</a>.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Why a terminal?</summary>
+          <div class="answer">
+            <p>
+              Boardroom is terminal-first for builders: it runs locally, scripts cleanly with <code>--json</code> and keeps
+              the focus on the argument. A graphical interface is possible future work, not a commitment of this version.
+            </p>
+          </div>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -890,71 +937,18 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
     background: var(--surface-1);
   }
 
-  .architecture {
-    display: grid;
-    gap: var(--space-3);
-    margin-top: var(--space-6);
+  .engineering-more {
+    margin-top: var(--space-5);
   }
 
-  .arch {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr) auto minmax(0, 1.2fr);
-    align-items: center;
-    gap: var(--space-3) var(--space-4);
-    padding: var(--space-6);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-l);
-    background: var(--term-bg);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
+  .engineering-more a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
   }
 
-  .node {
-    display: grid;
-    gap: var(--space-1);
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid rgb(120 147 141 / 0.45);
-    border-radius: var(--radius-s);
-    background: #142230;
-    color: var(--term-text);
-    text-align: center;
-  }
-
-  .node small {
-    color: var(--term-dim);
-    font-size: 0.72rem;
-  }
-
-  .node--core {
-    border-color: #d8eeae;
-  }
-
-  .arrow,
-  .branch {
-    color: var(--term-dim);
-    font-size: 1.15rem;
-  }
-
-  .branch {
-    grid-column: 3;
-    justify-self: center;
-    line-height: 1;
-  }
-
-  .node--output {
-    grid-column: 3 / span 3;
-    justify-self: start;
-    border-style: dashed;
-  }
-
-  .node--probe {
-    margin-top: var(--space-4);
-    background: transparent;
-    color: var(--term-dim);
-  }
-
-  .arrow--probe {
-    margin-top: var(--space-4);
+  .engineering-more a:hover {
+    text-decoration: underline;
   }
 
   /* Roadmap */
@@ -1036,6 +1030,60 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
     color: var(--accent);
   }
 
+  /* FAQ */
+  .faq-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--space-7);
+    align-items: start;
+  }
+
+  .faq {
+    border-top: 1px solid var(--line);
+  }
+
+  .faq details {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .faq summary {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-5) 0;
+    color: var(--text-strong);
+    font-size: var(--step-1);
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq summary::after {
+    content: '+';
+    color: var(--accent);
+    font-family: var(--font-mono);
+    transition: rotate var(--duration) var(--ease-out);
+  }
+
+  .faq details[open] summary::after {
+    rotate: 45deg;
+  }
+
+  .answer {
+    display: grid;
+    gap: var(--space-4);
+    padding-bottom: var(--space-5);
+  }
+
+  .answer a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
   /* Closing */
   .closing {
     background: var(--glow);
@@ -1063,7 +1111,8 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
 
   @media (max-width: 62rem) {
     .hero-grid,
-    .story-grid {
+    .story-grid,
+    .faq-grid {
       grid-template-columns: minmax(0, 1fr);
     }
 
@@ -1098,27 +1147,6 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
 
     .trust-col {
       grid-row: auto;
-    }
-
-    .arch {
-      grid-template-columns: minmax(0, 1fr);
-      justify-items: stretch;
-    }
-
-    .arch .arrow,
-    .arch .branch {
-      justify-self: center;
-      rotate: 90deg;
-    }
-
-    .branch,
-    .node--output {
-      grid-column: auto;
-      justify-self: stretch;
-    }
-
-    .branch {
-      rotate: 0deg;
     }
 
     .step {

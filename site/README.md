@@ -1,6 +1,6 @@
 # BOARDROOM website and documentation
 
-The public site and documentation, built as a static [Astro](https://astro.build) site with [Starlight](https://starlight.astro.build) for the docs. It implements phase 1 of the [website plan](../boardroom-plans/SITE-VITRINE-ET-DOCUMENTATION.md): foundations, design system, a first home page and the documentation skeleton.
+The public site and documentation, built as a static [Astro](https://astro.build) site with [Starlight](https://starlight.astro.build) for the docs. It implements phases 1 and 2 of the [website plan](../boardroom-plans/SITE-VITRINE-ET-DOCUMENTATION.md): foundations, design system, the home page with its replayable capture and FAQ, the engineering page and the documentation skeleton.
 
 Nothing here is deployed yet. The domain, hosting and analytics are pending decisions (D3–D5 in the plan), and no download is offered until a release is published (D1–D2).
 
@@ -29,6 +29,8 @@ The site never retypes product facts. It reads them from the repository at build
 | The decision record and its source hash | `docs/validation/recorded-export/` |
 | Roadmap statuses | `src/data/roadmap.ts`, checked against each plan's `Statut` line |
 | Every capability statement | `src/data/claims.ts`, each with its evidence path or owning plan |
+| Test count and qualified platforms | `tests/*.test.ts` and the matrix of `.github/workflows/ci.yml` |
+| Engineering decisions and limits | `src/data/engineering.ts`, each citing a document or test that must exist |
 
 Changing a fixture or an export changes the site; an unsupported fixture version, a citation outside its source or a final view without a verdict fails the build instead of being guessed.
 
@@ -38,12 +40,12 @@ Changing a fixture or an export changes the site; an unsupported fixture version
 | :--- | :--- | :--- |
 | Types and content schema | `npm run check` | Pages, components and every doc page's required `status` |
 | Data contracts | `npm run test:unit` | Fixture projection, claims registry, roadmap honesty |
-| Built site | `npm run test:build` | Internal links/anchors, `lang`/title/description, no superlatives, no third-party requests |
+| Built site | `npm run test:build` | Internal links/anchors, `lang`/title/description, no superlatives, no third-party requests, no “open source” without the pending-license claim |
 | End-to-end | `npm run test:e2e` | Story, evidence, verdicts, statuses, theme, search, no horizontal scroll — desktop and mobile |
 | Accessibility | part of `test:e2e` | No serious/critical axe violation (WCAG 2.2 AA) on every page, both themes; reduced motion honoured |
-| Lighthouse | `npm run lighthouse` | Median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
+| Lighthouse | `npm run lighthouse` | `/`, `/engineering/`, `/docs/`, `/docs/quickstart/`, median of 3 mobile runs: every category ≥ 95, LCP ≤ 1.8 s, CLS ≤ 0.05, TBT ≤ 150 ms |
 
-Observed locally on 2026-10-03 (Node 22.22, Chromium 141): 18 unit tests, 5 built-site checks and 54 end-to-end tests pass. Lighthouse (simulated mobile, median of 3) scored 100 in all four categories on `/`, `/docs/` and `/docs/quickstart/`, with median LCP of 1.52 s, 1.06 s and 1.06 s, CLS 0 and TBT 0. GitHub's runners measure slower than this container, so CI is the reference for the budgets.
+Observed locally on 2026-10-03 after phase 2 (Node 22.22, Chromium 141): 23 unit tests, 6 built-site checks and 76 end-to-end tests pass. Lighthouse (simulated mobile, median of 3) scored 100 in all four categories on the four audited pages, with median LCP of 1.66 s (`/`), 1.51 s (`/engineering/`), 1.06 s (`/docs/`) and 1.22 s (`/docs/quickstart/`). GitHub's runners measure slower than this container, so CI is the reference for the budgets.
 
 ## Red → green record
 
@@ -58,8 +60,13 @@ Observed locally on 2026-10-03 (Node 22.22, Chromium 141): 18 unit tests, 5 buil
 | Next milestone | `publicStatus` was not exported | The first unaccepted plan reads “Next”, later ones “Planned” |
 | Built site | No build output existed | Links, metadata, editorial and third-party checks pass on `dist/` |
 | Pages | No page or preview server existed | 54 end-to-end and accessibility tests pass on desktop and mobile |
+| Derived figures | `src/data/engineering.ts` was absent | 48 application tests and three platforms read from the repository; unknown runners refused |
+| Engineering evidence | `decisions` was not exported | Every decision and limit cites an existing document or test |
+| License honesty | `/docs/` called the project open source | Any “open source” mention requires the visible “Planned · Plan 09” license claim |
+| Replay | No replay control existed | The capture replays one intervention at a time, can be skipped, and stays fully readable without JavaScript |
+| FAQ and engineering page | Neither existed | Cost, license and data answers; `/engineering/` with figures, decisions, evidence links and stated limits |
 
-Corrections found by those checks rather than by review: the first CI run failed the docs' LCP budget on GitHub's runners although it passed locally (fixed by the font decision below), a misplaced `@import` silently dropped two fonts (and briefly flattered an LCP measurement), global utility classes overrode component colours (fixed by layering `site.css`), and two test selectors were wrong about the search box role and the scope of the “no download” rule.
+Corrections found by those checks rather than by review: the first CI run failed the docs' LCP budget on GitHub's runners although it passed locally (fixed by the font decision below), a misplaced `@import` silently dropped two fonts (and briefly flattered an LCP measurement), global utility classes overrode component colours (fixed by layering `site.css`), an Engineering link hidden on phones (the recruiter path) became always visible, and four test selectors were wrong about the search box role, the scope of the “no download” rule, repeated claims and repeated evidence links.
 
 ## Decisions taken in this phase
 

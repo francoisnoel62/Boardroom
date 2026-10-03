@@ -1,0 +1,131 @@
+---
+import { sourceUrl } from '../data/labels.ts';
+---
+<figure class="architecture">
+  <p class="visually-hidden">
+    The CLI and its Ink renderer call the application service, which owns state in a domain SQLite database with
+    immutable source snapshots and writes each new Markdown plan and decision memo. Separately, the doctor command
+    runs a LangGraph probe against the official SQLite checkpointer.
+  </p>
+  <div class="arch" aria-hidden="true">
+    <span class="node">CLI · Ink</span>
+    <span class="arrow">→</span>
+    <span class="node node--core">Application service<small>owns state</small></span>
+    <span class="arrow">→</span>
+    <span class="node">Domain SQLite<small>+ immutable snapshots</small></span>
+    <span class="branch">↳</span>
+    <span class="node node--output">New Markdown plan + decision memo</span>
+    <span class="node node--probe">doctor</span>
+    <span class="arrow arrow--probe">→</span>
+    <span class="node node--probe">Separate LangGraph probe</span>
+    <span class="arrow arrow--probe">→</span>
+    <span class="node node--probe">Official SQLite checkpointer</span>
+  </div>
+  <figcaption>
+    The terminal renders results; the application service owns state.{' '}
+    <a href={sourceUrl('docs/architecture.md')} rel="noopener">Architecture and tradeoffs</a>{' · '}
+    <a href={sourceUrl('docs/plan-01-acceptance.md')} rel="noopener">Acceptance evidence</a>
+  </figcaption>
+</figure>
+
+<style>
+  .architecture {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  figcaption {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  figcaption a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .arch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr) auto minmax(0, 1.2fr);
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--term-bg);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .node {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid rgb(120 147 141 / 0.45);
+    border-radius: var(--radius-s);
+    background: #142230;
+    color: var(--term-text);
+    text-align: center;
+  }
+
+  .node small {
+    color: var(--term-dim);
+    font-size: 0.72rem;
+  }
+
+  .node--core {
+    border-color: #d8eeae;
+  }
+
+  .arrow,
+  .branch {
+    color: var(--term-dim);
+    font-size: 1.15rem;
+  }
+
+  .branch {
+    grid-column: 3;
+    justify-self: center;
+    line-height: 1;
+  }
+
+  .node--output {
+    grid-column: 3 / span 3;
+    justify-self: start;
+    border-style: dashed;
+  }
+
+  .node--probe {
+    margin-top: var(--space-4);
+    background: transparent;
+    color: var(--term-dim);
+  }
+
+  .arrow--probe {
+    margin-top: var(--space-4);
+  }
+
+  @media (max-width: 44rem) {
+    .arch {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: stretch;
+    }
+
+    .arch .arrow,
+    .arch .branch {
+      justify-self: center;
+      rotate: 90deg;
+    }
+
+    .branch,
+    .node--output {
+      grid-column: auto;
+      justify-self: stretch;
+    }
+
+    .branch {
+      rotate: 0deg;
+    }
+  }
+</style>

@@ -78,3 +78,12 @@ test('no page loads a third-party script, stylesheet or font', () => {
     assert.deepEqual(external, [], urlOf(file));
   }
 });
+
+test('no page calls Boardroom open source without showing that the license is still pending', () => {
+  for (const file of pages) {
+    const html = readFileSync(file, 'utf8');
+    if (/open[- ]source/i.test(textOf(html).replace(/<[^>]*>/g, ''))) {
+      assert.match(html, /data-claim="open-source-license"/, `${urlOf(file)} mentions open source without the license claim`);
+    }
+  }
+});

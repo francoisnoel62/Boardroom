@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-const pages = ['/', '/design/', '/docs/', '/docs/quickstart/', '/docs/your-data/'];
+const pages = ['/', '/engineering/', '/design/', '/docs/', '/docs/quickstart/', '/docs/your-data/'];
 
 for (const theme of ['dark', 'light'] as const) {
   for (const path of pages) {

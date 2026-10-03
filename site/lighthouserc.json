@@ -4,6 +4,7 @@
       "staticDistDir": "./dist",
       "url": [
         "http://localhost/",
+        "http://localhost/engineering/",
         "http://localhost/docs/",
         "http://localhost/docs/quickstart/"
       ],

@@ -11,8 +11,9 @@ import Wordmark from './Wordmark.astro';
         <li class="section-link"><a href="/#story">Story</a></li>
         <li class="section-link"><a href="/#principles">Principles</a></li>
         <li class="section-link"><a href="/#roadmap">Roadmap</a></li>
+        <li><a href="/engineering/">Engineering</a></li>
         <li><a href="/docs/">Docs</a></li>
-        <li><a href={repository} rel="noopener">GitHub</a></li>
+        <li class="wide-link"><a href={repository} rel="noopener">GitHub</a></li>
       </ul>
     </nav>
     <div class="actions">
@@ -81,7 +82,8 @@ import Wordmark from './Wordmark.astro';
   }
 
   @media (max-width: 34rem) {
-    .try {
+    .try,
+    .wide-link {
       display: none;
     }
 

@@ -58,7 +58,7 @@ test('the decision record shows the retained export and its source hash', async 
 });
 
 test('future capabilities are labelled with the plan that delivers them', async ({ page }) => {
-  const live = page.locator('[data-claim="live-meetings"]');
+  const live = page.locator('#trust [data-claim="live-meetings"]');
   await expect(live.locator('[data-status]')).toHaveText('Planned · Plan 02');
 });
 
@@ -81,4 +81,16 @@ test('the chosen theme is remembered and shared with the documentation', async (
 test('the page never scrolls horizontally', async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('the FAQ answers cost, license and data questions honestly', async ({ page }) => {
+  const faq = page.getByRole('region', { name: 'Questions worth asking' });
+  await faq.getByText('Is it open source?').click();
+  await expect(faq.locator('[data-claim="open-source-license"] [data-status]')).toHaveText('Planned · Plan 09');
+  await faq.getByText('What leaves my machine?').click();
+  await expect(faq).toContainText('no telemetry');
+});
+
+test('the engineering section shows figures derived from the repository', async ({ page }) => {
+  await expect(page.locator('#engineering [data-stat="tests"] [data-value]')).toHaveText('48');
 });

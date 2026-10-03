@@ -64,6 +64,13 @@ export const claims: Claim[] = [
     plan: '03',
   },
   {
+    id: 'open-source-license',
+    text: 'Released under an open-source license',
+    status: 'planned',
+    evidence: [],
+    plan: '09',
+  },
+  {
     id: 'configurable-room',
     text: 'Choose the size, roles and models of your advisory team',
     status: 'vision',

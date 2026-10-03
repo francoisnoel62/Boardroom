@@ -1,6 +1,6 @@
 # Site vitrine, téléchargement gratuit et documentation — plan détaillé
 
-Date : 3 octobre 2026. Statut : **phase 1 réalisée** le 3 octobre 2026 — fondations, design system, première page d'accueil et squelette de documentation dans [`site/`](../site/README.md), non déployés. Phases 2 à 6 à réaliser ; décisions D1–D10 en attente. [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
+Date : 3 octobre 2026. Statut : **phases 1 et 2 réalisées** le 3 octobre 2026 — fondations, design system, page d'accueil (capture rejouable, FAQ), page `/engineering` avancée depuis la phase 5, et squelette de documentation dans [`site/`](../site/README.md), non déployés. Le test éditorial des 30 secondes (sortie de phase 2) reste à mener avec des personnes extérieures. Phases 3 à 6 à réaliser ; décisions D1–D10 en attente. [Ordre et dépendances](00-ORDRE-ET-DEPENDANCES.md) · [Exigences transversales TDD et README](EXIGENCES-TDD-ET-README.md) · [Spec V1](BOARDROOM_V1_SPEC.md).
 
 Ce document est une **piste parallèle** aux neuf plans de livraison, pas un dixième jalon. Le site est une vitrine marketing statique et une documentation publique : il ne contredit pas la règle « pas de GUI/web » du produit, qui reste une application terminal locale. Comme le reste du travail de conception, ce plan est rédigé en français ; le site, sa documentation et ses exemples seront **en anglais**.
 
@@ -122,7 +122,7 @@ Le récit suit une structure où **l'utilisateur est le héros** et BOARDROOM le
 - **À proscrire** : *revolutionary, 10x, autonomous, AI-powered everything, unlimited, guaranteed, best-in-class*, ainsi que tout chiffre non sourcé.
 - **Statuts obligatoires** sur toute capacité : `Available` · `Preview` · `Planned — Plan 0X` · `Vision` (direction produit qu'aucun plan ne porte encore, comme l'équipe configurable). Une capacité future n'est jamais rédigée au présent.
 - **Fiction toujours étiquetée** : *Recorded example — scripted fictional fixture* reste visible près de chaque extrait.
-- **Gratuité honnête** : *Boardroom is free and open source. Live meetings use your own model provider keys; providers bill you directly.*
+- **Gratuité honnête** : *Boardroom has no account, subscription or payment. Live meetings use your own model provider keys; providers bill you directly.* Ne pas écrire « open source » tant que la licence n'est pas décidée (D1) : le code est public, pas encore sous licence libre.
 - Relecture automatisée par Vale (§11) avec un vocabulaire maison.
 
 ---

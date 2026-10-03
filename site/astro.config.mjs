@@ -15,7 +15,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Boardroom',
-      description: 'Documentation for BOARDROOM, an open-source decision room where AI advisers challenge your plan and you make the call.',
+      description: 'Documentation for BOARDROOM, a local decision room where AI advisers challenge your plan and you make the call.',
       logo: { light: './src/assets/mark-light.svg', dark: './src/assets/mark-dark.svg', alt: '' },
       social: [{ icon: 'github', label: 'GitHub', href: repository }],
       editLink: { baseUrl: `${repository}/edit/main/site/` },
