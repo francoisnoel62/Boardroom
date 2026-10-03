@@ -86,8 +86,7 @@ export class Boardroom {
     const evidence = EvidenceSchema.parse(this.load('evidence', evidenceId));
     if (evidence.projectId !== projectId) throw new Error('Evidence is outside this project.');
     if (evidence.extraction !== 'utf8-text') throw new Error('PDF/DOCX citations require a document locator, not text lines.');
-    const content = readFileSync(join(this.dataDirectory, 'snapshots', evidence.sha256));
-    if (hash(content) !== evidence.sha256) throw new Error('Snapshot integrity check failed.');
+    const content = this.readSnapshot(evidence.sha256);
     const lines = content.toString('utf8').split(/\r?\n/);
     if (!Number.isInteger(firstLine) || !Number.isInteger(lastLine) || firstLine < 1 || lastLine < firstLine || lastLine > lines.length) {
       throw new Error('Citation line range is invalid.');
@@ -171,12 +170,21 @@ export class Boardroom {
 
   private readExtraction(evidence: Evidence) {
     if (!evidence.extractionSha256) throw new Error('Evidence is not a saved PDF/DOCX extraction.');
-    const original = readFileSync(join(this.dataDirectory, 'snapshots', evidence.sha256));
-    const bytes = readFileSync(join(this.dataDirectory, 'snapshots', evidence.extractionSha256));
-    if (hash(original) !== evidence.sha256 || hash(bytes) !== evidence.extractionSha256) {
-      throw new Error('Snapshot integrity check failed.');
-    }
+    this.readSnapshot(evidence.sha256); // The cited extraction is valid only beside its intact original.
+    const bytes = this.readSnapshot(evidence.extractionSha256);
     return ExtractionSchema.parse(JSON.parse(bytes.toString('utf8')));
+  }
+
+  /** Saved bytes are returned only while they still match the digest that names them. */
+  private readSnapshot(digest: string): Buffer {
+    let content: Buffer;
+    try { content = readFileSync(join(this.dataDirectory, 'snapshots', digest)); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      throw new Error('Snapshot integrity check failed: the saved snapshot is missing.');
+    }
+    if (hash(content) !== digest) throw new Error('Snapshot integrity check failed.');
+    return content;
   }
 
   openRecordedExample(): RecordedMeeting {

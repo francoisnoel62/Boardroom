@@ -1,6 +1,6 @@
 # Local recorded-example architecture
 
-Status: recorded workflow, PDF/DOCX, durable history, and terminal-validation increments of Plan 01, updated 2026-10-03. The complete milestone and public release are not accepted yet.
+Status: Plan 01 accepted with reservations, updated 2026-10-03. [Acceptance evidence](plan-01-acceptance.md) covers the local recorded workflow and three-platform installation campaign. Live meetings and public release remain later milestones.
 
 ## Public boundaries
 
@@ -10,8 +10,10 @@ The approved plan defines the seams: application commands, the terminal/CLI, and
 
 ## Durable data
 
+The current configuration consists of CLI options and the saved English fictional project; durable state stays in the documented OS data location unless explicitly overridden. No credential is accepted or stored. Future provider secrets belong in host credential storage, separate from the application package, domain snapshots and exported context. Plan 02 configures provider keys; Plan 07 adds guided onboarding and subscription connections.
+
 - `domain.sqlite`: versioned, schema-validated project, evidence, recorded-meeting, and export-operation records, plus an append-only event journal; WAL with a finite busy timeout. Playback position and its event commit in one immediate transaction. First recording creation also serializes so concurrent initial readers cannot reset progress. The current recording is stored in the meeting record, so updating bundled assets does not rewrite an existing recording.
-- `snapshots/<sha256>`: original bytes saved with exclusive creation. Document evidence adds a separate content-addressed, schema-validated extraction JSON. Citation resolution validates both original and extraction snapshot hashes. Text references use saved line ranges; PDFs use physical pages and DOCX uses saved text blocks. Invalid UTF-8 is rejected by the plain-text extractor.
+- `snapshots/<sha256>`: original bytes saved with exclusive creation. Document evidence adds a separate content-addressed, schema-validated extraction JSON. Citation resolution validates both original and extraction snapshot hashes, and refuses a missing or altered snapshot instead of substituting other bytes. Text references use saved line ranges; PDFs use physical pages and DOCX uses saved text blocks. Invalid UTF-8 is rejected by the plain-text extractor.
 - `checkpoints.sqlite`: the separate technical probe uses the official `SqliteSaver`; a minimal graph increments a count and reopens its saved state. It is not the replay engine or a live meeting.
 - Export directories: unique `boardroom-recorded-<operation-id>` directories containing exclusively created `plan.md` and `memo.md`. Exports include saved evidence identity and preserve disagreement and the pending human decision.
 
@@ -53,7 +55,7 @@ The candidate includes the complete installed dependency tree, including develop
 
 Initial targets: Windows x64, Linux x64, and macOS arm64. Other architectures are not implied. The CI matrix uses a Windows x64 runner, a Linux x64 runner, and an explicitly selected arm64 Node on a macOS runner. A missing or incompatible runner blocks that qualification; a configured job is not proof of support.
 
-The workflow uses the currently documented v7 actions and the documented macOS arm64 runner label: [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [upload-artifact](https://github.com/actions/upload-artifact), and [GitHub-hosted runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). Artifact permission/executable-mode preservation on Unix remains part of distribution qualification.
+The workflow uses the currently documented v7 actions and the documented macOS arm64 runner label: [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [upload-artifact](https://github.com/actions/upload-artifact), and [GitHub-hosted runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). Candidates are archived with tar to preserve executable modes and exercised by separate installation jobs after download.
 
 The recorded workflow and document increment passed [PR 1's remote CI](https://github.com/francoisnoel62/Boardroom/pull/1/checks) and [PR 2's remote CI](https://github.com/francoisnoel62/Boardroom/pull/2/checks) on all three targets. The durable-history increment has its own [PR 3 matrix](https://github.com/francoisnoel62/Boardroom/pull/3/checks). Empty-PATH process tests show that the candidate invokes its own Node; they do not substitute for a clean-machine installation test. No paid infrastructure or provider account is needed for the present tests.
 

@@ -23,9 +23,10 @@ try {
   readFileSync(join(projectRoot, 'dist', 'cli.js'));
   mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output); // Never replace an existing candidate or user directory.
-  for (const entry of ['dist', 'assets', 'node_modules', 'package.json', 'package-lock.json', 'README.md', 'docs', 'boardroom-plans']) {
+  for (const entry of ['dist', 'assets', 'node_modules', 'package.json', 'package-lock.json', 'README.md', 'docs', 'boardroom-plans', 'qualification']) {
     copy(join(projectRoot, entry), join(output, entry));
   }
+  copyFileSync(join(projectRoot, 'tests', 'support', 'terminal.ts'), join(output, 'qualification', 'terminal.ts'));
   mkdirSync(join(output, 'runtime'));
   const executable = process.platform === 'win32' ? 'node.exe' : 'node';
   copyFileSync(process.execPath, join(output, 'runtime', executable));
@@ -33,7 +34,7 @@ try {
   if (process.platform === 'win32') {
     writeFileSync(join(output, 'boardroom.cmd'), '@echo off\r\n"%~dp0runtime\\node.exe" "%~dp0dist\\cli.js" %*\r\nexit /b %errorlevel%\r\n');
   } else {
-    writeFileSync(join(output, 'boardroom'), '#!/bin/sh\nROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexec "$ROOT/runtime/node" "$ROOT/dist/cli.js" "$@"\n');
+    writeFileSync(join(output, 'boardroom'), '#!/bin/sh\nROOT=$(CDPATH= cd -- "${0%/*}" && pwd)\nexec "$ROOT/runtime/node" "$ROOT/dist/cli.js" "$@"\n');
     chmodSync(join(output, 'boardroom'), 0o755);
     chmodSync(join(output, 'runtime', executable), 0o755);
   }

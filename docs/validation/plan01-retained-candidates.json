@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Retained candidate archives and exports from the accepted Plan 01 installation campaign.",
+  "commit": "7d60a91be4fb74fb28093068d443676e8daff4f6",
+  "workflowRuns": {
+    "push": 37107742606,
+    "pullRequest": 37107745572,
+    "source": "push"
+  },
+  "retention": "GitHub workflow artifacts expire. The maintainer keeps these archives outside the repository; they are not published. Verify any copy against the SHA-256 values below.",
+  "candidates": [
+    {
+      "platform": "win32",
+      "architecture": "x64",
+      "runner": "windows-latest-x64",
+      "artifact": "boardroom-candidate-windows-latest-x64",
+      "file": "boardroom.tar.gz",
+      "bytes": 91970202,
+      "sha256": "73b22217aa556bc1113d4c5cbcb93ce395e87da075106fd162dda8ef224e9888"
+    },
+    {
+      "platform": "linux",
+      "architecture": "x64",
+      "runner": "ubuntu-latest-x64",
+      "artifact": "boardroom-candidate-ubuntu-latest-x64",
+      "file": "boardroom.tar.gz",
+      "bytes": 114025943,
+      "sha256": "b8e0f4972583920765fb6d84810374709907fdb4e65c9aaebddbfcc1e7b6a440"
+    },
+    {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "runner": "macos-14-arm64",
+      "artifact": "boardroom-candidate-macos-14-arm64",
+      "file": "boardroom.tar.gz",
+      "bytes": 94299568,
+      "sha256": "9e717a0562c38b8f21eaf742e33ba5ee3a9154c32fd45008a4f721d6c8002543"
+    }
+  ],
+  "exports": [
+    {
+      "platform": "win32",
+      "architecture": "x64",
+      "installationMode": "clean",
+      "plan": "0c25e2125cdf46d06428b9ba90069b914eaf3a4c7af0fc6de61f54f399eb0eb3",
+      "memo": "806b4ee58752de7f0fa4841a2064bd1613c024a498a713a7301cfcfbe7c55329"
+    },
+    {
+      "platform": "linux",
+      "architecture": "x64",
+      "installationMode": "clean",
+      "plan": "e1e0081b58e900c76b7f05f77d8c958917ba58539ecc6f20ac299ef395fe21a7",
+      "memo": "f8176428c76654d4d9f9e149758938dc0ddec4bf9d237d7439556119d798914f"
+    },
+    {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "installationMode": "clean",
+      "plan": "e1e0081b58e900c76b7f05f77d8c958917ba58539ecc6f20ac299ef395fe21a7",
+      "memo": "f8176428c76654d4d9f9e149758938dc0ddec4bf9d237d7439556119d798914f"
+    }
+  ],
+  "sampleExport": {
+    "source": "linux-x64 clean installation evidence",
+    "plan": "recorded-export/plan.md",
+    "memo": "recorded-export/memo.md"
+  },
+  "note": "The commit that adds this record changes documentation only; the qualified application code is unchanged.",
+  "observation": "Linux and macOS exports are byte-identical. The Windows candidate ships the bundled context.md with CRLF line endings from its Windows checkout, so its saved source SHA-256 and the exports' provenance line differ. Citations stay correct on each installation; byte-reproducible packaging across platforms belongs to Plan 09."
+}

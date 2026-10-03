@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, rmSync, readFileSync, copyFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, copyFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Boardroom } from '../src/application.ts';
@@ -86,6 +86,19 @@ test('CLI requires explicit source consent and reopens saved PDF/DOCX citations 
   assert.equal(citation.text, 'Launch scope: one integration.');
   assert.equal(citation.originalChanged, true);
   assert.match(run('evidence', '--id', savedDocx.evidence.id, '--block', '2'), /Budget: €500/);
+});
+
+test('CLI keeps showing a saved page and warns after the authorized original is deleted', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom deleted original CLI '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const run = (...args: string[]) => execFileSync(process.execPath, [cli, ...args, '--data-dir', join(root, 'data')], { encoding: 'utf8' });
+  const pdf = join(root, 'launch.pdf');
+  copyFileSync(new URL('../assets/validation/launch.pdf', import.meta.url), pdf);
+  const saved = JSON.parse(run('document', '--source', pdf, '--allow-source', '--json'));
+  unlinkSync(pdf);
+  const output = run('evidence', '--id', saved.evidence.id, '--page', '2');
+  assert.match(output, /Launch scope: one integration\./);
+  assert.match(output, /Warning: original changed or unavailable; showing the saved snapshot\./);
 });
 
 test('technical validation is explicit and reports durable storage without claiming a live meeting', (t) => {

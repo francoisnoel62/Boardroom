@@ -68,4 +68,8 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(manifest.platform, process.platform);
   assert.match(readFileSync(join(candidate, 'README.md'), 'utf8'), /Try the local example/);
   assert.match(readFileSync(join(candidate, 'docs', 'architecture.md'), 'utf8'), /Public boundaries/);
+  const installed = spawnSync(runtime, ['--test', join(candidate, 'qualification', 'installed.test.mjs')], {
+    cwd: root, encoding: 'utf8', env: { ...env, BOARDROOM_INSTALLATION_MODE: 'local-empty-path', BOARDROOM_QUALIFICATION_OUTPUT: join(root, 'installation evidence') },
+  });
+  assert.equal(installed.status, 0, installed.stdout + installed.stderr);
 });

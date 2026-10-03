@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "commit": "94c0409",
+  "workflowRun": 37102973196,
+  "targets": [
+    {
+      "platform": "darwin",
+      "architecture": "arm64",
+      "runtime": "v24.12.0",
+      "mode": "clean",
+      "hostNodeVisible": false,
+      "dataOutsideCandidate": true,
+      "sourceUnchanged": true,
+      "environment": {
+        "schemaVersion": 1,
+        "strategy": "fresh-macos-vm-homebrew-and-cache-node-removed",
+        "systemNodeVisible": false,
+        "absentPaths": [
+          "/Users/runner/hostedtoolcache/node",
+          "/opt/homebrew/bin/node"
+        ],
+        "controlPlane": "GitHub runner internal action runtimes remain off application PATH; the application uses its bundled Node."
+      },
+      "optionalProbes": {
+        "embeddings": {
+          "status": "blocked",
+          "runtimePresent": false,
+          "reason": "Embedding runtime and model assets are not qualified in this package; no model download is configured. FTS5 is the fallback."
+        },
+        "providerStreaming": {
+          "status": "blocked",
+          "reason": "No provider account or development budget is configured in this build. Real streaming must be qualified in Plan 02."
+        },
+        "cloudTrace": {
+          "status": "blocked",
+          "reason": "No authorized cloud trace account is configured. Local filtered trace export is available; cloud telemetry stays off."
+        }
+      },
+      "isolation": {
+        "schemaVersion": 1,
+        "mode": "technical-isolation-validation",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "baseline": {
+          "protectedWrite": "blocked",
+          "outsideCopyWrite": "allowed",
+          "workWrite": "allowed",
+          "loopbackNetwork": "allowed",
+          "copyIsBoundary": false
+        },
+        "sandboxCandidate": {
+          "name": "sandbox-exec",
+          "status": "failed",
+          "observation": {
+            "protectedWrite": "blocked",
+            "outsideCopyWrite": "blocked",
+            "workWrite": "blocked",
+            "loopbackNetwork": "blocked"
+          },
+          "reason": "Fixed temporary write and loopback checks only. Read restrictions, descendants, escape attacks and MCP adapters are not qualified; product tools remain unavailable."
+        },
+        "product": {
+          "commands": "unavailable",
+          "localMcp": "unavailable",
+          "remoteMcp": "unavailable"
+        },
+        "localMcpLimit": "Local MCP requires a qualified process sandbox plus scoped protocol permissions; neither adapter is enabled.",
+        "remoteMcpLimit": "A local sandbox cannot protect files or actions on a remote MCP server. Remote server enforcement and explicit scoped consent must be qualified separately.",
+        "safety": "Only newly created fictional temporary targets and a loopback listener are used. No external network request or user-selected command is executed."
+      }
+    },
+    {
+      "platform": "linux",
+      "architecture": "x64",
+      "runtime": "v24.12.0",
+      "mode": "clean",
+      "hostNodeVisible": false,
+      "dataOutsideCandidate": true,
+      "sourceUnchanged": true,
+      "environment": {
+        "schemaVersion": 1,
+        "strategy": "fresh-ubuntu-image-no-node-offline",
+        "systemNodeVisible": false,
+        "absentPaths": [
+          "/usr/bin/node",
+          "/usr/local/bin/node"
+        ]
+      },
+      "optionalProbes": {
+        "embeddings": {
+          "status": "blocked",
+          "runtimePresent": false,
+          "reason": "Embedding runtime and model assets are not qualified in this package; no model download is configured. FTS5 is the fallback."
+        },
+        "providerStreaming": {
+          "status": "blocked",
+          "reason": "No provider account or development budget is configured in this build. Real streaming must be qualified in Plan 02."
+        },
+        "cloudTrace": {
+          "status": "blocked",
+          "reason": "No authorized cloud trace account is configured. Local filtered trace export is available; cloud telemetry stays off."
+        }
+      },
+      "isolation": {
+        "schemaVersion": 1,
+        "mode": "technical-isolation-validation",
+        "platform": "linux",
+        "architecture": "x64",
+        "baseline": {
+          "protectedWrite": "blocked",
+          "outsideCopyWrite": "allowed",
+          "workWrite": "allowed",
+          "loopbackNetwork": "allowed",
+          "copyIsBoundary": false
+        },
+        "sandboxCandidate": {
+          "name": "bubblewrap",
+          "status": "blocked",
+          "reason": "Candidate could not execute on this host (ENOENT). Installation, OS policy and namespace prerequisites require qualification in Plan 06."
+        },
+        "product": {
+          "commands": "unavailable",
+          "localMcp": "unavailable",
+          "remoteMcp": "unavailable"
+        },
+        "localMcpLimit": "Local MCP requires a qualified process sandbox plus scoped protocol permissions; neither adapter is enabled.",
+        "remoteMcpLimit": "A local sandbox cannot protect files or actions on a remote MCP server. Remote server enforcement and explicit scoped consent must be qualified separately.",
+        "safety": "Only newly created fictional temporary targets and a loopback listener are used. No external network request or user-selected command is executed."
+      }
+    },
+    {
+      "platform": "win32",
+      "architecture": "x64",
+      "runtime": "v24.12.0",
+      "mode": "clean",
+      "hostNodeVisible": false,
+      "dataOutsideCandidate": true,
+      "sourceUnchanged": true,
+      "environment": {
+        "schemaVersion": 1,
+        "controlPlane": "GitHub runner internal action runtimes remain off application PATH; the application uses its bundled Node.",
+        "systemNodeVisible": false,
+        "absentPaths": [
+          "C:\\Program Files\\nodejs",
+          "C:\\hostedtoolcache\\windows\\node"
+        ],
+        "removedExecutables": [
+          "C:\\Program Files\\nodejs\\node.exe"
+        ],
+        "strategy": "fresh-windows-vm-system-and-cache-node-removed"
+      },
+      "optionalProbes": {
+        "embeddings": {
+          "status": "blocked",
+          "runtimePresent": false,
+          "reason": "Embedding runtime and model assets are not qualified in this package; no model download is configured. FTS5 is the fallback."
+        },
+        "providerStreaming": {
+          "status": "blocked",
+          "reason": "No provider account or development budget is configured in this build. Real streaming must be qualified in Plan 02."
+        },
+        "cloudTrace": {
+          "status": "blocked",
+          "reason": "No authorized cloud trace account is configured. Local filtered trace export is available; cloud telemetry stays off."
+        }
+      },
+      "isolation": {
+        "schemaVersion": 1,
+        "mode": "technical-isolation-validation",
+        "platform": "win32",
+        "architecture": "x64",
+        "baseline": {
+          "protectedWrite": "blocked",
+          "outsideCopyWrite": "allowed",
+          "workWrite": "allowed",
+          "loopbackNetwork": "allowed",
+          "copyIsBoundary": false
+        },
+        "sandboxCandidate": {
+          "name": "AppContainer",
+          "status": "blocked",
+          "reason": "No qualified AppContainer launcher and scoped capability/ACL policy are bundled. Read-only attributes alone are not isolation."
+        },
+        "product": {
+          "commands": "unavailable",
+          "localMcp": "unavailable",
+          "remoteMcp": "unavailable"
+        },
+        "localMcpLimit": "Local MCP requires a qualified process sandbox plus scoped protocol permissions; neither adapter is enabled.",
+        "remoteMcpLimit": "A local sandbox cannot protect files or actions on a remote MCP server. Remote server enforcement and explicit scoped consent must be qualified separately.",
+        "safety": "Only newly created fictional temporary targets and a loopback listener are used. No external network request or user-selected command is executed."
+      }
+    }
+  ]
+}

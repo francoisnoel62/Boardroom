@@ -6,11 +6,14 @@ import headless from '@xterm/headless';
 
 /** Real OS PTY plus a VT screen; assertions observe the rendered CLI, not Ink internals. */
 export function openTerminal(t: TestContext, args: string[], options: {
-  executable?: string; cwd?: string; env?: NodeJS.ProcessEnv;
+  executable?: string; cwd?: string; env?: NodeJS.ProcessEnv; cols?: number; rows?: number;
 } = {}) {
-  const screen = new headless.Terminal({ cols: 100, rows: 30, allowProposedApi: true });
+  const cols = options.cols ?? 100, rows = options.rows ?? 30;
+  const screen = new headless.Terminal({ cols, rows, allowProposedApi: true });
+  const started = performance.now();
+  const recording: [number, string, string][] = [];
   const process = pty.spawn(options.executable ?? globalThis.process.execPath, args, {
-    name: 'xterm-256color', cols: 100, rows: 30,
+    name: 'xterm-256color', cols, rows,
     useConpty: true,
     useConptyDll: false,
     cwd: options.cwd ?? globalThis.process.cwd(),
@@ -19,7 +22,9 @@ export function openTerminal(t: TestContext, args: string[], options: {
   let exited: { exitCode: number; signal?: number } | undefined;
   let raw = '';
   const responseListener = screen.onData(data => process.write(data));
-  const dataListener = process.onData(data => { raw += data; screen.write(data); });
+  const dataListener = process.onData(data => {
+    raw += data; recording.push([(performance.now() - started) / 1000, 'o', data]); screen.write(data);
+  });
   const exit = new Promise<{ exitCode: number; signal?: number }>(resolve => {
     process.onExit(result => { exited = result; resolve(result); });
   });
@@ -41,8 +46,10 @@ export function openTerminal(t: TestContext, args: string[], options: {
     write: (input: string) => process.write(input),
     resize: (cols: number, rows: number) => { screen.resize(cols, rows); process.resize(cols, rows); },
     raw: () => raw,
-    async waitFor(pattern: RegExp | ((text: string) => boolean)) {
-      const deadline = Date.now() + 10000;
+    snapshot: text,
+    recording: () => recording,
+    async waitFor(pattern: RegExp | ((text: string) => boolean), timeoutMs = 10000) {
+      const deadline = Date.now() + timeoutMs;
       do {
         await flush();
         const current = text();

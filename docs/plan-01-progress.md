@@ -1,6 +1,6 @@
 # Plan 01 — implementation evidence
 
-Updated: 2026-10-03. Status: **started; not accepted**. This report records the local workflow, PDF/DOCX, durable-history, and terminal-validation increments. All unchecked milestone acceptance criteria remain in force.
+Updated: 2026-10-03. Status: **accepted with reservations**. This report retains the red → green evidence; the [acceptance report](plan-01-acceptance.md) records the complete target matrix, optional blocks, accepted limits and later-milestone work. Merging PRs #1–#7 records the acceptance.
 
 ## Red → green record
 
@@ -50,6 +50,7 @@ Each behavior below was introduced after executing its failing test. Run the res
 | Trace CLI | `trace` was unknown | The compiled application creates a new local filtered artifact |
 | Optional probe blocks | `doctor` had no prerequisite explanations | Runtime/assets and authorized account/budget blocks are explicit; no optional pass is fabricated |
 | Isolation report | `isolation-check` was unknown | Real fixed temporary writes and loopback access are measured; command/MCP capabilities stay unavailable |
+| Installed qualification | The copied runtime could not find its shipped installed suite | The actual launcher completes the account-free journey and retains environment, trace, isolation and terminal evidence |
 
 The package copy initially failed using Node's recursive `cpSync` on this Windows environment. Copying files and directories individually resolved the observed failure; the same package E2E then passed. This is not a claim that all Windows environments have that issue.
 
@@ -69,7 +70,7 @@ The history checks include a real process killed after saved intent, four concur
 
 Additive compatibility was also checked against data created by the retained PR 2 Windows candidate: saved position 2 and source citation survived; playback continued at position 3, and the new event and export receipt were saved. Existing data has no fabricated historical events. No general migration runner or recovery reconciliation is delivered yet.
 
-The README transcript is captured from the compiled CLI with a fresh local demonstration data directory. Its SVG is a static rendering of that actual text, not a photograph of a terminal window. Fictional model labels are visibly identified.
+The earlier README SVG rendered captured CLI text. The final README uses a screenshot of the actual packaged PTY screen, with timestamped VT recording and accessible screen text. [Capture provenance](media/README.md) distinguishes that rendered screen from a native-window photograph. Fictional model labels remain explicit.
 
 ## Terminal-validation increment — PR 4
 
@@ -81,15 +82,37 @@ The first remote run exposed Ink's default noninteractive rendering when `CI=tru
 
 The test driver is Microsoft `node-pty` 1.2.0-beta.15, with system ConPTY on Windows, plus `@xterm/headless` 6.0.0 to interpret actual VT output. The earlier stable driver retained Windows workers after exit; the selected beta completed the same cleanup checks. No production dependency or provider access was added. This proof concerns the documented sample and window sizes; it does not qualify every terminal, IME, editing operation, or real provider stream. Remote results are tracked on [PR 4](https://github.com/francoisnoel62/Boardroom/pull/4/checks).
 
-## Still required before accepting Plan 01
+## Final increments and acceptance
 
-- Clean-machine packages on Windows x64, Linux x64, and macOS arm64; execute the CI matrix, review native packaging and launcher behavior on each.
-- Broader terminal/editor qualification and the real-provider streaming gate in Plan 02. The separate fictional-stream probe now covers input, multiline paste, resizing, Unicode, and cancellation through real PTYs and the packaged runtime.
-- Broader document/font/layout qualification and optional embedding candidate qualification. The basic packaged worker/assets, DOCX text, and empty/malformed cases have passed the three-target CI matrix.
-- Live context/proposal/stance contracts and general command/MCP action contracts. Versioned playback/export events, operation IDs, receipts, and additive storage compatibility are implemented; a migration runner, recovery reconciliation, and further crash/disk-fault qualification remain.
-- Protection experiments for commands and local/remote MCP: protected temporary originals, outside-copy files, filesystem/network restrictions, platform prerequisites. All such tools remain blocked in the product.
-- Filtered trace export experiment, optional embedding results, and provider-streaming evidence or an explicit access-related block. Real provider calls require separately authorized accounts and spending.
-- A real terminal capture, GitHub rendering review, copied quickstart commands against each candidate, and a novice installation/readability check.
-- Dependency production pruning, full license/distribution review, and release decisions where applicable.
+[PR 5](https://github.com/francoisnoel62/Boardroom/pull/5) adds the versioned saved-decision projection and CLI: **36 local tests passed**, with both three-target matrices green. [PR 6](https://github.com/francoisnoel62/Boardroom/pull/6) adds local filtered traces, actual temporary isolation experiments and explicit optional blocks: **40 local tests passed**, with both three-target matrices green.
 
-No plan acceptance box has been checked. The source repository and dependent PRs are public at the user's request; no product release, external model-account integration, purchase, or signing has occurred. PRs are left open for review, without automatic merging.
+[PR 7](https://github.com/francoisnoel62/Boardroom/pull/7) extends the candidate test with its shipped installed journey, archives executable modes and runs separate download/install jobs. The first complete campaign passed all six jobs in each workflow: three producer/test jobs and three fresh-environment installation jobs. Windows/macOS system/cache application Node was removed; Linux used an offline fresh Ubuntu image without Node. Complete evidence was downloaded locally, and compact results are [retained in the repository](validation/plan01-targets.json).
+
+The final screenshot comes from the actual packaged CLI in a real Windows PTY. A local first-frame startup exceeded the old ten-second readiness window; the final qualifier records startup timing with a bounded thirty-second cold-start window while subsequent interaction checks remain bounded at ten seconds. No test is skipped or automatically retried. The final-head matrix remains the authority for the submitted PR.
+
+All Plan 01 criteria have passing mandatory evidence or the explicit optional blocked/failed outcomes allowed by its passage rule. [Acceptance and future work](plan-01-acceptance.md) distinguish those outcomes from live integration or tool activation. Broader editing/recovery, retrieval, tools, novice onboarding, cloud observability and public release remain in their respective plans. No paid account, product release or automatic merge occurred.
+
+## Acceptance review — evidence guarantees
+
+The review found guarantees promised by the README and architecture without any test. The tests below are **characterization tests**: each was written after its behavior and passed. It then failed for the expected reason once its guard was temporarily removed, and passed again after restoration. They secure the behavior; they do not claim TDD-first. Each check ran `npm run build`, then `node --test --test-name-pattern="<test name>" <test file>`.
+
+| Guarantee | Guard removed | Observed failure | Restored behavior |
+| --- | --- | --- | --- |
+| Deleted text original | Missing-original fallback when citing text | `ENOENT` instead of a citation | Saved snapshot text with `originalChanged: true` |
+| Deleted document original, service and CLI | Missing-original fallback when citing a page or block | `ENOENT`; the CLI printed `BOARDROOM: ENOENT` | Saved page plus the visible CLI warning |
+| Altered text, PDF or extraction snapshot | Digest check when citing | Missing expected integrity exception | `Snapshot integrity check failed` |
+| Altered snapshot when capturing text | Digest check on an existing snapshot | Capture succeeded over conflicting bytes | Capture refused |
+| Altered snapshot when capturing a document | Digest check on an existing snapshot | Evidence was saved before a later failure, so the file could not be captured again | A refused capture saves nothing; a later capture gets revision 1 |
+| Unsupported document format | Extension guard | A `.txt` capture was not rejected | `Document extraction supports PDF and DOCX files only` |
+
+One behavior was changed test-first:
+
+| Slice | Observed red result | Green behavior |
+| --- | --- | --- |
+| Missing snapshot | `node --test --test-name-pattern="missing .*snapshot is refused" tests/project.test.ts tests/document-evidence.test.ts` failed with a raw `ENOENT` naming the internal snapshot path | One shared snapshot reader refuses missing and altered snapshots with an explicit integrity error |
+
+The first deleted-original test failed for an unrelated reason. On Windows, Node 24.12 `rmSync` returned without deleting a path containing `é`, so the original still existed. `unlinkSync` deletes it, and the product fallback was correct. The same runtime behavior can leave temporary directories with non-ASCII names after tests on Windows.
+
+The installed qualification suite now also retains the first exported plan and memo with its evidence.
+
+Local result: **48 tests passed**, none skipped; type checking and `git diff --check` passed. A locally built candidate also ran its installed suite with empty `PATH` and retained `export-plan.md` and `export-memo.md`.
