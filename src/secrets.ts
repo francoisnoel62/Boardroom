@@ -10,7 +10,7 @@ export interface SecretStore {
 
 export function validateSecret(secret: string): string {
   // Generic errors deliberately do not echo input, validation issues or host errors.
-  if (typeof secret !== 'string' || !secret.length || Buffer.byteLength(secret) > 2560 || /[\x00-\x20\x7f]/.test(secret)) {
+  if (typeof secret !== 'string' || !secret.length || Buffer.byteLength(secret) > 2560 || /[\s\x00-\x1f\x7f-\x9f]/u.test(secret)) {
     throw new PublicError('Credential must be a nonempty token without whitespace, at most 2560 UTF-8 bytes.');
   }
   return secret;

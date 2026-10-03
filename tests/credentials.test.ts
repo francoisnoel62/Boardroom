@@ -11,6 +11,22 @@ const input = { id: 'private-route', providerId: 'provider-a', modelId: 'model-a
   capabilities: { streaming: true, structuredOutput: 'json' as const, tools: false,
     cancellation: 'best-effort' as const, usage: 'tokens' as const }, limitations: ['Not verified.'] };
 
+test('invalid token whitespace, terminal controls and oversized input never reach the secret store', async t => {
+  const root = mkdtempSync(join(tmpdir(), 'Boardroom invalid credential '));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const app = new Boardroom(root);
+  let written: string | undefined;
+  const store = { async set(_ref: string, token: string) { written = token; },
+    async get() { return written; }, async delete() { written = undefined; } };
+  try {
+    app.configureRoute(input);
+    for (const token of ['', 'with space', 'with\u2003space', 'with\u009bcontrol', 'x'.repeat(2561)]) {
+      await assert.rejects(app.setRouteCredential(input.id, token, store), /Credential/);
+      assert.equal((await app.routeCredentialStatus(input.id, store)).status, 'missing');
+    }
+  } finally { app.close(); }
+});
+
 test('credentials stay at the secret boundary and unavailable vault errors never echo their bodies', async t => {
   const root = mkdtempSync(join(tmpdir(), 'Boardroom secret boundary '));
   t.after(() => rmSync(root, { recursive: true, force: true }));
