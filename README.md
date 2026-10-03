@@ -1,159 +1,124 @@
 # BOARDROOM
 
-### Make the objection part of the decision.
+![Great decisions deserve a room. Build your own team of AI advisers, with you at the head of the table.](docs/media/boardroom-hero.svg)
 
-A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
+<p align="center">
+  <strong>A boardroom for the decisions that shape what you build.</strong><br />
+  Your models. Your experts. Your ambition. You at the head of the table.
+</p>
 
-**Current build: Plan 01 complete — local recorded example.** Explore a fictional discussion, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. A separate terminal check lets you try input during a fictional stream. Live AI meetings are planned for Plan 02.
+<p align="center">
+  <a href="docs/getting-started.md#try-the-local-example">Try the local example</a> ·
+  <a href="#a-launch-that-found-its-focus">See the story</a> ·
+  <a href="#every-ambition-deserves-its-own-team">Explore the vision</a> ·
+  <a href="docs/contributing.md">Build with us</a>
+</p>
 
-[Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](docs/architecture.md) · [Acceptance evidence](docs/plan-01-acceptance.md)
+---
 
-## An objection that changes the plan
+## Before the first line of code, there is a decision.
 
-The initial proposal is ambitious: five integrations and self-service billing in four weeks. The Lead Developer points to the saved staffing constraint: **two engineers**. The revised plan narrows to one integration and a supervised pilot with five design partners.
+You have an idea you can't leave alone.
 
-The Marketing Manager still reports `INSUFFICIENT_EVIDENCE`: willingness to pay is untested. Two approvals do not erase that uncertainty, and the human decision remains `pending`.
+You can see the product. You can imagine the launch. You're already thinking about how to build it. Then come the questions that follow you long after you close your laptop.
 
-This is a **scripted, fictional recorded example**, authored for the project. Its model labels are fictional; no model generated this recording and no model calls occur during playback.
+*Is this the right problem? Can we deliver it? Will anyone care enough to pay?*
 
-![Captured packaged terminal: five integrations become one after the staffing objection; two approvals preserve the Marketing Manager's insufficient evidence and the pending human decision.](docs/media/recorded-terminal.jpg)
+For a technical founder, those questions often land on the same desk. Yours. Every assumption can become a feature. Every feature can become weeks of work. And the most consequential choices happen before there is anything to measure.
 
-This is the rendered screen from an actual packaged CLI process in an OS pseudoterminal. [Replayable VT recording](docs/media/recorded-example.cast) · [Accessible screen text](docs/media/terminal-screen.txt) · [Capture provenance](docs/media/README.md).
+**Boardroom begins at that moment.**
 
-[Read the complete captured text](docs/demo-transcript.txt) · [Inspect the fictional source](assets/demo/context.md) · [Read the fixture and export content](assets/demo/meeting.json)
+Our vision is a local decision workspace where **you are the CEO, and you build the team.** Hire the AI models you want, give them the roles your business needs, and bring them your toughest question. Three advisers for a product launch. Five for a new market. Ten for a decision that touches the whole company. You choose who gets a seat.
 
-## Try the local example
+Bring your context and your ambition. Let your team examine the evidence, challenge the proposal, and work with you toward a plan you can stand behind.
 
-No account, API key, or model download is needed for playback.
+The aim: catch the objection that changes everything while changing your mind is still cheap.
 
-### From the development checkout
+## Every ambition deserves its own team.
 
-Prerequisites: **Node 24.12.0**, npm, and the dependencies installed by `npm ci`. The native SQLite driver is required. The recorded workflow and independent installed-candidate journey pass CI on Windows x64, Linux x64, and macOS arm64.
+A promising idea needs to survive more than one way of looking at the world. The perspectives you need depend on what you're trying to do.
 
-```sh
-npm ci
-npm run build
-node dist/cli.js demo --data-dir .boardroom/example
-node dist/cli.js evidence --line 4 --data-dir .boardroom/example
-node dist/cli.js export --output .boardroom/exports --data-dir .boardroom/example
-node dist/cli.js history --data-dir .boardroom/example
-node dist/cli.js decision --data-dir .boardroom/example
-```
+A software launch might call for a Product Owner, a Lead Developer, and a Marketing Manager. Expanding a physical business might call for a logistics expert, a finance director, and someone who understands the local market. Build the room around the decision.
 
-Run `demo --next` to read one intervention at a time. Repeating `demo` resumes from the saved position; after the last message it reports `Recording complete`. Use a new `--data-dir` for a fresh example.
+Imagine the people you'd want at the table:
 
-### A local candidate with Node included
+| At the table | The question they bring |
+| :--- | :--- |
+| **Product Owner** | What is the smallest thing we can build that solves a problem worth solving? |
+| **Lead Developer** | What will it take to make this real, and which constraint could break the plan? |
+| **Marketing Manager** | Who needs this, how do we reach them, and what evidence says they will pay? |
+| **Logistics Expert** | Can we deliver reliably, and where does the supply chain become fragile? |
+| **Finance Director** | What can we afford to commit, and which assumptions determine the return? |
+| **You, the CEO** | Given the tradeoffs, what are we willing to commit to? |
 
-```sh
-npm run package
-```
+These are examples of seats you could create. Our ambition is to let you recruit any AI model you want and define its responsibility. The team can grow, shrink, or change expertise with the question.
 
-The command prints a new directory under `release/`. It contains its own Node runtime, compiled application, assets, and prepared native dependencies. It builds for the **current host platform and architecture**. It does not produce cross-platform binaries or publish anything.
+The intended conversation starts with independent assessments, then brings them into the same room. Advisers challenge specific assumptions, investigate the context, and revise the shared proposal. You can add the missing fact, question an argument, or change the direction.
 
-On Windows, open PowerShell in that printed directory:
+You choose the models. You define the roles. Evidence gives you something to judge their perspectives against. **The final decision belongs to you.**
 
-```powershell
-.\boardroom.cmd demo
-.\boardroom.cmd evidence --line 4
-.\boardroom.cmd export --output .\exports
-.\boardroom.cmd history
-.\boardroom.cmd decision
-.\boardroom.cmd doctor --json
-```
+## A launch that found its focus
 
-On Linux or macOS, open a terminal in the printed directory:
+For this story, you've brought together a Product Owner, a Lead Developer, and a Marketing Manager to examine a SaaS launch. The proposal is exciting: **five integrations, self-service billing, four weeks.**
 
-```sh
-./boardroom demo
-./boardroom evidence --line 4
-./boardroom export --output ./exports
-./boardroom history
-./boardroom decision
-./boardroom doctor --json
-```
+Then the Lead Developer points to one line in the project context: **two engineers.**
 
-Development archives are retained in the successful [PR 7 workflow runs](https://github.com/francoisnoel62/Boardroom/pull/7/checks). Download the candidate for your OS/architecture and extract `boardroom.tar.gz`; on Unix, use `tar -xzf boardroom.tar.gz` to preserve executable modes. GitHub may require sign-in to retrieve workflow artifacts; the installed application and recorded example require no model account. There is no published product release yet.
+That constraint changes the conversation. The Product Owner revises the scope to one integration and a supervised pilot. The Marketing Manager pushes for five design partners before a public launch — and keeps one question open: will they pay?
 
-The default data directory is `%LOCALAPPDATA%\Boardroom` on Windows, `~/Library/Application Support/Boardroom` on macOS, and `$XDG_DATA_HOME/boardroom` (or `~/.local/share/boardroom`) on Linux. Data remains outside the candidate directory. `--data-dir` overrides this location.
+The ambition now has a first step:
 
-The downloaded candidate passes the [independent installation campaign](docs/installation-qualification.md): fresh Windows/macOS VMs with system/cache application Node removed, and an offline Ubuntu image containing no Node package. The journey uses the bundled runtime, actual launcher, Unicode/space paths and durable data outside the candidate. Signed installers and general release onboarding remain later work.
+> Run a four-week supervised pilot with one integration and five design partners. Defer self-service billing and public launch.
 
-## Inspect PDF and DOCX evidence
+<sub>Excerpt from the <a href="assets/demo/meeting.json">bundled example's plan</a>. This story is a scripted, fictional illustration of the decision process.</sub>
 
-Explicitly authorize the single file you want to read:
+Two advisers approve the revised plan. Marketing still reports **insufficient evidence**. That uncertainty stays in the room, right beside the recommendation, where you can act on it.
 
-```sh
-node dist/cli.js document --source assets/validation/launch.pdf --allow-source --data-dir .boardroom/documents
-node dist/cli.js document --source assets/validation/launch.docx --allow-source --data-dir .boardroom/documents
-```
+**You leave knowing what to build first, what changed, and what still needs to be learned.**
 
-Each command prints a saved evidence ID. Use that ID to reopen an exact physical PDF page or saved DOCX text block:
+<details>
+<summary><strong>Step inside the example</strong></summary>
 
-```sh
-node dist/cli.js evidence --id <pdf-evidence-id> --page 2 --data-dir .boardroom/documents
-node dist/cli.js evidence --id <docx-evidence-id> --block 2 --data-dir .boardroom/documents
-```
+![Recorded terminal showing the staffing objection, the narrower launch plan, and the unresolved willingness-to-pay question.](docs/media/recorded-terminal.jpg)
 
-In a Windows candidate, replace `node dist/cli.js` with `.\boardroom.cmd`. Add `--json` for structured output. A failed extraction exits with code `2` and a visible explanation; partial extraction keeps its warnings. PDF page references are physical page numbers. DOCX blocks are saved extraction blocks, **not Word page numbers**. Original bytes and extracted text are saved separately, so later edits do not rewrite a citation.
+An actual terminal capture of the local recorded example. The dialogue and model labels are fictional; playback makes no model calls.
 
-This increment supports textual PDFs and DOCX text extraction. It does not perform OCR or preserve complex layout, images, and formatting. The [fictional fixtures](assets/validation/README.md) describe exactly what the automated checks cover. `doctor --json` also extracts those files from the candidate's actual dependencies and assets.
+[Read the accessible transcript](docs/demo-transcript.txt) · [Inspect the source context](assets/demo/context.md) · [Capture provenance](docs/media/README.md)
 
-## Try input during a fictional stream
+</details>
 
-Run this in an interactive terminal:
+## Leave with a decision you can explain.
 
-```sh
-node dist/cli.js terminal-check
-```
+Boardroom's design follows a simple path: **question → evidence → challenge → revision → your decision.**
 
-In a Windows candidate, use `.\boardroom.cmd terminal-check`. Type while the sample updates, paste several lines, resize the window, and press Enter to submit the scratch draft. Backspace removes one whole character, including combined accents and emoji. Escape or Ctrl+C cancels with exit code `130` and restores the terminal modes.
+The outcome is a plan and a decision memo: what to do next, why the proposal changed, which evidence mattered, and where disagreement remains. A record you can reopen when circumstances change or someone asks, “Why did we choose this?”
 
-The screen is labeled **Technical validation — fictional stream**. Input stays in memory; it does not create project data, advance playback, or call a model. Pasted line endings are normalized, and terminal control bytes are removed before display. Piped input is refused. This is a small input probe, not a live meeting or a full text editor.
+We want that record to make the next conversation better, too. A remembered assumption should still be an assumption. A decision made under one constraint should remain understandable when that constraint disappears.
 
-## What happens to your data
+## What we believe a seat at the table requires
 
-For separate technical evidence, `trace --output <directory>` creates a new local JSON file with allowlisted event metadata: sequence, type, time, playback position or export-operation ID. It excludes paths, source/transcript bodies and receipts. Nothing is uploaded. `isolation-check --output <directory>` measures fixed fictional temporary targets and loopback networking, then writes a report; it accepts no arbitrary command or MCP endpoint. Both commands support `--json`.
+These principles guide the product we are building:
 
-`doctor --json` explains optional blocks. No embedding runtime/model assets or provider/cloud-trace account is configured in this build. FTS5 and local filtered traces remain available; real streaming must be validated in Plan 02. See the [technical qualification report](docs/technical-qualification.md).
+- **Disagreement earns its place.** An objection that survives the discussion belongs in the final memo. Consensus is never required to end a meeting.
+- **Evidence stays inspectable.** Claims should lead back to the source version behind them. Missing evidence should remain visible.
+- **Human judgment has the final word.** You set the direction and make the call. Adviser confidence cannot overrule you.
+- **Access is yours to grant.** Local project memory, explicit permissions, preserved originals, and deliberate spending limits are part of the design. Live advisers will receive selected context through the model providers you configure.
 
-- Playback reads only the bundled fictional source. Source ingestion through the application service requires explicit authorization for the chosen file and project.
-- Saved citations point to a SHA-256 identified revision. Editing the original does not change that snapshot; inspection warns if the original has changed or disappeared.
-- Each export creates a new directory and two UTF-8 Markdown files. Existing plans and sources are preserved.
-- `history` shows saved playback events and export outcomes. Each export has a stable ID and receipts containing the paths and SHA-256 hashes of files successfully written. Add `--json` for structured history.
-- `decision` inspects the saved context and both proposal versions. Each adviser view references its context/proposal versions; two approvals preserve the remaining `INSUFFICIENT_EVIDENCE` and the pending human decision. Add `--json` for versioned records.
-- An export without a saved outcome remains `unconfirmed`, including while it is running. Inspect its directory before requesting a new export. Reopening or reading history never retries it. A failed export may leave partial files; its receipt records the writes that finished.
-- Playback makes no provider calls. Commands, MCP, live meetings, and cloud telemetry are unavailable in this build.
-- Local files and SQLite databases are readable by the machine owner. Hashes help identify revisions; they are not protection against a malicious machine owner.
+Explore the [founding product specification](boardroom-plans/BOARDROOM_V1_SPEC.md) for the decision process behind this vision, or the [implementation guide](docs/getting-started.md) for what you can run today.
 
-When live meetings arrive, selected context will be sent to the configured model providers. Permissions, budgets, and optional observability are later milestones; this recorded build does not validate those capabilities.
+## Bring the question that matters.
 
-## Engineering you can inspect
+*Which feature deserves the next six weeks? Is this architecture worth the complexity? What would we need to learn before committing to this launch?*
 
-The terminal renders results; the application service owns state. Domain records, source snapshots, and LangGraph checkpoints have separate storage responsibilities. The recording reader is separate from the tiny LangGraph feasibility probe.
+Boardroom is for founders, CEOs, and builders who want to assemble the expertise their ambition deserves — and give their decisions the same care they give their product.
 
-```text
-CLI / Ink → Application service → Domain SQLite + immutable snapshots
-                │
-                └─ New Markdown plan + decision memo
+**[Explore the local example →](docs/getting-started.md#try-the-local-example)**
 
-doctor → Separate LangGraph probe → Official SQLite checkpointer
-```
+Start with a fictional launch, follow the objection, and inspect the resulting plan. Setup and current availability live in the guide.
 
-TypeScript, Ink/React, Zod, and a pinned `better-sqlite3` driver underpin this first increment. The official checkpointer is retained with its compatible native driver family. See the [architecture and tradeoffs](docs/architecture.md).
+If this is a problem you want to help solve, [build with us](docs/contributing.md). Bring a difficult decision, challenge a product assumption, or help engineer the room.
 
-```sh
-npm run typecheck
-npm test
-```
+[Architecture](docs/architecture.md) · [Engineering evidence](docs/plan-01-acceptance.md) · [Development plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) · [Project status and licensing](docs/getting-started.md#next-milestones)
 
-Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](docs/plan-01-progress.md) records the observed failures and passing behaviors.
+---
 
-A GitHub Actions workflow runs 40 deterministic integration/E2E tests and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](docs/plan-01-acceptance.md) records the observed results, optional blocks and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
-
-## Next milestones
-
-Plan 02 adds the first real decision using three distinct models from at least two providers. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. Optional embeddings, provider streaming and cloud traces remain explicitly blocked in this recorded build. [All nine plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
-
-The project is currently a development checkout, not a public release. Its project license and release/signing arrangements await a decision. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
-
-To contribute during development, use the approved spec and milestone acceptance criteria, reproduce changes through public interfaces, and start each behavior change with a failing test. Include the relevant validation and update the documentation. See the [small dependent PR workflow](docs/contributing.md) used on the [public repository](https://github.com/francoisnoel62/Boardroom).
+<p align="center"><strong>Build something worth believing in.<br />Start with a decision you can stand behind.</strong></p>
