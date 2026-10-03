@@ -13,6 +13,10 @@ test('Vercel builds and serves the site package', () => {
   assert.equal(config.framework, null);
 });
 
+test('a commit that does not touch the site skips the deployment', () => {
+  assert.equal(config.ignoreCommand, 'node site/scripts/vercel-ignore.mjs');
+});
+
 test('URLs keep the trailing slash the site is built with', () => {
   assert.equal(config.trailingSlash, true);
 });
