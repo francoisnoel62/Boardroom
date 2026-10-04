@@ -165,7 +165,11 @@ export class CallController {
       receipt = { ...receipt, status: 'failed', reason: 'timeout' }; result = undefined;
     }
     this.db.transaction(() => {
-      if (result && !result.failure) try { this.authorize(receipt.projectId, receipt.meetingId, receipt); }
+      if (result && !result.failure) try {
+        this.authorize(receipt.projectId, receipt.meetingId, receipt);
+        const execution = ExecutionSchema.parse(this.load('execution', receipt.meetingId));
+        if (execution.status === 'stopped' || (execution.status === 'concluding' && receipt.pool !== 'conclusion')) throw new PublicError('Execution no longer accepts this completion.');
+      }
       catch { receipt = { ...receipt, status: 'failed', reason: 'cancelled' }; result = undefined; }
       this.save('call', id, receipt);
       if (receipt.reason === 'invalid-usage') this.stop(receipt.projectId, receipt.meetingId);

@@ -9,8 +9,9 @@ export type Pricing = z.infer<typeof PricingSchema>;
 export const CallLimitsSchema = z.strictObject({ maxInputTokens: z.number().int().positive().max(2000000),
   maxOutputTokens: z.number().int().positive().max(1000000), maxDurationMs: z.number().int().positive().max(3600000) });
 const CallFieldsSchema = z.strictObject({ adviserId: z.string().min(1),
-  phase: z.enum(['preflight', 'framing', 'framing-correction', 'analysis', 'revision', 'conclusion']),
+  phase: z.enum(['preflight', 'framing', 'framing-correction', 'analysis', 'confrontation', 'revision', 'conclusion']),
   contextVersion: z.literal(1), subjectVersion: z.number().int().positive(),
+  framingVersion: z.number().int().positive().optional(),
   pool: z.enum(['work', 'revision', 'conclusion']), limits: CallLimitsSchema });
 const correctPool = (call: { phase: string; pool: string }) => call.pool ===
   (call.phase === 'revision' ? 'revision' : call.phase === 'conclusion' ? 'conclusion' : 'work');

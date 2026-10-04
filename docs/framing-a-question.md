@@ -1,6 +1,6 @@
 # Frame a question and approve its version
 
-This is the first live phase: the Product Owner proposes a framing from your frozen selected context, then waits for explicit human approval. Three analyses, debate, final adviser views and live decision exports remain future increments. A configured team has three model identities; framing calls only its PO route.
+This is the first live phase: the Product Owner proposes a framing from your frozen selected context, then waits for explicit human approval. [Independent analyses](independent-analyses.md) and [sourced debate/revisions](sourced-revisions.md) are available as explicit subsequent commands. Final adviser views and live decision exports remain future increments. A configured team has three model identities; framing calls only its PO route.
 
 Prerequisites: Node 24.12.0 (or the bundled runtime), a supported current [provider catalog](provider-preflight.md), a configured frozen team, a prepared meeting with a USD ceiling, [protected execution reserves](controlling-calls.md), and your explicitly supplied account credentials. A declared route is unverified until its paid preflight succeeds. The implementation's deterministic tests certify neither your account nor remote billing/cancellation.
 

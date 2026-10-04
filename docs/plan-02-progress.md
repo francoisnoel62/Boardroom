@@ -107,3 +107,21 @@ Observed red → green:
 Additional boundary checks: two successes/one adviser invalid twice; foreign line references refused; one separately billed correction; no call before framing approval; historical analyses excluded after correction; repeated phase refused. The complete live decision and real provider qualification remain open.
 
 Validation finale PR6 : Windows x64 / Node 24.12.0, typecheck/build et npm test **99/99**, zéro échec/skip, 108,5 s, coffre hôte obligatoire et qualification du paquet installé inclus. git diff --check passé. Résultats multi-OS dans les contrôles de la PR.
+
+## Increment 7 — objections and immutable PO revisions
+
+Based on PR6 (#13). A real checkpointed proposal → confrontation → revision graph dispatches only the PO as common-proposal author. Lead Developer and Marketing Manager receive the three completed analyses only at confrontation. Immutable domain records survive each network boundary; checkpoints hold identities and round counters only. Two internal cycles bound repetitions, with earlier closure on repeated content or limits. No account/paid call/Hotelix input used.
+
+Observed red → green:
+- `node --test tests/debate.test.ts`: `debateMeeting` absent → green sourced chain, immediate intervention/version persistence, reopen, repetition closure and protected conclusion reserve.
+- `--test-name-pattern='accepted proposal-item'`: unrelated billing change falsely accepted a staffing objection → green after requiring the targeted item to actually change. Two invalid revisions create two receipts and no new proposal.
+- `--test-name-pattern='early conclusion preserves'`: stop reason was call-failed and framing approval was lost → green after preserving approved framing for conclusion and recording the explicit stop reason. No revision starts afterward.
+- `node --test --test-name-pattern='between polls rejects' tests/call-control.test.ts`: ordinary late response remained accepted after conclusion → green settlement execution check, with reliable usage retained.
+- `--test-name-pattern='rapid correction'`: old-frame revision receipt completed after correction/new approval → green exact framing-version authorization at reservation, start, polling and settlement.
+- `node --test tests/debate-cli.test.ts`: unknown command → green actual paid-consent CLI debate/inspection/reopen, no replay.
+
+Additional public-boundary cases cover the internal two-cycle bound, rejected amendments with reasons and unchanged body, stable targets, model attribution and no unanimity requirement. Real multi-provider acceptance remains open.
+
+Inherited PR6 commit bcb317488d24cca233cedde3e38599087a0f4a77 passed all six verify/installed jobs in both push https://github.com/francoisnoel62/Boardroom/actions/runs/37118705701 and PR https://github.com/francoisnoel62/Boardroom/actions/runs/37118708487 runs on Windows x64, Linux x64 and macOS arm64; GitGuardian passed.
+
+Validation finale PR7 : typecheck/build et npm test **107/107**, zéro échec/skip, Windows x64 / Node 24.12.0, 112 s ; coffre natif requis et paquet installé inclus. Liens Markdown locaux et git diff --check passent.
