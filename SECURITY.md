@@ -20,10 +20,11 @@ No release has been published yet. Fixes land on the `main` branch. Once release
 
 ## Current security model and its limits
 
-BOARDROOM runs locally, with no account and no BOARDROOM server. The current build plays a recorded example and makes no model calls. Authorization is checked before an external source is read; this is application-level scoping, not operating-system sandboxing. PDF and DOCX files are read as text: scripts are never executed and HTML is never rendered. Installers verify the SHA-256 of a package before installing it.
+BOARDROOM runs locally, with no BOARDROOM account or server. Recorded playback makes no model calls. The implemented live workflow sends selected text and phase inputs to configured OpenAI and Anthropic API routes after explicit provider authorization; those providers process and bill the requests. Real-account qualification remains pending. Authorization is checked before an external source is read; this is application-level scoping, not operating-system sandboxing. PDF and DOCX files are read as text: scripts are never executed and HTML is never rendered. Installers verify the SHA-256 of a package before installing it.
 
 Known limits are documented rather than hidden:
 
 - **No isolation candidate demonstrates protection yet.** Command and MCP tools stay unavailable until Plan 06 qualifies one ([acceptance record](docs/plan-01-acceptance.md), [technical qualification](docs/technical-qualification.md)).
 - Packages are not code-signed or notarized, and they still include development dependencies.
 - Snapshots and exports are ordinary local files; saved source paths may reveal local directory names ([architecture](docs/architecture.md#protection-and-provenance-limits)).
+- API keys use the host credential store or explicit process-local session injection, separately from shareable configuration. Exports redact known keys and token patterns, but unrelated source secrets can remain; review exports before sharing ([data and credential limits](docs/configuring-routes.md)). Local cancellation does not establish zero remote billing.

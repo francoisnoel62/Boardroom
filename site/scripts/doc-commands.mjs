@@ -5,7 +5,7 @@
 //
 //   node site/scripts/doc-commands.mjs --repo . [--candidate release/candidate]
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,6 +42,15 @@ function mdxFiles(directory) {
   });
 }
 
+// Node 24.12's recursive cpSync can crash natively on Windows Unicode paths.
+// Use the same directory/file copy strategy as the candidate packager.
+function copyCandidate(source, target) {
+  if (statSync(source).isDirectory()) {
+    mkdirSync(target);
+    for (const name of readdirSync(source)) copyCandidate(join(source, name), join(target, name));
+  } else copyFileSync(source, target);
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const option = name => { const index = argv.indexOf(name); return index >= 0 ? argv[index + 1] : undefined; };
@@ -54,11 +63,11 @@ function main() {
   // They run in a copy of the candidate, so documented outputs never end up inside the package.
   const home = mkdtempSync(join(tmpdir(), 'boardroom-doc-commands-'));
   const candidate = source ? join(home, 'candidate') : undefined;
-  if (source && candidate) cpSync(source, candidate, { recursive: true });
   const env = { ...process.env, HOME: home, USERPROFILE: home, XDG_DATA_HOME: join(home, 'data'), LOCALAPPDATA: join(home, 'local') };
   let ran = 0;
   let failed = 0;
   try {
+    if (source && candidate) copyCandidate(source, candidate);
     for (const file of mdxFiles(docs)) {
       for (const command of extractDocCommands(readFileSync(file, 'utf8'))) {
         const invocation = toInvocation(command, { platform: process.platform, node: process.execPath });

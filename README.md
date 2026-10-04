@@ -102,7 +102,7 @@ These principles guide the product we are building:
 - **Disagreement earns its place.** An objection that survives the discussion belongs in the final memo. Consensus is never required to end a meeting.
 - **Evidence stays inspectable.** Claims should lead back to the source version behind them. Missing evidence should remain visible.
 - **Human judgment has the final word.** You set the direction and make the call. Adviser confidence cannot overrule you.
-- **Access is yours to grant.** Local project memory, explicit permissions, preserved originals, and deliberate spending limits are part of the design. Live advisers will receive selected context through the model providers you configure.
+- **Access is yours to grant.** Local project memory, explicit permissions, preserved originals, and deliberate spending limits are part of the design. Live advisers receive selected context through the model providers you configure, after explicit authorization.
 
 Explore the [founding product specification](boardroom-plans/BOARDROOM_V1_SPEC.md) for the decision process behind this vision, or the [implementation guide](docs/getting-started.md) for what you can run today.
 
@@ -121,6 +121,8 @@ You can also [prepare your own question locally](docs/preparing-a-question.md) a
 [Call control](docs/controlling-calls.md) freezes protected budgets and time, exposes durable receipts and supports stopping in-flight work. [Explicit paid preflight](docs/provider-preflight.md) supports bounded OpenAI and Anthropic text routes; actual provider/account qualification remains open.
 
 [Configure your advisers and protected credentials](docs/configuring-routes.md) before deliberately authorizing any paid request.
+
+During a running phase you can inspect, stop, request conclusion or export. Free contributions, scoped context changes, pause/resume and explicit extensions are the next participation milestone; they are not available yet. [Current project assessment](docs/etat-des-lieux-2026-10-04.md).
 
 If this is a problem you want to help solve, [build with us](docs/contributing.md). Bring a difficult decision, challenge a product assumption, or help engineer the room.
 

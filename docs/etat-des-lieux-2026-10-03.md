@@ -1,5 +1,7 @@
 # État des lieux de Boardroom — 3 octobre 2026
 
+Document historique au commit indiqué ci-dessous. Pour l'état après les fusions du plan 02, lire [l'audit du 4 octobre 2026](etat-des-lieux-2026-10-04.md).
+
 ## Périmètre et conclusion
 
 Audit du checkout au commit `f87a42f3c7bc9255e010da95a847344a177cc717` : fusion de la PR #7, le 3 octobre 2026 à 15:04:30, heure de Bangkok. L'arbre suivi était propre au début de l'audit ; ce checkout est en HEAD détachée. Cet état des lieux porte sur le code local et les preuves conservées dans le dépôt. Les statuts GitHub actuels et les comptes fournisseurs n'ont pas été consultés.

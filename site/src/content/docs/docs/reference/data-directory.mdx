@@ -12,16 +12,18 @@ status: available
 | macOS | `~/Library/Application Support/Boardroom` |
 | Linux | `$XDG_DATA_HOME/boardroom`, or `~/.local/share/boardroom` |
 
-Every command accepts `--data-dir <directory>` to use another location. Data never lives inside the application directory.
+Every command accepts `--data-dir <directory>` to use another location. The default keeps data outside the application directory; choose an external location when overriding it too.
 
 ## Contents
 
 | Path | Purpose |
 | :--- | :--- |
-| `domain.sqlite` | Versioned, schema-validated project, evidence, recorded-meeting and export records, plus an append-only event journal |
+| `domain.sqlite` | Projects, evidence, recorded/live meetings, routes, framing, analyses, proposals, views, human decisions, call receipts and exports, plus an append-only event journal |
 | `snapshots/<sha256>` | Original source bytes, and content-addressed document extractions, written once and never modified |
 | `checkpoints.sqlite` | Created by `doctor`'s separate LangGraph probe; not used by the recorded example |
 
-Exports, traces and isolation reports are written where you point `--output`, never inside the data directory.
+Live graphs also use separate phase checkpoint databases containing identities rather than authoritative business records. See [the architecture](https://github.com/francoisnoel62/Boardroom/blob/main/docs/architecture.md). Credentials live in the host vault or an explicitly injected process-local store, not shareable project configuration.
+
+Exports, traces and isolation reports are written where you point `--output`; that destination may be within or outside your data directory.
 
 Local files and databases are readable by the machine owner. Saved source paths may reveal local directory names.

@@ -23,3 +23,5 @@ node dist/cli.js decision --json --data-dir .boardroom/example
 The decision view shows the saved context, both proposal versions and each adviser's view of the version it judged. Two approvals keep the remaining `INSUFFICIENT_EVIDENCE`, and the human decision stays `pending`.
 
 Field-by-field contracts for both commands are in the [JSON output reference](/docs/reference/json-output/).
+
+For a live project, `history --project PROJECT_ID` shows its events and export receipts; `meeting-decision --project PROJECT_ID --id MEETING_ID` inspects the current live decision and its versioned history. [Live decisions and exports](https://github.com/francoisnoel62/Boardroom/blob/main/docs/live-decisions.md) document the distinct contracts and pending real-account qualification.

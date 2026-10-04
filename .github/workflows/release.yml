@@ -88,7 +88,7 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           cat > notes.md <<NOTES
-          Developer preview: the recorded example only. Live meetings arrive with Plan 02.
+          Developer preview: recorded example and implemented live decision workflow. Real-account qualification remains pending; review docs/plan-02-acceptance.md at this tag for evidence and limits.
 
           One-line installers for this tag: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/scripts/install.sh (macOS, Linux)
           and https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/scripts/install.ps1 (Windows), or download a package below.

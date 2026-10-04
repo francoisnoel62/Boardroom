@@ -64,9 +64,10 @@ test('the decision record shows the retained export and its source hash', async 
   await expect(record).toContainText('88a28e448d9deacf8340dcf1b2b38a52be1c9178f158c2c40400451ec5f0b8e9');
 });
 
-test('future capabilities are labelled with the plan that delivers them', async ({ page }) => {
+test('the implemented live workflow retains its qualification limit', async ({ page }) => {
   const live = page.locator('#trust [data-claim="live-meetings"]');
-  await expect(live.locator('[data-status]')).toHaveText('Planned · Plan 02');
+  await expect(live.locator('[data-status]')).toHaveText('Preview');
+  await expect(live).toContainText('real-account qualification pending');
 });
 
 test('the roadmap keeps the acceptance reservations visible', async ({ page }) => {

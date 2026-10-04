@@ -21,9 +21,10 @@ test('every documentation page states its availability', async ({ page }) => {
   }
 });
 
-test('planned features are labelled with the plan that delivers them', async ({ page }) => {
+test('the live workflow is a preview with an explicit outstanding acceptance gate', async ({ page }) => {
   await page.goto('/docs/first-real-meeting/');
-  await expect(page.locator('.page-status [data-status]')).toHaveText('Planned · Plan 02');
+  await expect(page.locator('.page-status [data-status]')).toHaveText('Preview');
+  await expect(page.locator('main')).toContainText('Plan 02 is not accepted yet');
 });
 
 test('an llms.txt index is published for AI assistants', async ({ request }) => {

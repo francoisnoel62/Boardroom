@@ -32,7 +32,7 @@ const report = `${repository}/security/advisories/new`;
   <section aria-labelledby="model-title">
     <h2 id="model-title">What protects you today</h2>
     <ul>
-      <li><strong>Local by design.</strong> No account and no Boardroom server. The current build plays a recorded example and makes no model calls.</li>
+      <li><strong>Local application.</strong> No Boardroom account or server. Recorded playback makes no model calls; explicitly authorized live phases send selected context to configured OpenAI and Anthropic API routes.</li>
       <li><strong>Sources on request.</strong> Authorization is checked before an external source is read, and evidence from another project is refused. This is application-level scoping, not operating-system sandboxing.</li>
       <li><strong>Documents read as text.</strong> PDF files are parsed from their bytes and never run scripts; DOCX files are reduced to raw text, and HTML is never rendered or executed.</li>
       <li><strong>Originals preserved.</strong> Snapshots keep the original bytes, and each export receipt records the SHA-256 of what was written.</li>
@@ -50,10 +50,11 @@ const report = `${repository}/security/advisories/new`;
       </li>
       <li>Packages are not code-signed or notarized yet, and they still include development dependencies.</li>
       <li>Snapshots and exports are ordinary local files; saved source paths may reveal local directory names.</li>
-      <li>Live model connections do not exist yet. When they arrive, API keys are to be stored apart from shareable project configuration, exports and logs.</li>
+      <li>Real-account qualification is pending. API keys use a host vault or explicit session injection, separately from shareable configuration. Export filtering removes known keys, but unrelated source secrets may remain. Review artifacts before sharing; cancellation does not prove zero remote billing.</li>
     </ul>
     <p>
       <a href={sourceUrl('docs/plan-01-acceptance.md')} rel="noopener">Source: Plan 01 acceptance</a> ·
+      <a href={sourceUrl('docs/plan-02-acceptance.md')} rel="noopener">Plan 02 qualification</a> ·
       <a href={sourceUrl('docs/technical-qualification.md')} rel="noopener">Technical qualification</a> ·
       <a href={sourceUrl('boardroom-plans/BOARDROOM_V1_SPEC.md')} rel="noopener">Specification</a>
     </p>

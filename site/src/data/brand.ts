@@ -50,16 +50,16 @@ export const markFiles = [
 export const descriptions = {
   short:
     'Boardroom is a local, open-source terminal workspace where a room of AI advisers challenges your plan before you commit. ' +
-    'You choose the room, the advisers argue from your sources, and the decision stays yours. ' +
-    'Today it plays a recorded example; live meetings with your own model keys are planned.',
+    'Three advisers argue from selected sources; the decision stays yours. ' +
+    'Explore the recorded example or the implemented live workflow, whose real-account qualification remains pending.',
   long:
     'Boardroom is a local, open-source decision workspace for the terminal, licensed under Apache-2.0. ' +
-    'Before you commit weeks of work to a plan, you put it in front of a room of AI advisers whose roles and models you choose. ' +
+    'Before you commit weeks of work to a plan, you put it in front of a Product Owner, Lead Developer and Marketing Manager. ' +
     'They read your sources, cite them, object and revise; disagreement stays on the record instead of being forced into consensus, ' +
-    'and the decision stays with you. Everything runs on your machine, with no account and no Boardroom server. ' +
+    'and the decision stays with you. Records stay on your machine, with no Boardroom account or server; authorized live calls send selected context to your model providers. ' +
     'The current build, qualified on Windows x64, Linux x64 and macOS arm64, plays a recorded example of the whole journey, ' +
-    'from proposal to exported plan and memo. Live meetings with three models from two providers, using your own keys, ' +
-    'are the next planned milestone; a public beta comes later.',
+    'from proposal to exported plan and memo. The live workflow with three models from two providers is implemented; real-account qualification remains pending. ' +
+    'Free participation during phases and a public beta are planned later.',
 };
 
 export const wordCount = (text: string) => text.split(/\s+/).filter(word => /[\p{L}\p{N}]/u.test(word)).length;

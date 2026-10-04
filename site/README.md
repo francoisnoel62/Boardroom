@@ -1,8 +1,8 @@
 # BOARDROOM website and documentation
 
-The public site and documentation, built as a static [Astro](https://astro.build) site with [Starlight](https://starlight.astro.build) for the docs. It implements phases 1 to 4 of the [website plan](../boardroom-plans/SITE-VITRINE-ET-DOCUMENTATION.md): foundations, design system, the home page with its replayable capture and FAQ, the engineering page, and documentation v1 (getting started, concepts, guides, generated reference, project pages and `llms.txt`), and the download chain: tested installers, a draft release workflow and release-aware `/download` and `/welcome` pages.
+The public site and documentation, built as a static [Astro](https://astro.build) site with [Starlight](https://starlight.astro.build) for the docs. It implements phases 0–5 of the [website plan](../boardroom-plans/SITE-VITRINE-ET-DOCUMENTATION.md), apart from the external human reviews: foundations, design system, home page with replayable capture and FAQ, engineering, documentation, download chain, roadmap, changelog, brand kit, privacy, security and field notes.
 
-Nothing here is deployed yet. The domain, hosting and analytics are pending decisions (D3–D5 in the plan). No download is offered until a release is published (D1–D2): `/download` reads GitHub Releases at build time and says so plainly while there is none.
+The site is deployed on [Vercel](https://boardroom-phi.vercel.app), without audience measurement or a custom domain. No download is offered until a release is published: the first public release is planned for Plan 09, and `/download` reads GitHub Releases at build time. The post-merge documentation update describes the implemented live workflow as Preview, explicitly pending real-account qualification; Plan 02 remains the next acceptance gate.
 
 ## Run it
 
@@ -20,7 +20,7 @@ To reuse an installed Chromium instead of downloading Playwright's, set `PLAYWRI
 
 ## Single sources of truth
 
-The site never retypes product facts. It reads them from the repository at build time:
+Generated references read product facts from the repository at build time. Editorial claims and guides must also be reviewed after product changes; existing evidence files alone do not prove that prose is current:
 
 | Shown on the site | Read from |
 | :--- | :--- |

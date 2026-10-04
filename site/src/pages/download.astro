@@ -1,6 +1,5 @@
 ---
 import Claim from '../components/Claim.astro';
-import { sourceUrl } from '../data/labels.ts';
 import { releaseInfo } from '../data/release-source.ts';
 import type { Platform } from '../data/release.ts';
 import Site from '../layouts/Site.astro';
@@ -56,7 +55,7 @@ const command = (platform: Platform, tag: string, version: string) => platform =
       {info.state === 'published' && (
         <>
           {info.release.prerelease && (
-            <p class="preview"><strong>Developer preview.</strong> The recorded example only; live meetings arrive with Plan 02.</p>
+            <p class="preview"><strong>Developer preview.</strong> Check this release's notes for its included workflows and qualification limits.</p>
           )}
           <p class="version">Version {info.release.version} · <a href={info.release.url} rel="noopener">Release notes</a></p>
           <div class="packages" data-packages>

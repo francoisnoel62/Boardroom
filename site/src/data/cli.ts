@@ -8,7 +8,7 @@ export interface UsageEntry {
 }
 
 export function parseHelp(source: string) {
-  const text = /const help = `([\s\S]*?)`;/.exec(source)?.[1];
+  const text = /const help = `([\s\S]*?)`;/.exec(source)?.[1]?.replace(/\r\n?/g, '\n');
   if (!text) throw new Error('The CLI help text was not found in src/cli.ts.');
   const lines = text.split('\n');
   const start = lines.indexOf('Usage:');
@@ -49,8 +49,8 @@ export function exitCodesIn(sources: string[]): number[] {
 export const documentedExitCodes = [
   { code: 0, meaning: 'The command completed.' },
   { code: 1, meaning: 'The command failed and printed the reason prefixed with “BOARDROOM:”, or a doctor probe did not verify.' },
-  { code: 2, meaning: 'Document extraction failed. With --json, the output still describes the failure and its warnings.' },
-  { code: 130, meaning: 'terminal-check was cancelled with Escape or Ctrl+C; the terminal modes are restored.' },
+  { code: 2, meaning: 'Document extraction, provider preflight or a live phase did not complete successfully. Inspect its structured result, warnings and receipts.' },
+  { code: 130, meaning: 'terminal-check or the live terminal was cancelled with Escape or Ctrl+C; terminal modes are restored. Live cancellation attempts a partial export and retains uncertain costs.' },
 ];
 
 export interface SchemaRow {

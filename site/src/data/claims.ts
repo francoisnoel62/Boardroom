@@ -51,9 +51,9 @@ export const claims: Claim[] = [
   },
   {
     id: 'live-meetings',
-    text: 'Live meetings with three distinct models from at least two providers',
-    status: 'planned',
-    evidence: [],
+    text: 'Live workflow implemented for three distinct models from two providers; real-account qualification pending',
+    status: 'preview',
+    evidence: ['docs/plan-02-acceptance.md', 'docs/live-quickstart.md'],
     plan: '02',
   },
   {

@@ -1,6 +1,6 @@
 ---
 title: Your data
-description: What BOARDROOM stores on your machine, what it reads, and what never leaves it.
+description: What BOARDROOM stores locally and what authorized live calls send to your model providers.
 status: available
 ---
 
@@ -23,13 +23,17 @@ Data stays outside the application directory. Every command accepts `--data-dir`
 - **Sources need your consent.** A document is read only after you authorize that file with `--allow-source`.
 - **Citations point to exact revisions.** Each saved citation references a SHA-256 identified snapshot. Editing the original does not change it; inspection warns when the original has changed or disappeared.
 - **Exports never overwrite.** Each export creates a new directory with a plan and a decision memo, and records receipts with the hashes of the files it wrote.
-- **History is inspectable.** `history` lists saved playback events and export outcomes; add `--json` for structured output.
-- **No provider calls.** Playback of the recorded example makes no model or cloud calls, and the application sends no telemetry.
+- **History is inspectable.** `history` lists saved events and export outcomes; use `--project` for your live project and `--json` for structured output.
+- **Recorded playback stays local.** It makes no model or cloud calls. The application sends no telemetry.
+- **Live calls are explicit.** Authorized phases send selected text and phase inputs to configured OpenAI and Anthropic APIs. Later phases also send the relevant saved analyses, proposals and objections. The providers process and bill those requests.
+- **Keys stay separate.** Credentials use the host vault or explicit process-local injection. Shareable configuration omits credential references; live exports omit original source paths and redact known keys and token patterns.
 
-<Aside type="note" title="When live meetings arrive">
-  Live meetings (Plan 02) will send selected context to the model providers you configure, under their own pricing and terms. Permissions, budgets and optional observability are later milestones.
+<Aside type="note" title="Qualification remains open">
+  The live workflow and its call controls are implemented, but real-account qualification is pending. Unknown usage stays committed against the ceiling; local cancellation cannot prove zero remote billing. Free participation, protected tools and optional cloud observability remain later milestones.
 </Aside>
 
 ## Limits worth knowing
 
 Local files and SQLite databases are readable by the machine owner. Hashes identify revisions; they do not protect against a malicious machine owner. Saved source paths may reveal local directory names.
+
+Read exports before sharing: filtering known credentials does not remove every unrelated secret that might occur in source text. See the [credential guide](https://github.com/francoisnoel62/Boardroom/blob/main/docs/configuring-routes.md) and [live exports](https://github.com/francoisnoel62/Boardroom/blob/main/docs/live-decisions.md).
