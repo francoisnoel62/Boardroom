@@ -16,7 +16,10 @@ globalThis.fetch = async (url, init) => {
   const schema = (body.text?.format.schema ?? body.output_config?.format.schema)?.properties ?? {};
   const phase = schema.assertions ? 'analysis' : schema.objections ? 'confrontation' : schema.dispositions ? 'revision' : schema.items ? 'proposal' : schema.verdict ? 'views' : 'framing';
   const scripted = process.env.TEST_OUTPUTS ? JSON.parse(process.env.TEST_OUTPUTS)[phase] : undefined;
-  const text = scripted ? JSON.stringify(scripted[body.model] ?? scripted) : process.env.TEST_OUTPUT ?? '{"ok":true}';
+  // A preflight asks for an exact synthetic object; a provider that obeys returns it.
+  const prompt = body.input ?? body.messages?.[0]?.content ?? '', marker = 'Return exactly this JSON object and nothing else: ';
+  const echoed = prompt.includes(marker) ? prompt.slice(prompt.indexOf(marker) + marker.length) : undefined;
+  const text = echoed ?? (scripted ? JSON.stringify(scripted[body.model] ?? scripted) : process.env.TEST_OUTPUT ?? '{"ok":true}');
   const events = String(url).includes('anthropic') ? [
     { type: 'message_start', message: { model: body.model, usage: { input_tokens: 100 } } },
     { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } },

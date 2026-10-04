@@ -149,6 +149,7 @@ export class CallController {
       result = await Promise.race([Promise.resolve().then(() => provider(request, controller.signal, text => {
         if (!settled && !controller.signal.aborted) receipt.streamedBytes += Buffer.byteLength(text);
       })), aborted]);
+      if (result.diagnostic) receipt = { ...receipt, diagnostic: result.diagnostic };
       const usage = UsageSchema.safeParse(result.usage);
       if (result.usage !== undefined && (!usage.success || usage.data.inputTokens > receipt.limits.maxInputTokens || usage.data.outputTokens > receipt.limits.maxOutputTokens)) {
         receipt = { ...receipt, status: 'uncertain', reason: 'invalid-usage' }; result = undefined;

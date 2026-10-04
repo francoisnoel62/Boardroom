@@ -18,6 +18,8 @@ import { validateSecret, type SecretStore } from './secrets.ts';
 import { z } from 'zod';
 import { supportedRoute, supportedModel } from './providers/catalog.ts';
 import { providerBoundary } from './providers/http.ts';
+import { providerSchema } from './providers/schema.ts';
+import { checksFor, syntheticRequest } from './providers/preflight.ts';
 import type { CallReceipt } from './call-domain.ts';
 import { FramingStateSchema, type FramingBody } from './framing-domain.ts';
 import type { LiveFraming } from './live-framing.ts';
@@ -165,17 +167,24 @@ export class Boardroom {
     const route = meeting.team?.routes.find(item => item.id === adviser?.routeId);
     if (!route) throw new PublicError('Frozen adviser route unavailable.');
     const model = supportedModel(route.providerId, route.modelId);
-    const result = await this.callStructured(projectId, meetingId, { adviserId, phase: 'preflight', contextVersion: 1,
-      subjectVersion: 1, pool: 'work', limits: { maxInputTokens: model.context, maxOutputTokens: 256, maxDurationMs: 30000 } },
-      { text: 'This is an explicitly authorized connection test. Return {"ok":true}.', schema: z.strictObject({ ok: z.literal(true) }) }, store);
-    const verified = result.value?.ok === true && result.receipts.every(receipt => receipt.knownCostMicros !== undefined);
+    // One synthetic call per schema this adviser will receive. The first failure stops the campaign: nothing is retried.
+    const required = checksFor(adviserId === meeting.proposalAuthorId), checks: { name: string; ok: boolean; receiptIds: string[] }[] = [], receipts: CallReceipt[] = [];
+    for (const check of required) {
+      const result = await this.callStructured(projectId, meetingId, { adviserId, phase: 'preflight', contextVersion: 1, subjectVersion: 1, pool: 'work',
+        limits: { maxInputTokens: model.context, maxOutputTokens: 1024, maxDurationMs: 30000 } }, { text: syntheticRequest(check), schema: check.schema }, store);
+      receipts.push(...result.receipts);
+      const ok = result.value !== undefined && result.receipts.every(receipt => receipt.knownCostMicros !== undefined);
+      checks.push({ name: check.name, ok, receiptIds: result.receipts.map(receipt => receipt.id) });
+      if (!ok) break;
+    }
+    const verified = checks.length === required.length && checks.every(check => check.ok);
     if (verified) this.db.transaction(() => {
       const current = this.getRoute(route.id);
       if (current.revision === route.revision) this.save('provider-route', route.id, {
         ...current, verification: 'verified', verifiedAt: new Date().toISOString(),
       });
     }).immediate();
-    return { routeId: route.id, modelId: route.modelId, verified, receipts: result.receipts };
+    return { routeId: route.id, modelId: route.modelId, verified, checks, receipts };
   }
 
   async callStructured<T>(projectId: string, meetingId: string, input: CallInput,
@@ -214,14 +223,8 @@ export class Boardroom {
     catch { throw new PublicError('Protected credential store unavailable. Use explicit session injection.'); }
     if (!key) throw new PublicError('Credential unavailable for the frozen route.');
     this.exportSecrets.add(key);
-    const jsonSchema = z.toJSONSchema(output.schema) as Record<string, unknown>;
-    // Provider schemas constrain shape. The original Zod schema still enforces local value bounds.
-    const removeUnsupportedBounds = (node: any) => {
-      if (!node || typeof node !== 'object') return;
-      for (const name of ['$schema', 'minimum', 'maximum', 'minLength', 'maxLength', 'minItems', 'maxItems', 'format']) delete node[name];
-      for (const child of Object.values(node)) removeUnsupportedBounds(child);
-    };
-    removeUnsupportedBounds(jsonSchema);
+    // The provider receives only its documented subset; the original Zod schema still enforces every local bound.
+    const jsonSchema = providerSchema(route.providerId, z.toJSONSchema(output.schema) as Record<string, unknown>);
     return async (first: ReturnType<Boardroom['reserveCall']>): Promise<{ value?: T; receipts: CallReceipt[] }> => {
     const receipts: CallReceipt[] = [];
     for (let attempt = 0; attempt < 2; attempt++) {

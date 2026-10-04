@@ -17,8 +17,9 @@ test('paid CLI preflight requires explicit consent and uses only a test-owned ex
   assert.equal(existsSync(log), false); assert.equal(app.callLedger(project.id, meeting.id).calls.length, 0);
   const accepted = run(true); assert.equal(accepted.status, 0, accepted.stderr);
   const result = JSON.parse(accepted.stdout); assert.equal(result.verified, true);
-  assert.equal(result.receipts.length, 1); assert.equal(app.getRoute('po').verification, 'verified');
+  assert.equal(result.receipts.length, 5, 'the proposal author is checked against framing, analysis, proposal, revision and final view');
+  assert.equal(app.getRoute('po').verification, 'verified');
   const sent = readFileSync(log, 'utf8'); assert.equal(sent.includes('CLI_KEY_SENTINEL'), false);
-  assert.equal(sent.includes('Two engineers.'), false); assert.equal(sent.trim().split('\n').length, 1);
+  assert.equal(sent.includes('Two engineers.'), false); assert.equal(sent.trim().split('\n').length, 5);
   assert.equal(accepted.stdout.includes('CLI_KEY_SENTINEL'), false);
 });
