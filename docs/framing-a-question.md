@@ -30,9 +30,7 @@ node dist/cli.js team-configure --input "$data/team.json" --data-dir $data
   passages = @(@{ evidenceId = $evidence.id; firstLine = 4; lastLine = 4 })
 } | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 "$data/question.json"
 $meeting = node dist/cli.js meeting-prepare --project $project.id --team decision --input "$data/question.json" --data-dir $data --json | ConvertFrom-Json
-@{ revisionMicros = 1000000; conclusionMicros = 1000000; revisionMs = 10000; conclusionMs = 10000 } |
-  ConvertTo-Json | Set-Content -Encoding utf8 "$data/reserves.json"
-node dist/cli.js execution-configure --project $project.id --id $meeting.id --input "$data/reserves.json" --data-dir $data
+node dist/cli.js execution-configure --project $project.id --id $meeting.id --data-dir $data
 ```
 
 The declared USD 10 is a ceiling, not a forecast. Full-context reservations are deliberately much larger than typical actual usage. The PO framing caps each attempt at 4,096 output tokens and 60 seconds. A malformed JSON/reference output permits at most one separately reserved correction; all attempts and unknown usage remain in receipts. Refresh the catalog after its documented expiry.

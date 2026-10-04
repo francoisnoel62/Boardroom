@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { openTerminal } from './support/terminal.ts';
 import { providerSetup } from './support/providers.ts';
@@ -79,7 +79,7 @@ for (const [cancelName, cancelKey] of [['Ctrl+C', '\x03'], ['Escape', '\x1b']] a
   assert.match(readFileSync(join(out, directory, 'plan.md'), 'utf8'), /No final plan has been established/);
 });
 
-test('live PTY exposes an unfunded framing and exports without sending HTTP', { timeout: 30000 }, async t => {
+test('live PTY refuses a ceiling that could never reach the final views, before any meeting or request', { timeout: 30000 }, async t => {
   let terminal: ReturnType<typeof openTerminal> | undefined, finished = false;
   t.after(async () => { if (terminal && !finished) { terminal.write('\x03'); await terminal.finish(); } });
   const { app, project, meeting, root } = providerSetup(t, async () => { throw new Error('PTY only'); });
@@ -93,13 +93,12 @@ test('live PTY exposes an unfunded framing and exports without sending HTTP', { 
   await terminal.waitFor(/Live decision/);
   const command = async (text: string) => { terminal!.write(text); await terminal!.waitFor(screen => screen.includes(`Draft: ${text}`)); terminal!.write('\r');
     await terminal!.waitFor(screen => screen.split('\n').filter(l => l.startsWith('Draft:')).at(-1)?.trim() === 'Draft:'); };
-  await command('start'); await terminal.waitFor(/failed.*execution-refused/); await terminal.waitFor(/USD ceiling 0/);
-  await command('export'); await terminal.waitFor(/Export saved/);
+  await command('start'); await terminal.waitFor(/Budget refused before any request: at least 6\.37 USD is needed, ceiling is 0 USD/); await terminal.waitFor(/Budget 0 USD/);
+  await command('export'); await terminal.waitFor(/Start the question first/);
   terminal.write('quit'); await terminal.waitFor(/Draft: quit/); terminal.write('\r'); assert.equal((await terminal.finish()).exitCode, 0); finished = true;
   assert.equal(readFileSync(log, 'utf8'), '');
-  const [directory] = readdirSync(out), saved = JSON.parse(readFileSync(join(out, directory!, 'meeting.json'), 'utf8'));
-  assert.equal(app.callLedger(project.id, saved.meetingId).calls.length, 0);
-  assert.match(readFileSync(join(out, directory!, 'plan.md'), 'utf8'), /No final plan has been established/);
+  assert.equal(app.callLedger(project.id, meeting.id).calls.length, 0);
+  assert.equal(existsSync(out), false, 'no meeting was created, so nothing is exported');
 });
 
 test('live PTY concludes explicitly and preserves a missing view beside insufficient evidence', { timeout: 30000 }, async t => {

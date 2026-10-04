@@ -22,4 +22,8 @@ When a provider refuses a request, the receipt keeps a safe `diagnostic`: the HT
 
 `--session` reads `BOARDROOM_SESSION_KEY` for this process and clears it from the environment before application work. Avoid putting keys in arguments or route JSON. A preflight in which every check is structured and metered marks the matching current route revision verified with its date. Configuration edits, credential replacement/deletion invalidate that status. A successful result with unknown metering remains unverified. Verification records one connection test; it does not certify cancellation or a complete multi-adviser meeting. Frozen meeting metadata remains immutable.
 
+## Refreshing the catalog
+
+Rates carry a validity window; past it every reservation and provider call is refused (see [call control](controlling-calls.md)). To refresh, review each provider's pricing, model and structured-output pages again, update `src/providers/catalog.ts` (rates, `asOf`, `validUntil`, sources) and the route notes in [OpenAI](providers/openai.md) and [Anthropic](providers/anthropic.md), then run the suite: its tests take their date from the catalog window, so they need no change. Routes, team and meetings frozen with the old rates are created again; their old receipts keep the rates they were reserved under. Rerun the preflight on every route afterwards.
+
 Implementation tests use a test-only HTTP import in disposable processes; it is excluded from the product package. No actual user route has been marked verified by this work, and no real paid smoke test has been run. Plan 02 acceptance stays open pending account access and an explicit spending envelope.

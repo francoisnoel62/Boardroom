@@ -19,7 +19,7 @@ test('a sourced objection revises the PO proposal and repeated objections end wi
   assert.equal(result.confrontations.length, 4); assert.equal(result.proposals[1].changes[0].itemId, 'integrations');
   assert.equal(sent.filter(s => s.phase === 'revision').length, 1);
   for (const payload of sent.filter(s => s.phase === 'confrontation')) assert.equal(payload.request.analyses.length, 3);
-  assert.equal(app.callLedger(project.id, meeting.id).remainingConclusion, 1000000);
+  assert.equal(app.callLedger(project.id, meeting.id).remainingConclusion, 2744084);
   const reopened = new Boardroom(root);
   try {
     assert.deepEqual((await reopened.inspectDebate(project.id, meeting.id)).proposals, result.proposals);

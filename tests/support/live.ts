@@ -16,7 +16,7 @@ export function echoSynthetic(init: RequestInit | undefined) {
   const wire = JSON.parse(String(init?.body)), prompt: string = wire.input ?? wire.messages[0].content;
   return providerResponse(wire.model, JSON.parse(prompt.slice(prompt.indexOf(syntheticMarker) + syntheticMarker.length)));
 }
-export async function liveSetup(t: TestContext, override?: (phase: string, request: any, normal: any) => unknown | Promise<unknown>) {
+export async function liveSetup(t: TestContext, override?: (phase: string, request: any, normal: any) => unknown | Promise<unknown>, ceiling?: number) {
   let references: any;
   const sent: { phase: string; request: any }[] = [];
   const wires: { phase: string; providerId: 'openai' | 'anthropic'; schema: any }[] = [];
@@ -36,7 +36,7 @@ export async function liveSetup(t: TestContext, override?: (phase: string, reque
     sent.push({ phase, request });
     wires.push({ phase, providerId: wire.messages ? 'anthropic' : 'openai', schema: wire.text?.format.schema ?? wire.output_config.format.schema });
     return providerResponse(wire.model, override ? await override(phase, { ...request, model: wire.model }, normal) : normal);
-  });
+  }, undefined, undefined, ceiling);
   references = fixture.meeting.context.passages;
   for (const id of ['po', 'dev', 'marketing']) await fixture.app.setRouteCredential(id, 'DUMMY_PRIVATE_KEY', fixture.store);
   await fixture.app.startMeeting(fixture.project.id, fixture.meeting.id, fixture.store);

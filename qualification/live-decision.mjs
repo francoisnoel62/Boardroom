@@ -47,9 +47,8 @@ export async function qualifyLiveDecision(t, { candidate, root, evidence, env, r
     revision: { proposal: revised, dispositions: [{ adviserId: 'dev', objectionId: 'capacity', action: 'accepted', reason: 'Staffing', changedItemIds: ['integration'] }] },
     views: { 'gpt-4.1-mini-2025-04-14': view, 'claude-haiku-4-5-20251001': { ...view, verdict: 'REJECTED' }, 'gpt-4.1-2025-04-14': { ...view, verdict: 'INSUFFICIENT_EVIDENCE', confidence: 35 } },
   };
-  const reserves = join(root, 'reserves.json');
-  writeFileSync(reserves, JSON.stringify({ revisionMicros: 1000000, conclusionMicros: 1000000, revisionMs: 10000, conclusionMs: 10000 }));
-  run('execution-configure', '--project', project.id, '--id', meeting.id, '--input', reserves, '--json');
+  // Reserves are computed from the frozen team's call bounds; no hand-written figures.
+  run('execution-configure', '--project', project.id, '--id', meeting.id, '--json');
   const token = 'QUALIFICATION_PRIVATE_SENTINEL_6c2d', log = join(root, 'live-http.jsonl');
   const before = { ...env };
   let live, exited = false;

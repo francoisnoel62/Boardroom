@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type Database from 'better-sqlite3';
 import { openDomainDatabase } from './local-database.ts';
 import { CallController } from './call-control.ts';
-import type { CallInput, Reserves } from './call-domain.ts';
+import { ExecutionSchema, type CallInput, type Reserves } from './call-domain.ts';
 import { EvidenceSchema, EventSchema, ExportOperationSchema, FixtureSchema, ProjectSchema, RecordedMeetingSchema, RecordedDecisionSchema, type Project, type Evidence, type RecordedMeeting, type EventInput } from './domain.ts';
 import { DocumentLocatorSchema, ExtractionSchema, extractDocument, type DocumentLocator } from './extraction.ts';
 import { LiveProjectSchema, ProjectInputSchema, MeetingInputSchema, LiveMeetingSchema,
@@ -20,6 +20,7 @@ import { supportedRoute, supportedModel } from './providers/catalog.ts';
 import { providerBoundary } from './providers/http.ts';
 import { providerSchema } from './providers/schema.ts';
 import { checksFor, syntheticRequest } from './providers/preflight.ts';
+import { assertFundable, phaseLimits, reserveRequirement } from './reserves.ts';
 import type { CallReceipt } from './call-domain.ts';
 import { FramingStateSchema, type FramingBody } from './framing-domain.ts';
 import type { LiveFraming } from './live-framing.ts';
@@ -53,6 +54,7 @@ export class Boardroom {
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
     this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow,
       (project, id, input) => {
+        this.assertProtectedReserves(project, id, input);
         if (!['analysis', 'revision', 'confrontation'].includes(input.phase) && !(input.phase === 'conclusion' && input.framingVersion !== undefined)) return;
         this.getMeeting(project, id);
         const state = FramingStateSchema.safeParse(this.load('framing-state', id));
@@ -67,7 +69,33 @@ export class Boardroom {
     this.http = options.fetch ?? globalThis.fetch;
   }
 
-  configureExecution(projectId: string, meetingId: string, input: Reserves) { return this.calls.configure(projectId, meetingId, input); }
+  /** Without `input` the reserves are computed from the frozen team's routes and call bounds; `input` is the advanced override. */
+  configureExecution(projectId: string, meetingId: string, input?: Reserves) {
+    if (input) return this.calls.configure(projectId, meetingId, input);
+    const meeting = this.getMeeting(projectId, meetingId), required = meeting.team && reserveRequirement(meeting.team);
+    if (!required) throw new PublicError('Protected reserves can only be computed for catalog routes; supply them explicitly.');
+    assertFundable(required, meeting.costCeiling, meeting.durationTargetSeconds);
+    return this.calls.configure(projectId, meetingId, required.reserves);
+  }
+  /** Before a team's meeting is even prepared: refuse a ceiling or duration that could never run the workflow. */
+  assertTeamFundable(teamId: string, ceiling: { amount: number; currency: string }, durationTargetSeconds: number) {
+    const stored = this.load('team', teamId);
+    if (!stored) throw new PublicError('Team unavailable.');
+    const team = TeamSchema.parse(stored), required = reserveRequirement({ ...team, routes: team.advisers.map(adviser => this.getRoute(adviser.routeId)) });
+    if (required) assertFundable(required, ceiling, durationTargetSeconds);
+  }
+  /** Declared reserves must at least match what the team's calls need before any phase may spend. */
+  private assertProtectedReserves(project: string, id: string, input: CallInput) {
+    if (input.phase === 'preflight') return;
+    const meeting = this.getMeeting(project, id), required = meeting.team && reserveRequirement(meeting.team);
+    const execution = ExecutionSchema.safeParse(this.load('execution', id));
+    if (!required || !execution.success) return;
+    const held = execution.data, minimum = required.reserves;
+    if (held.revisionMicros < minimum.revisionMicros || held.conclusionMicros < minimum.conclusionMicros
+      || held.revisionMs < minimum.revisionMs || held.conclusionMs < minimum.conclusionMs) {
+      throw new PublicError('Protected reserves are below the funded minimum for this team; freeze computed reserves on a new meeting.');
+    }
+  }
   reserveCall(projectId: string, meetingId: string, input: CallInput) { return this.calls.reserve(projectId, meetingId, input); }
   callLedger(projectId: string, meetingId: string) { return this.db.transaction(() => this.calls.ledger(projectId, meetingId))(); }
   stopExecution(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, false); }
@@ -171,7 +199,7 @@ export class Boardroom {
     const required = checksFor(adviserId === meeting.proposalAuthorId), checks: { name: string; ok: boolean; receiptIds: string[] }[] = [], receipts: CallReceipt[] = [];
     for (const check of required) {
       const result = await this.callStructured(projectId, meetingId, { adviserId, phase: 'preflight', contextVersion: 1, subjectVersion: 1, pool: 'work',
-        limits: { maxInputTokens: model.context, maxOutputTokens: 1024, maxDurationMs: 30000 } }, { text: syntheticRequest(check), schema: check.schema }, store);
+        limits: phaseLimits('preflight', route) }, { text: syntheticRequest(check), schema: check.schema }, store);
       receipts.push(...result.receipts);
       const ok = result.value !== undefined && result.receipts.every(receipt => receipt.knownCostMicros !== undefined);
       checks.push({ name: check.name, ok, receiptIds: result.receipts.map(receipt => receipt.id) });

@@ -89,10 +89,11 @@ export class LiveTerminalSession {
     if (!['start', 'analyse', 'debate', 'views'].includes(name)) throw new PublicError('Unknown terminal command; see displayed actions.');
     if (name === 'start' && !this.meetingId) {
       const prep = this.preparation!;
+      // A ceiling or duration that could never reach the final views is refused here, before any meeting is created.
+      this.app.assertTeamFundable(prep.teamId, prep.costCeiling, prep.durationTargetSeconds);
       const meeting = this.app.prepareTeamMeeting({ ...prep, passages: this.selected.map(i => prep.passages[i - 1]!) });
       this.meetingId = meeting.id;
-      this.app.configureExecution(this.projectId, meeting.id, { revisionMicros: Math.floor(meeting.costCeiling.amount * 1e6 * 0.1), conclusionMicros: Math.floor(meeting.costCeiling.amount * 1e6 * 0.1),
-        revisionMs: Math.floor(meeting.durationTargetSeconds * 1000 * 0.1), conclusionMs: Math.floor(meeting.durationTargetSeconds * 1000 * 0.15) });
+      this.app.configureExecution(this.projectId, meeting.id);
     }
     this.busy = name; this.notice = 'Receiving provisional output; saved results require validation.'; this.streams.clear();
     this.pending = (async () => {
