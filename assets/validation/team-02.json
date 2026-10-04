@@ -1,0 +1,9 @@
+{
+  "id": "decision-02",
+  "proposalAuthorId": "po",
+  "advisers": [
+    { "id": "po", "role": "Product Owner", "routeId": "po-route" },
+    { "id": "dev", "role": "Lead Developer", "routeId": "dev-route" },
+    { "id": "marketing", "role": "Marketing Manager", "routeId": "marketing-route" }
+  ]
+}

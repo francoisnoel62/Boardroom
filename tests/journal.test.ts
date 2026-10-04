@@ -86,17 +86,22 @@ test('simultaneous first readers cannot reset playback or emit a message twice',
   const root = mkdtempSync(join(tmpdir(), 'Boardroom first readers '));
   const source = `
     import { Boardroom } from ${JSON.stringify(new URL('../src/application.ts', import.meta.url).href)};
-    const app = new Boardroom(process.argv[1]);
-    process.send('ready');
+    process.send('spawned');
     process.once('message', () => {
-      process.send(app.nextRecordedMessage());
-      app.close();
-      process.disconnect();
+      const app = new Boardroom(process.argv[1]);
+      process.send('ready');
+      process.once('message', () => {
+        process.send(app.nextRecordedMessage());
+        app.close();
+        process.disconnect();
+      });
     });
   `;
   const children = Array.from({ length: 4 }, () => spawn(process.execPath, ['--input-type=module', '-e', source, root], {
     stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
   }));
+  const errors = new Map<typeof children[number], string>();
+  for (const child of children) child.stderr.on('data', bytes => errors.set(child, (errors.get(child) ?? '') + bytes));
   t.after(async () => {
     await Promise.all(children.map(async child => {
       if (child.exitCode === null && child.signalCode === null) {
@@ -109,9 +114,12 @@ test('simultaneous first readers cannot reset playback or emit a message twice',
   });
   const next = (child: typeof children[number]) => Promise.race([
     once(child, 'message').then(([message]) => message),
-    once(child, 'exit').then(([code]) => { throw new Error(`Reader exited before replying (${code}).`); }),
+    once(child, 'exit').then(([code]) => { throw new Error(`Reader exited before replying (${code}): ${errors.get(child) ?? ''}`); }),
   ]);
   await Promise.all(children.map(child => next(child)));
+  const opened = children.map(child => next(child));
+  for (const child of children) child.send('open');
+  await Promise.all(opened);
   const replies = children.map(child => next(child));
   for (const child of children) child.send('advance');
   const messages = await Promise.all(replies);

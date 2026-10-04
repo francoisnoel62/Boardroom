@@ -31,7 +31,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
+      - name: Install a real Secret Service for Linux vault qualification
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y dbus-x11 gnome-keyring
+      - name: Qualify Linux with an unlocked disposable vault
+        if: runner.os == 'Linux'
+        env:
+          BOARDROOM_REQUIRE_HOST_VAULT: 'true'
+        run: dbus-run-session -- sh -c 'printf "%s" "boardroom-ci-dummy" | gnome-keyring-daemon --unlock --components=secrets; npm test'
+      - name: Qualify Windows and macOS host vaults
+        if: runner.os != 'Linux'
+        env:
+          BOARDROOM_REQUIRE_HOST_VAULT: 'true'
+        run: npm test
       - run: npm run package -- --output release/candidate
       - name: Run the commands the documentation presents as runnable
         run: node site/scripts/doc-commands.mjs --repo . --candidate release/candidate
@@ -90,6 +102,7 @@ jobs:
           $env:BOARDROOM_INSTALLATION_MODE = 'clean'
           $env:BOARDROOM_NO_NODE_PROOF = $proof
           $env:BOARDROOM_QUALIFICATION_OUTPUT = Join-Path $PWD 'evidence'
+          $env:BOARDROOM_REQUIRE_HOST_VAULT = 'true'
           & './Boardroom clean François/candidate/runtime/node.exe' --test './Boardroom clean François/candidate/qualification/installed.test.mjs'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Qualify macOS without installed application Node
@@ -97,7 +110,7 @@ jobs:
         shell: bash
         run: |
           bash tools/scripts/clean-ci-node.sh "$PWD/evidence/no-node.json"
-          BOARDROOM_INSTALLATION_MODE=clean BOARDROOM_NO_NODE_PROOF="$PWD/evidence/no-node.json" BOARDROOM_QUALIFICATION_OUTPUT="$PWD/evidence" \
+          BOARDROOM_REQUIRE_HOST_VAULT=true BOARDROOM_INSTALLATION_MODE=clean BOARDROOM_NO_NODE_PROOF="$PWD/evidence/no-node.json" BOARDROOM_QUALIFICATION_OUTPUT="$PWD/evidence" \
             './Boardroom clean François/candidate/runtime/node' --test './Boardroom clean François/candidate/qualification/installed.test.mjs'
       - name: Qualify Linux in an offline image containing no Node
         if: runner.os == 'Linux'

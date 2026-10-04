@@ -4,6 +4,8 @@ This increment creates real projects and saves a question with immutable text co
 
 A question and selected context are sufficient. An initial plan is optional. The recorded example remains available with its existing commands.
 
+To select a configured team and freeze its route revisions, use [route and credential configuration](configuring-routes.md). The example below preserves the PR 1 metadata-only preparation path.
+
 ## Try the prepared-question workflow
 
 From a development checkout with Node 24.12.0 and installed dependencies, run `npm run build`. This PowerShell example selects line 4 of the bundled **fictional** source; replace the source and line range to prepare your own context.

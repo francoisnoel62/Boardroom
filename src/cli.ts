@@ -1,8 +1,13 @@
+import { PublicError, publicDiagnostic } from './privacy.ts';
 import { parseArgs } from 'node:util';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { Boardroom } from './application.ts';
+import { HostSecretStore, SessionSecretStore } from './secrets.ts';
+
+const sessionKey = process.env.BOARDROOM_SESSION_KEY;
+delete process.env.BOARDROOM_SESSION_KEY;
 
 const help = `BOARDROOM — local decision workspace
 
@@ -12,10 +17,17 @@ Commands and MCP: unavailable
 Cloud telemetry: off
 
 Usage:
+  boardroom route-configure --input <json-file>  Save an unverified provider/model route
+  boardroom team-configure --input <json-file>   Save the three-adviser Plan 02 profile
+  boardroom configuration [--json]              Inspect shareable configuration without credentials
+  boardroom credential-set --route <id>         Enter a masked credential into the host vault
+  boardroom credential-set --route <id> --secret-stdin  Store an explicitly piped credential
+  boardroom credential-check --route <id> [--session]   Check presence without showing the key
+  boardroom credential-delete --route <id>      Delete this route's host credential
   boardroom project-create --name <name> [--language en]  Create a real project
   boardroom project --id <project-id>    Inspect a saved project
   boardroom source --project <id> --source <file> --allow-source  Save authorized UTF-8 text
-  boardroom meeting-prepare --project <id> --input <json-file>  Freeze a question and selected passages
+  boardroom meeting-prepare --project <id> --input <json-file> [--team <id>]  Freeze a question and selected passages
   boardroom meeting --project <id> --id <meeting-id>          Inspect a prepared meeting
   boardroom meeting-context --project <id> --id <meeting-id>  Read its frozen text passages
   boardroom demo [--next]                 Read or resume the recorded example
@@ -52,6 +64,8 @@ try {
       name: { type: 'string' }, language: { type: 'string' },
       project: { type: 'string' },
       input: { type: 'string' },
+      route: { type: 'string' }, team: { type: 'string' }, session: { type: 'boolean' },
+      'secret-stdin': { type: 'boolean' },
     },
   });
   const command = positionals[0];
@@ -59,37 +73,63 @@ try {
     console.log(help);
   } else if (command === 'terminal-check' && positionals.length === 1) {
     if (!process.stdin.isTTY || !process.stdout.isTTY) {
-      throw new Error('Terminal validation requires an interactive terminal for input and output.');
+      throw new PublicError('Terminal validation requires an interactive terminal for input and output.');
     }
     const { runTerminalValidation } = await import('./terminal-validation.tsx');
     await runTerminalValidation();
   } else if (command === 'isolation-check' && positionals.length === 1) {
-    if (!values.output) throw new Error('Isolation validation requires --output <directory>.');
+    if (!values.output) throw new PublicError('Isolation validation requires --output <directory>.');
     const { exportIsolationReport } = await import('./isolation-validation.ts');
     const path = await exportIsolationReport(values.output);
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
-      throw new Error('Unknown command. Run boardroom --help.');
+    if (!['route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+      throw new PublicError('Unknown command. Run boardroom --help.');
     }
-    if (command === 'project-create' && !values.name) throw new Error('Project creation requires --name <name>.');
-    if (command === 'project' && !values.id) throw new Error('Project inspection requires --id <project-id>.');
-    if (['meeting-prepare', 'meeting', 'meeting-context'].includes(command) && !values.project) throw new Error('Meeting commands require --project <project-id>.');
-    if (command === 'meeting-prepare' && !values.input) throw new Error('Meeting preparation requires --input <json-file>.');
-    if ((command === 'meeting' || command === 'meeting-context') && !values.id) throw new Error('Meeting inspection requires --id <meeting-id>.');
-    if (command === 'export' && !values.output) throw new Error('Export requires --output <directory>.');
-    if (command === 'trace' && !values.output) throw new Error('Trace export requires --output <directory>.');
-    if (command === 'source' && !values.project) throw new Error('Text capture requires --project <project-id>.');
-    if ((command === 'source' || command === 'document') && !values.source) throw new Error('Source capture requires --source <file>.');
-    if ((command === 'source' || command === 'document') && !values['allow-source']) throw new Error('Document reading requires explicit source consent: add --allow-source for this file.');
+    if (['route-configure', 'team-configure'].includes(command) && !values.input) throw new PublicError('Configuration requires --input <json-file>.');
+    if (command.startsWith('credential-') && !values.route) throw new PublicError('Credential commands require --route <route-id>.');
+    if (values.session && command !== 'credential-check') throw new PublicError('Session injection is available only for credential-check in this increment.');
+    if (values['secret-stdin'] && command !== 'credential-set') throw new PublicError('--secret-stdin is available only for credential-set.');
+    if (command === 'project-create' && !values.name) throw new PublicError('Project creation requires --name <name>.');
+    if (command === 'project' && !values.id) throw new PublicError('Project inspection requires --id <project-id>.');
+    if (['meeting-prepare', 'meeting', 'meeting-context'].includes(command) && !values.project) throw new PublicError('Meeting commands require --project <project-id>.');
+    if (command === 'meeting-prepare' && !values.input) throw new PublicError('Meeting preparation requires --input <json-file>.');
+    if ((command === 'meeting' || command === 'meeting-context') && !values.id) throw new PublicError('Meeting inspection requires --id <meeting-id>.');
+    if (command === 'export' && !values.output) throw new PublicError('Export requires --output <directory>.');
+    if (command === 'trace' && !values.output) throw new PublicError('Trace export requires --output <directory>.');
+    if (command === 'source' && !values.project) throw new PublicError('Text capture requires --project <project-id>.');
+    if ((command === 'source' || command === 'document') && !values.source) throw new PublicError('Source capture requires --source <file>.');
+    if ((command === 'source' || command === 'document') && !values['allow-source']) throw new PublicError('Document reading requires explicit source consent: add --allow-source for this file.');
     if (command === 'evidence' && values.id && ((values.page !== undefined) === (values.block !== undefined))) {
-      throw new Error('Saved document evidence requires exactly one --page or --block locator.');
+      throw new PublicError('Saved document evidence requires exactly one --page or --block locator.');
     }
-    if (command === 'evidence' && !values.id && (values.page || values.block)) throw new Error('A document locator requires --id <evidence-id>.');
+    if (command === 'evidence' && !values.id && (values.page || values.block)) throw new PublicError('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (command === 'project-create' || command === 'project') {
+      if (command === 'route-configure' || command === 'team-configure' || command === 'configuration') {
+        const result = command === 'configuration' ? app.configuration() : command === 'team-configure'
+          ? app.configureTeam(JSON.parse(readFileSync(values.input!, 'utf8'))) : (() => {
+            const { credentialRef: _secret, ...route } = app.configureRoute(JSON.parse(readFileSync(values.input!, 'utf8')));
+            return route;
+          })();
+        console.log(JSON.stringify(result, null, values.json ? undefined : 2));
+      } else if (command.startsWith('credential-')) {
+        const store = values.session ? new SessionSecretStore() : new HostSecretStore();
+        if (values.session) {
+          if (!sessionKey) throw new PublicError('Session injection requires BOARDROOM_SESSION_KEY for this process.');
+          await app.setRouteCredential(values.route!, sessionKey, store);
+        }
+        if (command === 'credential-set') {
+          app.getRoute(values.route!); // Fail before prompting if no route exists.
+          const { readCredential } = await import('./credential-input.ts');
+          await app.setRouteCredential(values.route!, await readCredential(!!values['secret-stdin']), store);
+        } else if (command === 'credential-delete') await app.deleteRouteCredential(values.route!, store);
+        const status = await app.routeCredentialStatus(values.route!, store);
+        console.log(JSON.stringify(status));
+        if (status.status !== 'available' && command !== 'credential-delete') process.exitCode = 2;
+        if (store instanceof SessionSecretStore) store.clear();
+      } else if (command === 'project-create' || command === 'project') {
         const project = command === 'project-create'
           ? app.createProject({ name: values.name!, language: values.language ?? 'en' }) : app.getProject(values.id!);
         console.log(values.json ? JSON.stringify(project)
@@ -98,14 +138,17 @@ try {
         const meeting = command === 'meeting' ? app.getMeeting(values.project!, values.id!) : (() => {
           const input = JSON.parse(readFileSync(values.input!, 'utf8'));
           if (!input || typeof input !== 'object' || Array.isArray(input) || 'projectId' in input) {
-            throw new Error('Meeting input must be an object without projectId; use --project.');
+            throw new PublicError('Meeting input must be an object without projectId; use --project.');
           }
-          return app.prepareMeeting({ ...input, projectId: values.project! });
+          return values.team ? app.prepareTeamMeeting({ ...input, projectId: values.project!, teamId: values.team })
+            : app.prepareMeeting({ ...input, projectId: values.project! });
         })();
         console.log(values.json ? JSON.stringify(meeting) : [
           'Live meeting prepared — no model calls.', `Meeting: ${meeting.id}`, `Project: ${meeting.projectId}`,
           `Question: ${meeting.question}`, `Language: ${meeting.language}`,
           `Context v${meeting.context.version} | ${meeting.context.passages.length} selected passages`,
+          ...(meeting.team ? [`Team: ${meeting.team.id} v${meeting.team.revision}`,
+            ...meeting.team.routes.map(route => `${route.id} v${route.revision} | ${route.providerId}/${route.modelId} | ${route.verification}`)] : []),
           `Duration target: ${meeting.durationTargetSeconds}s | declared ceiling: ${meeting.costCeiling.amount} ${meeting.costCeiling.currency}`,
           'Provider connections and operational budget enforcement are not available yet.',
         ].join('\n'));
@@ -194,9 +237,6 @@ try {
           console.log([values.project ? `Project ${values.project} | saved history` : 'Recorded example | saved history', ...events, 'Exports:', ...operations].join('\n'));
         }
       } else if (command === 'doctor') {
-        // Product telemetry is opt-in; inherited development tracing flags grant no consent.
-        process.env.LANGSMITH_TRACING = 'false';
-        process.env.LANGCHAIN_TRACING_V2 = 'false';
         const { StorageProbe, optionalProbeResults } = await import('./technical-validation.ts');
         let probe = new StorageProbe(app.dataDirectory);
         let fts5: boolean;
@@ -233,6 +273,6 @@ try {
     } finally { app.close(); }
   }
 } catch (error) {
-  console.error(`BOARDROOM: ${error instanceof Error ? error.message : 'Operation failed.'}`);
+  console.error(`BOARDROOM: ${publicDiagnostic(error)}`);
   process.exitCode = 1;
 }

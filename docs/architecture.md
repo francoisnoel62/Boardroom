@@ -67,6 +67,12 @@ The recorded workflow and document increment passed [PR 1's remote CI](https://g
 
 ## Protection and provenance limits
 
+Prepared live meetings can now pin a configured team's revision and three full route snapshots, independently of subsequent configuration changes. Shareable configuration omits credential references; domain meeting snapshots hold opaque UUID references only. `HostSecretStore` lazily loads the pinned native binding and uses Linux Secret Service without fallback. `SessionSecretStore` is explicitly injected and process-local. No network await or vault access occurs in a SQLite transaction. See [configuration, vault prerequisites and limitations](configuring-routes.md).
+
+The privacy module is evaluated before graph/client dependencies from the CLI, application service and technical storage probe. Inherited cloud tracing switches are disabled, including the older LangChain flag and OpenTelemetry SDK. CLI diagnostics allow only intentional `PublicError` messages; arbitrary parser/OS/native error messages are replaced. No provider adapter or model call is delivered by configuration alone.
+
+Concurrent fresh connections can fail WAL promotion before the normal SQLite busy handler waits. Local domain database initialization retries only idempotent WAL/schema setup for at most five seconds, then restores the regular busy timeout. It closes the connection on setup failure; domain writes, exports and future provider calls are never retried by this mechanism.
+
 The separate technical commands now qualify a local field-allowlisted trace export and fixed temporary isolation experiments. See [actual probes and platform prerequisites](technical-qualification.md). The unrestricted child can write outside its working copy and reach loopback. Platform candidates record tested/failed/blocked observations, never activate product tools, and do not establish remote MCP protection. Optional embedding/provider/cloud-trace blocks are explicit in `doctor`; an absent prerequisite is not a passed test.
 
 Authorization is checked before reading an external source. Evidence resolution rejects a project mismatch. This is application-level scoping, not OS sandboxing. Command and MCP adapters remain unavailable; no directory copy is treated as a security barrier.

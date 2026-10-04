@@ -18,7 +18,10 @@ test('installed launcher completes the account-free journey with only the bundle
   mkdirSync(evidence, { recursive: true });
   const mode = process.env.BOARDROOM_INSTALLATION_MODE ?? 'local-empty-path';
   assert.ok(['clean', 'local-empty-path'].includes(mode));
-  const env = { ...process.env, NODE_PATH: '', NODE_OPTIONS: '', HOME: join(root, 'home'),
+  // macOS Keychain belongs to the real login HOME. Isolate application data
+  // explicitly there rather than inventing a login home with no default vault.
+  const macDataDirectory = join(root, 'application-data');
+  const env = { ...process.env, NODE_PATH: '', NODE_OPTIONS: '', HOME: process.platform === 'darwin' ? process.env.HOME : join(root, 'home'),
     LOCALAPPDATA: join(root, 'local'), XDG_DATA_HOME: join(root, 'xdg'), CI: 'true',
     LANGSMITH_TRACING: 'false', LANGCHAIN_TRACING_V2: 'false' };
   if (mode === 'local-empty-path') env.PATH = '';
@@ -33,14 +36,16 @@ test('installed launcher completes the account-free journey with only the bundle
   }
   const launcher = join(candidate, process.platform === 'win32' ? 'boardroom.cmd' : 'boardroom');
   const commandLog = [];
-  const invoke = (...args) => {
+  const invokeInput = (input, ...args) => {
+    if (process.platform === 'darwin') args.push('--data-dir', macDataDirectory);
     commandLog.push(args);
     const quote = arg => { assert.ok(!/["\r\n%]/.test(arg)); return `"${arg}"`; };
     const command = process.platform === 'win32' ? join(process.env.SystemRoot, 'System32', 'cmd.exe') : launcher;
     const arguments_ = process.platform === 'win32' ? ['/d', '/s', '/c', `"${[launcher, ...args].map(quote).join(' ')}"`] : args;
-    return spawnSync(command, arguments_, { encoding: 'utf8', cwd: root, env,
+    return spawnSync(command, arguments_, { input, encoding: 'utf8', cwd: root, env,
       ...(process.platform === 'win32' ? { windowsVerbatimArguments: true } : {}) });
   };
+  const invoke = (...args) => invokeInput(undefined, ...args);
   const run = (...args) => { const result = invoke(...args); assert.equal(result.status, 0, result.stdout + result.stderr); return result.stdout; };
   const original = join(candidate, 'assets', 'demo', 'context.md');
   const originalHash = hash(original);
@@ -87,6 +92,66 @@ test('installed launcher completes the account-free journey with only the bundle
     schemaVersion: 1, status: prepared.status, noModelCalls: true,
     originalPreserved: hash(original) === originalHash, frozenPassage: frozen.passages[0].text,
     contextVersion: prepared.context.version, sourceSha256: liveEvidence.sha256,
+  }, null, 2) + '\n');
+  const configurationFile = join(root, 'routes.json');
+  for (const [id, providerId, modelId] of [['po', 'a', 'a1'], ['dev', 'b', 'b1'], ['marketing', 'a', 'a2']]) {
+    writeFileSync(configurationFile, JSON.stringify({ id, providerId, modelId, capabilities: {
+      streaming: true, structuredOutput: 'json', tools: false, cancellation: 'best-effort', usage: 'tokens',
+    }, limitations: ['Declared, not account-verified.'] }));
+    assert.equal(JSON.parse(run('route-configure', '--input', configurationFile, '--json')).verification, 'unverified');
+  }
+  writeFileSync(configurationFile, JSON.stringify({ id: 'decision', proposalAuthorId: 'po', advisers: [
+    { id: 'po', role: 'Product Owner', routeId: 'po' }, { id: 'dev', role: 'Lead Developer', routeId: 'dev' },
+    { id: 'marketing', role: 'Marketing Manager', routeId: 'marketing' },
+  ] }));
+  run('team-configure', '--input', configurationFile, '--json');
+  delete question.advisers; delete question.proposalAuthorId;
+  writeFileSync(questionPath, JSON.stringify(question));
+  const configured = JSON.parse(run('meeting-prepare', '--project', liveProject.id, '--input', questionPath, '--team', 'decision', '--json'));
+  assert.equal(configured.team.revision, 1); assert.equal(configured.advisers[1].modelId, 'b1');
+  const token = 'installed-SENTINEL-private-7e4c';
+  env.BOARDROOM_SESSION_KEY = token;
+  const session = invoke('credential-check', '--route', 'po', '--session', '--json');
+  delete env.BOARDROOM_SESSION_KEY;
+  assert.equal(session.status, 0, session.stderr); assert.equal(JSON.parse(session.stdout).source, 'session');
+  assert.ok(!session.stdout.includes(token)); assert.ok(!session.stderr.includes(token));
+  const plain = invokeInput(token, 'credential-set', '--route', 'po');
+  assert.equal(plain.status, 1); assert.match(plain.stderr, /explicit --secret-stdin/);
+  const vault = JSON.parse(invoke('credential-check', '--route', 'po', '--json').stdout);
+  let hostVault = 'unavailable';
+  if (vault.status !== 'unavailable') {
+    try {
+      const stored = invokeInput(token + '\n', 'credential-set', '--route', 'po', '--secret-stdin', '--json');
+      assert.equal(stored.status, 0, stored.stderr);
+      assert.ok(!stored.stdout.includes(token)); assert.ok(!stored.stderr.includes(token));
+      assert.equal(JSON.parse(run('credential-check', '--route', 'po', '--json')).status, 'available');
+      run('credential-delete', '--route', 'po', '--json');
+      assert.equal(JSON.parse(invoke('credential-check', '--route', 'po', '--json').stdout).status, 'missing');
+      hostVault = 'verified';
+    } finally { invoke('credential-delete', '--route', 'po'); }
+  } else assert.notEqual(process.env.BOARDROOM_REQUIRE_HOST_VAULT, 'true', 'Required installed host vault is unavailable.');
+  assert.ok(!run('configuration', '--json').includes(token));
+  // Keep the injected token present while exercising the graph import path.
+  env.BOARDROOM_SESSION_KEY = token;
+  env.LANGSMITH_TRACING = 'true'; env.LANGCHAIN_TRACING = 'true'; env.LANGCHAIN_TRACING_V2 = 'true';
+  const protectedDoctor = invoke('doctor', '--json');
+  delete env.BOARDROOM_SESSION_KEY;
+  assert.equal(protectedDoctor.status, 0, protectedDoctor.stderr);
+  assert.ok(!protectedDoctor.stdout.includes(token)); assert.ok(!protectedDoctor.stderr.includes(token));
+  assert.equal(JSON.parse(protectedDoctor.stdout).checkpointReopen, 'verified');
+  const configTrace = JSON.parse(run('trace', '--project', liveProject.id, '--output', join(root, 'config-traces'), '--json'));
+  assert.ok(!readFileSync(configTrace.path, 'utf8').includes(token));
+  // Checkpoint/domain files are external artifacts at the installed product seam.
+  const { readdirSync } = await import('node:fs');
+  const dataHome = process.platform === 'win32' ? join(root, 'local', 'Boardroom')
+    : process.platform === 'darwin' ? macDataDirectory : join(root, 'xdg', 'boardroom');
+  for (const name of readdirSync(dataHome).filter(name => /sqlite/.test(name))) {
+    assert.ok(!readFileSync(join(dataHome, name)).includes(Buffer.from(token)));
+  }
+  assert.ok(!readFileSync(first.plan, 'utf8').includes(token)); assert.ok(!readFileSync(first.memo, 'utf8').includes(token));
+  writeFileSync(join(evidence, 'protected-configuration.json'), JSON.stringify({
+    schemaVersion: 1, platform: process.platform, hostVault, sessionInjection: 'verified',
+    shareableConfiguration: 'verified', frozenTeam: 'verified', sentinelAbsent: true, noModelCalls: true,
   }, null, 2) + '\n');
   assert.match(run('demo', '--next'), /Marketing Manager/);
   assert.match(run('demo'), /INSUFFICIENT_EVIDENCE/);
@@ -138,7 +203,7 @@ test('installed launcher completes the account-free journey with only the bundle
   writeFileSync(join(evidence, 'terminal-screen.txt'), display.snapshot());
   assert.equal(hash(original), originalHash);
   const dataPath = process.platform === 'win32' ? join(env.LOCALAPPDATA, 'Boardroom')
-    : process.platform === 'darwin' ? join(env.HOME, 'Library', 'Application Support', 'Boardroom') : join(env.XDG_DATA_HOME, 'boardroom');
+    : process.platform === 'darwin' ? macDataDirectory : join(env.XDG_DATA_HOME, 'boardroom');
   assert.ok(existsSync(join(dataPath, 'domain.sqlite')));
   assert.ok(!dataPath.startsWith(candidate));
   writeFileSync(join(evidence, 'installation.json'), JSON.stringify({ schemaVersion: 1, mode, platform: process.platform,
