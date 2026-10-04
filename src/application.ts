@@ -251,7 +251,8 @@ export class Boardroom {
   capabilities() {
     return {
       recordedExample: 'available',
-      liveMeetings: 'unavailable',
+      liveMeetings: 'available',
+      liveQualification: 'real-account qualification pending',
       commands: 'unavailable',
       mcp: 'unavailable',
       cloudTelemetry: 'off',

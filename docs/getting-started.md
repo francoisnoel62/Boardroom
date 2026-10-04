@@ -6,7 +6,7 @@ This guide documents the current implementation, setup, and validation. The READ
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 complete; Plan 02 increments 1–9 implemented.** Explore the fictional discussion, immutable text/PDF/DOCX evidence and its exports. You can also [prepare your own question](preparing-a-question.md), [configure routes and protected credentials](configuring-routes.md), [control paid calls](controlling-calls.md), [frame and approve a question](framing-a-question.md), [obtain three independent analyses](independent-analyses.md), and [confront objections and revise the PO proposal](sourced-revisions.md). [Final views, human decisions and live exports](live-decisions.md) complete the explicit CLI workflow, also available in the [interactive live terminal](interactive-live-terminal.md). Actual provider accounts and the live multi-provider milestone remain unqualified.
+**Current build: Plan 01 complete; Plan 02 deterministic workflow implemented.** [Start a live decision](live-quickstart.md) with configured API accounts, selected text and an explicit spending ceiling, or explore the fictional example below. [The interactive terminal](interactive-live-terminal.md) drives framing approval, independent analyses, sourced revision, individual views, human decisions and exports. [Qualification evidence](plan-02-acceptance.md) distinguishes installed deterministic checks from the still pending real-account campaign; Plan 02 is not accepted yet.
 
 [Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](architecture.md) · [Acceptance evidence](plan-01-acceptance.md)
 
@@ -74,7 +74,7 @@ On Linux or macOS, open a terminal in the printed directory:
 ./boardroom doctor --json
 ```
 
-Development archives are retained in the successful [PR 7 workflow runs](https://github.com/francoisnoel62/Boardroom/pull/7/checks). Download the candidate for your OS/architecture and extract `boardroom.tar.gz`; on Unix, use `tar -xzf boardroom.tar.gz` to preserve executable modes. GitHub may require sign-in to retrieve workflow artifacts; the installed application and recorded example require no model account. There is no published product release yet.
+Development archives are retained in successful workflow runs linked from [qualification evidence](plan-02-acceptance.md). Download the candidate for your OS/architecture and extract `boardroom.tar.gz`; on Unix, use `tar -xzf boardroom.tar.gz` to preserve executable modes. GitHub may require sign-in to retrieve workflow artifacts; installation and recorded playback require no model account. Live provider calls require API access and explicit spending consent. There is no published product release yet.
 
 The default data directory is `%LOCALAPPDATA%\Boardroom` on Windows, `~/Library/Application Support/Boardroom` on macOS, and `$XDG_DATA_HOME/boardroom` (or `~/.local/share/boardroom`) on Linux. Data remains outside the candidate directory. `--data-dir` overrides this location.
 
@@ -124,10 +124,10 @@ For separate technical evidence, `trace --output <directory>` creates a new loca
 - `history` shows saved playback events and export outcomes. Each export has a stable ID and receipts containing the paths and SHA-256 hashes of files successfully written. Add `--json` for structured history.
 - `decision` inspects the saved context and both proposal versions. Each adviser view references its context/proposal versions; two approvals preserve the remaining `INSUFFICIENT_EVIDENCE` and the pending human decision. Add `--json` for versioned records.
 - An export without a saved outcome remains `unconfirmed`, including while it is running. Inspect its directory before requesting a new export. Reopening or reading history never retries it. A failed export may leave partial files; its receipt records the writes that finished.
-- Playback makes no provider calls. Commands, MCP, live meetings, and cloud telemetry are unavailable in this build.
+- Playback makes no provider calls. Live phases send the chosen context only after explicit paid access and applicable human approval. Arbitrary commands, MCP and cloud telemetry remain unavailable.
 - Local files and SQLite databases are readable by the machine owner. Hashes help identify revisions; they are not protection against a malicious machine owner.
 
-When live meetings arrive, selected context will be sent to the configured model providers. Permissions, budgets, and optional observability are later milestones; this recorded build does not validate those capabilities.
+The live controller reserves conservative money/time bounds before calls, keeps unknown usage committed, and retains individual completed results. [Spending controls](controlling-calls.md) document their limits. Local cancellation does not prove zero remote billing; the real-account qualification remains pending.
 
 ## Engineering you can inspect
 
@@ -150,11 +150,11 @@ npm test
 
 Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](plan-01-progress.md) records the observed failures and passing behaviors.
 
-A GitHub Actions workflow runs 53 deterministic integration/E2E tests, including the installers against a local release, and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) records the observed results, optional blocks and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
+A GitHub Actions workflow runs the deterministic integration/E2E suite, including the installers against a local release, and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) and [Plan 02 qualification](plan-02-acceptance.md) record observed results and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
 
 ## Next milestones
 
-Plan 02 adds the first real decision using three distinct models from at least two providers. Its first increment already saves real projects and frozen questions; the [ten-PR plan](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md) covers connections, spending controls and debate. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. Optional embeddings are not attempted, while provider streaming and cloud traces remain unavailable. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
+Plan 02's [ten-PR implementation](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md) delivers the deterministic full workflow; its actual three-model/two-provider campaign still needs authorized accounts and a budget. Later milestones add free phase participation, guided incident recovery, retrieval, protected tools and onboarding. Optional embeddings are not attempted; cloud traces remain unavailable. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
 
 The project is currently a development checkout, not a public release. BOARDROOM is licensed under the [Apache License 2.0](../LICENSE); release and signing arrangements await later decisions. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 

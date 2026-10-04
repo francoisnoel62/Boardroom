@@ -49,7 +49,7 @@ Text revision allocation and snapshot publication are serialized across local pr
 
 `history --project <id>` and `trace --project <id> --output <directory>` inspect that project's metadata. Preparation events and filtered traces omit question/source bodies and source paths. Source snapshots and prepared meetings contain the explicitly selected local data and remain readable by the machine owner. No cloud upload occurs.
 
-PDF/DOCX extraction stays available for the recorded project, but those locators are not accepted in the prepared text context. Debate, framing approval, adviser opinions, human decisions and live exports remain later increments.
+PDF/DOCX extraction stays available for the recorded project, but those locators are not accepted in the prepared text context. The [live quickstart](live-quickstart.md) selects an executable team and continues through framing approval, debate, individual views, human decisions and live exports.
 
 ## Validation
 

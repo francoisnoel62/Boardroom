@@ -1,5 +1,7 @@
 # Plan 01 — installed candidate qualification
 
+The campaign now also exercises the complete deterministic live CLI and Ink workflow, using an external HTTP fixture shipped only as a separate CI tool. [Plan 02 evidence](plan-02-acceptance.md) lists its additional artifacts and the outstanding real-provider gate. Linux's no-Node image remains offline; no real key is included in the archive/image.
+
 Target matrix: Windows x64, Linux x64 and macOS arm64. A passing development test with empty PATH is only a precursor. Acceptance requires the separate `installed` jobs on the final candidate, with retained environment and journey evidence.
 
 ## Distribution experiment

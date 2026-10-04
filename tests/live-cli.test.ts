@@ -54,6 +54,6 @@ test('CLI prepares and inspects a real frozen question across processes without 
   writeFileSync(inputFile, JSON.stringify({ ...input, projectId: 'another-project' }));
   assert.equal(invoke('meeting-prepare', '--project', project.id, '--input', inputFile).status, 1);
   assert.equal(JSON.parse(run('history', '--project', project.id, '--json')).events.length, 1);
-  assert.match(run('status'), /Live meetings: unavailable/);
+  assert.match(run('status'), /Live meetings: available/);
   assert.match(run('demo', '--next'), /Recorded example/);
 });
