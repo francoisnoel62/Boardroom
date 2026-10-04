@@ -36,6 +36,10 @@ Usage:
   boardroom meeting-context --project <id> --id <meeting-id>  Read its frozen text passages
   boardroom meeting-say --project <id> --id <meeting-id> --input <command-json>  Queue a durable human contribution
   boardroom meeting-participation --project <id> --id <meeting-id>  Inspect contributions and delivery inputs
+  boardroom meeting-requests --project <id> --id <meeting-id> [--request <request-id>]  List or inspect human requests
+  boardroom meeting-answer --project <id> --id <meeting-id> --input <response-json>  Answer with explicit request/context versions
+  boardroom meeting-deny --project <id> --id <meeting-id> --input <response-json>  Refuse; retain the uncertainty
+  boardroom meeting-defer --project <id> --id <meeting-id> --input <response-json>  Defer; keep dependent work waiting
   boardroom meeting-start --project <id> --id <meeting-id> --allow-provider [--session]  Produce PO framing and wait
   boardroom meeting-framing --project <id> --id <meeting-id>  Inspect durable framing versions
   boardroom meeting-approve --project <id> --id <meeting-id> --version <n>  Approve the displayed framing
@@ -87,7 +91,7 @@ try {
       source: { type: 'string' }, 'allow-source': { type: 'boolean' },
       id: { type: 'string' }, page: { type: 'string' }, block: { type: 'string' },
       name: { type: 'string' }, language: { type: 'string' },
-      project: { type: 'string' },
+      project: { type: 'string' }, request: { type: 'string' },
       input: { type: 'string' },
       route: { type: 'string' }, team: { type: 'string' }, session: { type: 'boolean' },
       'secret-stdin': { type: 'boolean' },
@@ -112,7 +116,7 @@ try {
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['meeting-say', 'meeting-participation', 'live', 'meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export', 'meeting-debate', 'meeting-proposals', 'meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+    if (!['meeting-requests', 'meeting-answer', 'meeting-deny', 'meeting-defer', 'meeting-say', 'meeting-participation', 'live', 'meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export', 'meeting-debate', 'meeting-proposals', 'meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new PublicError('Unknown command. Run boardroom --help.');
     }
     if (['route-configure', 'team-configure'].includes(command) && !values.input) throw new PublicError('Configuration requires --input <json-file>.');
@@ -148,7 +152,23 @@ try {
     if (command === 'evidence' && !values.id && (values.page || values.block)) throw new PublicError('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (command === 'meeting-say' || command === 'meeting-participation') {
+      if (['meeting-requests', 'meeting-answer', 'meeting-deny', 'meeting-defer'].includes(command)) {
+        if (!values.project || !values.id) throw new PublicError('Human requests require --project and --id.');
+        let result;
+        if (command === 'meeting-requests') {
+          const requests = app.inspectParticipation(values.project, values.id).requests;
+          result = values.request ? requests.find(r => r.id === values.request) : requests;
+          if (!result) throw new PublicError('Request unavailable in this meeting.');
+        } else {
+          if (!values.input) throw new PublicError('Human response requires --input <response-json>.');
+          const input = JSON.parse(readFileSync(values.input, 'utf8'));
+          const action = command.slice('meeting-'.length) as 'answer' | 'deny' | 'defer';
+          if ((input.projectId && input.projectId !== values.project) || (input.meetingId && input.meetingId !== values.id)
+            || (input.action && input.action !== action)) throw new PublicError('Response command does not match its project, meeting or action.');
+          result = app.respondToRequest({ ...input, projectId: values.project, meetingId: values.id, action });
+        }
+        console.log(JSON.stringify(result, null, values.json ? undefined : 2));
+      } else if (command === 'meeting-say' || command === 'meeting-participation') {
         if (!values.project || !values.id) throw new PublicError('Participation requires --project and --id.');
         if (command === 'meeting-say' && !values.input) throw new PublicError('Contribution requires --input <command-json>.');
         const input = command === 'meeting-say' ? JSON.parse(readFileSync(values.input!, 'utf8')) : undefined;

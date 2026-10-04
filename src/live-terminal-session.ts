@@ -47,12 +47,27 @@ export class LiveTerminalSession {
       views: `${views?.status ?? 'not-started'} | ${views?.advisers.filter(a => a.status === 'current').length ?? 0}/3`,
       viewsDetail: views?.advisers.map(a => `${a.adviserId}: ${a.status}${a.view ? ` ${a.view.body.verdict} ${a.view.body.confidence}/100` : ''}`).join('; ') ?? '',
       human: saved?.decision?.action ?? 'pending', calls: saved?.calls, ceiling: meeting?.costCeiling ?? draft?.costCeiling,
+      requests: saved?.participation.requests.map(r => `${r.id} v${r.version}: ${r.status} (${r.authorId})`) ?? [],
       streams: [...this.streams].map(([adviser, text]) => `${adviser} (provisional): ${text}`).join('\n'), exported: this.lastExport?.directory };
   }
   async command(input: string) {
     const text = input.trim(), [name = '', ...words] = text.split(/\s+/), rest = text.slice(name.length).trim();
     if (!name) return;
-    if (this.busy && !['say', 'participation', 'stop', 'conclude', 'inspect', 'history', 'evidence', 'export'].includes(name)) throw new PublicError('Work is running; contribute, stop, conclude or inspect saved work.');
+    if (this.busy && !['requests', 'answer', 'answer-structural', 'deny', 'defer', 'say', 'participation', 'stop', 'conclude', 'inspect', 'history', 'evidence', 'export'].includes(name)) throw new PublicError('Work is running; contribute, answer, stop, conclude or inspect saved work.');
+    if (name === 'requests') {
+      const requests = this.app.inspectParticipation(this.projectId, this.id()).requests;
+      const result = rest ? requests.find(r => r.id === rest) : requests;
+      if (!result) throw new PublicError('Request unavailable in this meeting.');
+      this.detail = JSON.stringify(result, null, 2).slice(-8000); this.notice = 'Saved human requests (full details in CLI).'; return;
+    }
+    if (['answer', 'answer-structural', 'deny', 'defer'].includes(name)) {
+      if (words.length < 3) throw new PublicError('Use answer|answer-structural|deny|defer REQUEST_ID VERSION TEXT.');
+      const receipt = this.app.respondToRequest({ commandId: randomUUID(), projectId: this.projectId, meetingId: this.id(), author: 'human',
+        expectedContextVersion: this.app.getMeeting(this.projectId, this.id()).context.version, requestId: words[0]!, expectedRequestVersion: Number(words[1]),
+        action: name === 'answer-structural' ? 'answer' : name as 'answer' | 'deny' | 'defer',
+        ...(name === 'answer-structural' ? { scope: 'structural' as const } : {}), text: rest.slice(words[0]!.length).trim().slice(words[1]!.length).trim() });
+      this.notice = `Response saved: ${receipt.status} | request v${receipt.version}`; return;
+    }
     if (name === 'say') {
       const recipient = words[0];
       if (!recipient || words.length < 2) throw new PublicError('Use say ADVISER_ID|all TEXT.');

@@ -18,8 +18,8 @@ export const AnalysisSchema = z.strictObject({ schemaVersion: z.literal(1), proj
   createdAt: z.iso.datetime(), body: AnalysisBodySchema, callIds: z.array(z.uuid()).min(1),
 });
 export const AnalysisStateSchema = z.strictObject({ schemaVersion: z.literal(1), projectId: z.string(), meetingId: z.uuid(),
-  framingVersion: z.number().int().positive(), status: z.enum(['analysing', 'complete', 'incomplete']),
-  outcomes: z.array(z.strictObject({ adviserId: z.string(), status: z.enum(['completed', 'failed', 'uncertain']), callIds: z.array(z.uuid()) })),
+  framingVersion: z.number().int().positive(), status: z.enum(['analysing', 'complete', 'incomplete', 'waiting-human']),
+  outcomes: z.array(z.strictObject({ adviserId: z.string(), status: z.enum(['completed', 'failed', 'uncertain', 'blocked']), callIds: z.array(z.uuid()), blockedRequestIds: z.array(z.uuid()).optional() })),
 });
 export function validAnalysis(body: AnalysisBody, meeting: LiveMeeting) {
   return validFramingReferences({ decisionQuestion: '', summary: '', initialProposal: null, assumptions: [],
@@ -48,10 +48,12 @@ export const ProposalVersionSchema = z.strictObject({ schemaVersion: z.literal(1
 export type ProposalVersion = z.infer<typeof ProposalVersionSchema>;
 export const ConfrontationSchema = z.strictObject({ schemaVersion: z.literal(1), projectId: z.string(), meetingId: z.uuid(), framingVersion: z.number().int().positive(),
   proposalVersion: z.number().int().positive(), round: z.number().int().positive(), adviserId: z.string(),
-  status: z.enum(['completed', 'failed', 'uncertain']), body: ConfrontationBodySchema.nullable(),
+  status: z.enum(['completed', 'failed', 'uncertain', 'blocked']), body: ConfrontationBodySchema.nullable(),
+  blockedRequestIds: z.array(z.uuid()).optional(),
   novelIds: z.array(z.string()), callIds: z.array(z.uuid()), createdAt: z.iso.datetime() });
 export const DebateStateSchema = z.strictObject({ schemaVersion: z.literal(1), projectId: z.string(), meetingId: z.uuid(), framingVersion: z.number().int().positive(),
-  status: z.enum(['running', 'complete', 'partial']), round: z.number().int().nonnegative(),
+  status: z.enum(['running', 'complete', 'partial', 'waiting-human']), round: z.number().int().nonnegative(),
+  waitingPhase: z.enum(['propose', 'confront', 'revise']).optional(),
   stopReason: z.enum(['no-new-objections', 'round-bound', 'execution-refused', 'call-failed', 'conclusion-requested', 'stopped']).optional() });
 export function validProposal(body: z.infer<typeof ProposalBodySchema>, meeting: LiveMeeting) {
   return validFramingReferences({ decisionQuestion: '', summary: '', initialProposal: null, assumptions: [], references: body.items.flatMap(item => item.references) }, meeting);

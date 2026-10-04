@@ -156,7 +156,7 @@ A GitHub Actions workflow runs the deterministic integration/E2E suite, includin
 
 ## Next milestones
 
-Plan 02's [ten-PR implementation](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md) delivers the deterministic full workflow; its actual three-model/two-provider campaign still needs authorized accounts and a budget. Plan 03 begins with [durable contributions during phases](human-participation.md). Context revisions, pause/resume, guided incident recovery, retrieval, protected tools and onboarding remain future increments. Optional embeddings are not attempted; cloud traces remain unavailable. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
+Plan 02's [ten-PR implementation](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md) delivers the deterministic full workflow; its actual three-model/two-provider campaign still needs authorized accounts and a budget. Plan 03 begins with [durable contributions and human requests during phases](human-participation.md). Context revisions, pause/resume, guided incident recovery, retrieval, protected tools and onboarding remain future increments. Optional embeddings are not attempted; cloud traces remain unavailable. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
 
 The project is currently a development checkout, not a public release. BOARDROOM is licensed under the [Apache License 2.0](../LICENSE); release and signing arrangements await later decisions. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 

@@ -50,8 +50,10 @@ export class LiveDeliberation {
       contextVersion: 1, framingVersion: version, framing: body,
       passages: context.passages.map((passage, index) => ({ ...meeting.context.passages[index], text: passage.text })) };
     const factsSha256 = createHash('sha256').update(JSON.stringify(facts)).digest('hex');
+    const previous = this.load('analysis-state', key);
+    const advisers = meeting.team!.advisers.filter(a => !previous?.outcomes.some((o: { adviserId: string; status: string }) => o.adviserId === a.id && o.status !== 'blocked'));
     // Construct every immutable payload before dispatch; domain history never enters these requests.
-    const requests = meeting.team!.advisers.map(adviser => {
+    const requests = advisers.map(adviser => {
       const route = meeting.team!.routes.find(item => item.id === adviser.routeId)!;
       return { input: { adviserId: adviser.id, phase: 'analysis' as const, contextVersion: 1 as const, subjectVersion: version,
         pool: 'work' as const, limits: phaseLimits('analysis', route) },
@@ -60,18 +62,19 @@ export class LiveDeliberation {
         validate: (value: ReturnType<typeof AnalysisBodySchema.parse>) => validAnalysis(value, meeting) } };
     });
     this.db.transaction(() => {
-      if (this.load('analysis-state', key)) throw new PublicError('Analysis already attempted; inspect saved work instead of replaying it.');
+      const saved = this.load('analysis-state', key);
+      if (saved && saved.status !== 'waiting-human') throw new PublicError('Analysis already attempted; inspect saved work instead of replaying it.');
       const current = this.load('framing-state', id);
       if (current?.status !== 'approved' || current.approvedVersion !== version) throw new PublicError('Analysis requires the current approved framing.');
       this.save('analysis-state', key, AnalysisStateSchema.parse({ schemaVersion: 1, projectId: project, meetingId: id,
-        framingVersion: version, status: 'analysing', outcomes: [] }));
+        framingVersion: version, status: 'analysing', outcomes: saved?.outcomes ?? [] }));
       this.append({ schemaVersion: 1, type: 'analysis.started', projectId: project, meetingId: id, version, occurredAt: new Date().toISOString() });
     }).immediate();
     this.saver ??= new SqliteSaver(openDomainDatabase(join(this.app.dataDirectory, 'live-deliberation-checkpoints.sqlite')));
     const graph = new StateGraph(State).addNode('analyse', async () => {
       await this.app.callStructuredBatch(project, id, requests, store, (index, result) => {
         this.db.transaction(() => {
-          const adviser = meeting.team!.advisers[index]!, state = AnalysisStateSchema.parse(this.load('analysis-state', key));
+          const adviser = advisers[index]!, state = AnalysisStateSchema.parse(this.load('analysis-state', key));
           const currentFrame = this.load('framing-state', id);
           const accepted = result.value !== undefined && currentFrame?.status === 'approved' && currentFrame.approvedVersion === version;
           if (accepted) {
@@ -81,7 +84,9 @@ export class LiveDeliberation {
               framingVersion: version, contextVersion: 1, factsSha256, createdAt: new Date().toISOString(), body: result.value,
               callIds: result.receipts.map(call => call.id) }));
           }
-          state.outcomes.push({ adviserId: adviser.id, status: accepted ? 'completed' : result.receipts.some(call => ['running', 'uncertain'].includes(call.status)) ? 'uncertain' : 'failed', callIds: result.receipts.map(call => call.id) });
+          state.outcomes = state.outcomes.filter(o => o.adviserId !== adviser.id);
+          state.outcomes.push({ adviserId: adviser.id, status: result.blockedRequestIds?.length ? 'blocked' : accepted ? 'completed' : result.receipts.some(call => ['running', 'uncertain'].includes(call.status)) ? 'uncertain' : 'failed',
+            callIds: result.receipts.map(call => call.id), blockedRequestIds: result.blockedRequestIds });
           this.save('analysis-state', key, state);
           this.append({ schemaVersion: 1, type: 'analysis.settled', projectId: project, meetingId: id, version, adviserId: adviser.id, occurredAt: new Date().toISOString() });
         }).immediate();
@@ -96,7 +101,8 @@ export class LiveDeliberation {
         const calls = this.app.callLedger(project, id).calls.filter(call => call.phase === 'analysis' && call.subjectVersion === version && call.adviserId === adviser.id);
         state.outcomes.push({ adviserId: adviser.id, status: calls.some(call => ['running', 'uncertain'].includes(call.status)) ? 'uncertain' : 'failed', callIds: calls.map(call => call.id) });
       }
-      state.status = state.outcomes.length === 3 && state.outcomes.every(outcome => outcome.status === 'completed') ? 'complete' : 'incomplete';
+      state.status = state.outcomes.some(o => o.status === 'blocked') ? 'waiting-human'
+        : state.outcomes.length === meeting.advisers.length && state.outcomes.every(outcome => outcome.status === 'completed') ? 'complete' : 'incomplete';
       this.save('analysis-state', key, state);
       this.append({ schemaVersion: 1, type: 'analysis.finished', projectId: project, meetingId: id, version, occurredAt: new Date().toISOString() });
     }).immediate();

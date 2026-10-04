@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ site }) => {
   const body = [
     '# BOARDROOM',
     '',
-    '> A local decision workspace where AI advisers examine the evidence, challenge a plan and keep their objections on the record; the human makes the decision. The current build offers a recorded, fictional example and an implemented live workflow. Live calls send selected context to configured providers after authorization. Plan 02 real-account qualification remains pending; durable contributions begin Plan 03, while context revisions and pause/resume remain planned.',
+    '> A local decision workspace where AI advisers examine the evidence, challenge a plan and keep their objections on the record; the human makes the decision. The current build offers a recorded, fictional example and an implemented live workflow. Live calls send selected context to configured providers after authorization. Plan 02 real-account qualification remains pending; durable contributions and structured human requests begin Plan 03, while context revisions and pause/resume remain planned.',
     '',
     ...sections.flatMap(([title, ids]) => [`## ${title}`, '', ...ids.map(line), '']),
     '## Guides and reference',

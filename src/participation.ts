@@ -68,10 +68,11 @@ export class Participation {
   private unconsumedReason(id: string, recipient: string | null) {
     if (this.load('execution', id)?.status === 'stopped') return 'Execution stopped; no further work can consume this contribution.';
     if (recipient === null && this.load('execution', id)?.status === 'concluding') return 'Conclusion requested; no common confrontation remains.';
-    const states = this.all('views-state') as { meetingId: string; status: string; outcomes: { adviserId: string }[] }[];
-    if (states.some(s => s.meetingId === id && s.status !== 'running' && (recipient === null || s.outcomes.some(o => o.adviserId === recipient)))) return 'Final views already attempted; no further recipient work is scheduled.';
+    const states = this.all('views-state') as { meetingId: string; status: string; outcomes: { adviserId: string; callIds: string[] }[] }[];
+    if (states.some(s => s.meetingId === id && ['complete', 'partial'].includes(s.status) && (recipient === null
+      || s.outcomes.some(o => o.adviserId === recipient && o.callIds.some(callId => this.load('call', callId)?.startedMonoMs !== undefined))))) return 'Final views already attempted; no further recipient work is scheduled.';
     const debates = this.all('debate-state') as { meetingId: string; status: string }[];
-    if (recipient === null && debates.some(s => s.meetingId === id && s.status !== 'running')) return 'Common confrontation has ended.';
+    if (recipient === null && debates.some(s => s.meetingId === id && ['complete', 'partial'].includes(s.status))) return 'Common confrontation has ended.';
     return undefined;
   }
   /** Called inside admission immediately before dispatch. Rollback leaves the inbox untouched. */

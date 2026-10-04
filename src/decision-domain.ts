@@ -10,8 +10,8 @@ export const FinalViewSchema = z.strictObject({ schemaVersion: z.literal(1), id:
   route: z.strictObject({ id: z.string(), revision: z.number().int().positive(), providerId: z.string(), modelId: z.string() }),
   body: FinalViewBodySchema, callIds: z.array(z.uuid()).min(1), createdAt: z.iso.datetime() });
 export const ViewsStateSchema = z.strictObject({ schemaVersion: z.literal(1), projectId: z.string(), meetingId: z.uuid(), framingVersion: z.number().int().positive(),
-  proposalVersion: z.number().int().positive(), proposalSha256: z.string().regex(/^[a-f0-9]{64}$/), status: z.enum(['running', 'complete', 'partial']),
-  outcomes: z.array(z.strictObject({ adviserId: z.string(), status: z.enum(['completed', 'failed', 'uncertain']), callIds: z.array(z.uuid()) })) });
+  proposalVersion: z.number().int().positive(), proposalSha256: z.string().regex(/^[a-f0-9]{64}$/), status: z.enum(['running', 'complete', 'partial', 'waiting-human']),
+  outcomes: z.array(z.strictObject({ adviserId: z.string(), status: z.enum(['completed', 'failed', 'uncertain', 'blocked']), callIds: z.array(z.uuid()), blockedRequestIds: z.array(z.uuid()).optional() })) });
 export const HumanDecisionInputSchema = z.strictObject({ proposalVersion: z.number().int().positive(),
   action: z.enum(['accepted', 'rejected', 'modified', 'deferred', 'investigation-requested']), rationale: z.string().trim().min(1).max(12000),
   modifiedProposal: ProposalBodySchema.optional() }).refine(value => (value.action === 'modified') === (value.modifiedProposal !== undefined), 'Only a modified decision includes a modified proposal.');

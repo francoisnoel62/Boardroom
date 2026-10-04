@@ -52,12 +52,13 @@ export class LiveDecision {
     if (!proposal || !this.current(project, id, version)) throw new PublicError('Final views require the explicit current approved proposal version.');
     const key = `${id}:${version}`;
     this.db.transaction(() => {
-      if (this.load('views-state', key)) throw new PublicError('Final views already attempted for this proposal; inspect saved work instead of replaying it.');
+      const previous = this.load('views-state', key);
+      if (previous && previous.status !== 'waiting-human') throw new PublicError('Final views already attempted for this proposal; inspect saved work instead of replaying it.');
       if (!this.current(project, id, version)) throw new PublicError('Proposal no longer current.');
       const debate = this.load('debate-state', `${id}:${proposal.framingVersion}`);
-      if (debate?.status === 'running' && this.app.callLedger(project, id).execution.status !== 'concluding') throw new PublicError('Finish debate or explicitly request conclusion before final views.');
+      if (['running', 'waiting-human'].includes(debate?.status) && this.app.callLedger(project, id).execution.status !== 'concluding') throw new PublicError('Finish debate or explicitly request conclusion before final views.');
       this.save('views-state', key, ViewsStateSchema.parse({ schemaVersion: 1, projectId: project, meetingId: id, framingVersion: proposal.framingVersion,
-        proposalVersion: version, proposalSha256: proposal.sha256, status: 'running', outcomes: [] }));
+        proposalVersion: version, proposalSha256: proposal.sha256, status: 'running', outcomes: previous?.outcomes ?? [] }));
     }).immediate();
     const context = this.app.readMeetingContext(project, id), debate = await this.app.inspectDebate(project, id);
     const payload = { language: meeting.language, question: meeting.question, constraints: meeting.constraints,
@@ -66,8 +67,10 @@ export class LiveDecision {
       analyses: (await this.app.inspectAnalyses(project, id)).current,
       objections: debate.confrontations.filter(c => c.framingVersion === proposal.framingVersion), dispositions: proposal.dispositions };
     this.saver ??= new SqliteSaver(openDomainDatabase(join(this.app.dataDirectory, 'live-decision-checkpoints.sqlite')));
+    const previousOutcomes = ViewsStateSchema.parse(this.load('views-state', key)).outcomes;
+    const advisers = meeting.team!.advisers.filter(a => !previousOutcomes.some(o => o.adviserId === a.id && o.status !== 'blocked'));
     const graph = new StateGraph(State).addNode('views', async () => {
-      await this.app.callStructuredBatch(project, id, meeting.team!.advisers.map(adviser => {
+      await this.app.callStructuredBatch(project, id, advisers.map(adviser => {
         const route = meeting.team!.routes.find(r => r.id === adviser.routeId)!;
         return { input: { adviserId: adviser.id, phase: 'conclusion' as const, contextVersion: 1 as const, subjectVersion: version,
           framingVersion: proposal.framingVersion, pool: 'conclusion' as const, limits: phaseLimits('conclusion', route) }, output: {
@@ -76,7 +79,7 @@ export class LiveDecision {
             && validFramingReferences({ decisionQuestion: '', summary: '', initialProposal: null, assumptions: [], references: value.references }, meeting),
         } };
       }), store, (index, result) => this.db.transaction(() => {
-        const adviser = meeting.team!.advisers[index]!, route = meeting.team!.routes.find(r => r.id === adviser.routeId)!;
+        const adviser = advisers[index]!, route = meeting.team!.routes.find(r => r.id === adviser.routeId)!;
         const state = ViewsStateSchema.parse(this.load('views-state', key));
         const accepted = result.value !== undefined && this.current(project, id, version);
         if (accepted) {
@@ -86,7 +89,9 @@ export class LiveDecision {
             body: result.value, callIds: result.receipts.map(c => c.id), createdAt: new Date().toISOString() });
           this.save('final-view', view.id, view);
         }
-        state.outcomes.push({ adviserId: adviser.id, status: accepted ? 'completed' : result.receipts.some(c => ['running', 'uncertain'].includes(c.status)) ? 'uncertain' : 'failed', callIds: result.receipts.map(c => c.id) });
+        state.outcomes = state.outcomes.filter(o => o.adviserId !== adviser.id);
+        state.outcomes.push({ adviserId: adviser.id, status: result.blockedRequestIds?.length ? 'blocked' : accepted ? 'completed' : result.receipts.some(c => ['running', 'uncertain'].includes(c.status)) ? 'uncertain' : 'failed',
+          callIds: result.receipts.map(c => c.id), blockedRequestIds: result.blockedRequestIds });
         this.save('views-state', key, state);
         this.append({ schemaVersion: 1, type: 'view.settled', projectId: project, meetingId: id, version, adviserId: adviser.id, occurredAt: new Date().toISOString() });
       }).immediate(), emit); return {};
@@ -96,7 +101,7 @@ export class LiveDecision {
     this.db.transaction(() => {
       const state = ViewsStateSchema.parse(this.load('views-state', key));
       for (const adviser of meeting.team!.advisers) if (!state.outcomes.some(o => o.adviserId === adviser.id)) state.outcomes.push({ adviserId: adviser.id, status: 'failed', callIds: [] });
-      state.status = state.outcomes.every(o => o.status === 'completed') ? 'complete' : 'partial'; this.save('views-state', key, state);
+      state.status = state.outcomes.some(o => o.status === 'blocked') ? 'waiting-human' : state.outcomes.every(o => o.status === 'completed') ? 'complete' : 'partial'; this.save('views-state', key, state);
     }).immediate();
     return this.inspectViews(project, id);
   }
@@ -179,6 +184,7 @@ export class LiveDecision {
       `## Individual final views\n\n${content.finalViews.advisers.map(a => `${a.adviserId}: ${a.status}${a.view ? ` | ${a.view.body.verdict} | confidence ${a.view.body.confidence}/100 (declared assurance) | ${a.view.route.providerId}/${a.view.route.modelId} | proposal v${a.view.body.proposalVersion}\n${JSON.stringify(a.view.body)}` : ' | no opinion received'}`).join('\n\n')}\n\nConfidence is not a probability or a decision weight. Missing/stale views are never approvals.\n\nHistorical views: ${JSON.stringify(content.finalViews.views)}`,
       `## Human decisions\n\n${JSON.stringify(content.decisions)}`,
       `## Human participation\n\n${JSON.stringify(content.participation.contributions)}`,
+      `## Human requests and responses\n\n${JSON.stringify(content.participation.requests)}`,
       `## Selected saved evidence\n\n${content.passages.map(p => `${reference(p)}\n${p.text}`).join('\n\n')}`,
       `## Usage, limits and receipts\n\n${content.calls ? `Known cost: ${content.calls.knownCostMicros} USD micros; held commitments (usage unknown): ${content.calls.committedMicros}.\nActive: ${content.calls.activeMs} ms; committed: ${content.calls.committedMs} ms.\n${JSON.stringify(content.calls)}` : 'Execution not configured; no call receipts available.'}`,
     ];

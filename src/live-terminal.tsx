@@ -44,6 +44,7 @@ function Screen({ session, cancelled }: { session: LiveTerminalSession; cancelle
     `Analyses: ${view?.analyses ?? '-'} | Proposal: ${view?.proposal ?? 'none'}`,
     `Views: ${view?.views ?? '-'} | Human: ${view?.human ?? 'pending'}`,
     view?.viewsDetail ?? '',
+    `Requests: ${view?.requests.join('; ') || 'none'}`,
     view?.calls ? `USD ceiling ${view.calls.execution.ceilingMicros / 1e6} | known ${view.calls.knownCostMicros / 1e6} | held/unknown ${view.calls.committedMicros / 1e6} | reserve ${view.calls.heldReserveMicros / 1e6}`
       : `Budget ${view?.ceiling?.amount ?? '-'} ${view?.ceiling?.currency ?? ''}; revision and conclusion reserves are computed from the team's call bounds at start.`,
     view?.calls ? `Execution: ${view.calls.execution.status} | Active ${Math.round(view.calls.activeMs)}ms / ${view.calls.execution.durationTargetMs}ms` : 'Active duration excludes human waiting.',
@@ -53,6 +54,7 @@ function Screen({ session, cancelled }: { session: LiveTerminalSession; cancelle
     'question TEXT | select 1,2 | start | approve N | correct N FILE',
     'analyse | debate | views N | decide N ACTION REASON | decision-file FILE',
     'say ADVISER_ID|all TEXT | participation',
+    'requests [ID] | answer|answer-structural|deny|defer ID VERSION TEXT',
     'inspect | evidence | history | stop | conclude | export | quit; Esc/Ctrl+C saves',
   ];
   const draftLines = safe(draft).split('\n').slice(-3);
