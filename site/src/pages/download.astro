@@ -1,0 +1,213 @@
+---
+import Claim from '../components/Claim.astro';
+import { sourceUrl } from '../data/labels.ts';
+import { releaseInfo } from '../data/release-source.ts';
+import type { Platform } from '../data/release.ts';
+import Site from '../layouts/Site.astro';
+
+const info = await releaseInfo();
+const raw = (tag: string, file: string) => `https://raw.githubusercontent.com/francoisnoel62/Boardroom/${tag}/scripts/${file}`;
+const labels: Record<Platform, string> = { macos: 'macOS · Apple silicon', windows: 'Windows · x64', linux: 'Linux · x64' };
+const command = (platform: Platform, tag: string, version: string) => platform === 'windows'
+  ? `$env:BOARDROOM_VERSION='${version}'; irm ${raw(tag, 'install.ps1')} | iex`
+  : `curl -fsSL ${raw(tag, 'install.sh')} | BOARDROOM_VERSION=${version} sh`;
+---
+<Site title="Download — Boardroom" description="Download BOARDROOM for macOS, Windows and Linux, with checksums, build provenance and one-line installers, or build it from source.">
+  <section class="intro" aria-labelledby="download-title">
+    <div class="container narrow">
+      <p class="eyebrow">Download</p>
+      <h1 id="download-title" class="display">Download Boardroom</h1>
+      <p class="lede">A local application with its own runtime: no account, no Node installation, no administrator rights.</p>
+    </div>
+  </section>
+
+  <section class="section" data-release-state={info.state} aria-label="Release">
+    <div class="container narrow">
+      {info.state === 'none' && (
+        <div class="panel">
+          <h2>No release has been published yet.</h2>
+          <p>
+            The first public release is planned with the public beta (Plan 09); see the <a href="/roadmap/">roadmap</a>. Until
+            then, you can build Boardroom from source in a few commands; the project's CI already packages and qualifies it on
+            three platforms.
+          </p>
+          <div class="ctas">
+            <a class="button button--primary" href="/docs/install/">Build from source</a>
+            <a class="button button--ghost" href="https://github.com/francoisnoel62/Boardroom" rel="noopener">Follow the project on GitHub</a>
+          </div>
+          <h3>What a release will include</h3>
+          <ul class="includes">
+            <li>A package for each qualified platform: macOS (Apple silicon), Windows x64 and Linux x64</li>
+            <li>A <code>SHA256SUMS</code> file and a build provenance attestation for every package</li>
+            <li>One-line installers that verify the checksum before installing anything</li>
+          </ul>
+          <Claim id="open-source-license" />
+        </div>
+      )}
+
+      {info.state === 'unknown' && (
+        <div class="panel">
+          <h2>Release information was unavailable when this page was built.</h2>
+          <p>Check the <a href="https://github.com/francoisnoel62/Boardroom/releases" rel="noopener">releases on GitHub</a>, or build from source.</p>
+          <div class="ctas"><a class="button button--primary" href="/docs/install/">Build from source</a></div>
+        </div>
+      )}
+
+      {info.state === 'published' && (
+        <>
+          {info.release.prerelease && (
+            <p class="preview"><strong>Developer preview.</strong> The recorded example only; live meetings arrive with Plan 02.</p>
+          )}
+          <p class="version">Version {info.release.version} · <a href={info.release.url} rel="noopener">Release notes</a></p>
+          <div class="packages" data-packages>
+            {info.release.packages.map(item => (
+              <article class="package" data-platform={item.platform}>
+                <h2>{labels[item.platform]}</h2>
+                <p class="mono-label">Recommended: one-line install</p>
+                <pre tabindex="0" aria-label={`Install command for ${labels[item.platform]}`}><code>{command(item.platform, info.release.tag, info.release.version)}</code></pre>
+                <a class="archive" href={item.url}>Or download {item.name} ({item.sizeLabel})</a>
+              </article>
+            ))}
+          </div>
+
+          <div class="panel">
+            <h2>Verify what you install</h2>
+            <p>The installers check the SHA-256 of the package against <a href={info.release.checksumsUrl}>SHA256SUMS</a> before installing anything. To check a manual download:</p>
+            <pre tabindex="0" aria-label="Verification commands"><code>{`shasum -a 256 -c SHA256SUMS --ignore-missing\ngh attestation verify boardroom-${info.release.version}-<platform>-<arch>.tar.gz --repo francoisnoel62/Boardroom`}</code></pre>
+            <p>The attestation proves the package was built by this repository's release workflow from the tagged source.</p>
+          </div>
+
+          <div class="panel">
+            <h2>Before your first launch</h2>
+            <ul class="includes">
+              <li>Packages are not code-signed yet. The installers download outside the browser; a package downloaded in a browser may trigger a macOS Gatekeeper or Windows SmartScreen warning.</li>
+              <li>Your data stays in your user data directory, outside the application. <a href="/docs/install/#remove">How to remove Boardroom</a>.</li>
+            </ul>
+            <div class="ctas"><a class="button button--primary" href="/welcome/">After installing</a></div>
+          </div>
+        </>
+      )}
+    </div>
+  </section>
+</Site>
+
+<script>
+  import { detectPlatform } from '../data/release';
+  const packages = document.querySelector<HTMLElement>('[data-packages]');
+  if (packages) {
+    const hints = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData;
+    const platform = detectPlatform(navigator.userAgent, hints?.platform);
+    const match = platform && packages.querySelector<HTMLElement>(`[data-platform="${platform}"]`);
+    if (match) {
+      match.dataset.recommended = '';
+      packages.prepend(match);
+    }
+  }
+</script>
+
+<style>
+  .intro {
+    padding-block: var(--space-8) var(--space-6);
+    background: var(--glow);
+  }
+
+  .narrow {
+    max-width: 52rem;
+  }
+
+  .intro .narrow {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  h1 {
+    font-size: var(--step-4);
+  }
+
+  .lede {
+    font-size: var(--step-1);
+  }
+
+  .section {
+    padding-block: var(--space-6) var(--space-9);
+  }
+
+  .section .narrow {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .panel,
+  .package {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  .panel h2,
+  .package h2 {
+    font-size: var(--step-1);
+    font-weight: 600;
+  }
+
+  .panel h3 {
+    margin-top: var(--space-3);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .panel a:not(.button),
+  .package a,
+  .version a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .includes {
+    display: grid;
+    gap: var(--space-2);
+    padding-left: 1.1rem;
+  }
+
+  .preview {
+    padding: var(--space-3) var(--space-4);
+    border-left: 2px solid var(--insufficient);
+    background: color-mix(in srgb, var(--insufficient) 10%, transparent);
+  }
+
+  .preview strong {
+    color: var(--text-strong);
+  }
+
+  .packages {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .package[data-recommended] {
+    border-color: var(--accent);
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: var(--space-4);
+    border-radius: var(--radius-m);
+    background: var(--term-bg);
+    color: var(--term-text);
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+</style>

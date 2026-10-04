@@ -1,0 +1,27 @@
+---
+title: Evidence and citations
+description: How sources are authorized, saved as exact revisions and cited by line, physical PDF page or DOCX block.
+status: available
+---
+
+Advisers' claims lead back to the exact source version behind them. Missing evidence stays visible instead of being smoothed over.
+
+## Sources need your consent
+
+BOARDROOM reads a file only after you authorize that specific file. The recorded example reads only its bundled fictional source.
+
+## Exact revisions
+
+When a source is saved, its original bytes are stored under their SHA-256, and documents also get a separate, content-addressed extraction. A citation points to that saved revision, so editing or deleting the original never rewrites it. Inspection warns when the original has changed or disappeared, and a missing or altered snapshot is refused rather than replaced.
+
+## Where a citation points
+
+| Source | Locator |
+| :--- | :--- |
+| Text and Markdown | Saved line range, for example `context.md:4-4` |
+| PDF | Physical page number |
+| DOCX | Saved text block — **not** a Word page number |
+
+Textual PDFs and DOCX text are supported. There is no OCR: empty PDF pages are reported as possibly blank or scanned, and partial or failed extractions keep visible warnings.
+
+Try it with the [document evidence guide](/docs/guides/documents/).

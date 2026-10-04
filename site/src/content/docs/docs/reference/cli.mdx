@@ -1,0 +1,13 @@
+---
+title: CLI
+description: Every command and global option, generated from the help text the BOARDROOM CLI prints.
+status: available
+---
+
+import CommandTable from '../../../../components/reference/CommandTable.astro';
+
+This table is generated at build time from the help text in `src/cli.ts`, and a test checks that it lists exactly the commands the CLI accepts. Run `boardroom --help` (or `node dist/cli.js --help`) to see the same text.
+
+<CommandTable />
+
+Commands that write accept `--output <directory>` and always create new files. Commands that read structured records accept `--json`. Exit codes are listed in [Exit codes](/docs/reference/exit-codes/).

@@ -1,0 +1,73 @@
+---
+// A retained export shown as the file it is: raw Markdown on a sheet of paper.
+interface Props { name: string; markdown: string }
+const { name, markdown } = Astro.props;
+const lines = markdown.split(/\r?\n/);
+---
+<article class="paper" aria-label={name}>
+  <header><span class="file-name">{name}</span></header>
+  <div class="body">
+    {lines.map(line =>
+      line.startsWith('## ') ? <p class="h2">{line}</p>
+      : line.startsWith('# ') ? <p class="h1">{line}</p>
+      : line === '' ? <p class="gap" aria-hidden="true"></p>
+      : <p>{line}</p>)}
+  </div>
+</article>
+
+<style>
+  .paper {
+    position: relative;
+    isolation: isolate;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-s);
+    background: var(--paper);
+    color: var(--paper-ink);
+    box-shadow: var(--shadow-raised);
+  }
+
+  /* A second sheet behind the record; the text itself stays unrotated and crisp. */
+  .paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid var(--paper-line);
+    border-radius: inherit;
+    background: var(--paper);
+    opacity: 0.55;
+    transform: rotate(1.4deg) translate(6px, 6px);
+  }
+
+  header {
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .file-name {
+    color: var(--paper-muted);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  .body {
+    padding: var(--space-5);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+  }
+
+  .h1,
+  .h2 {
+    font-weight: 700;
+  }
+
+  .h1 {
+    font-size: 0.95rem;
+  }
+
+  .gap {
+    height: 0.8em;
+  }
+</style>

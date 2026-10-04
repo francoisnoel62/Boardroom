@@ -1,0 +1,25 @@
+---
+import Mark from './Mark.astro';
+---
+<a class="wordmark" href="/" aria-label="Boardroom home">
+  <Mark />
+  <span aria-hidden="true">Boardroom</span>
+</a>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-strong);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .wordmark :global(.mark) {
+    flex: none;
+  }
+</style>

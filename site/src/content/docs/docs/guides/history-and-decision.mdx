@@ -1,0 +1,25 @@
+---
+title: History and the saved decision
+description: Inspect playback events, export receipts, proposal versions and adviser views, as text or JSON.
+status: available
+---
+
+## History
+
+```sh doc-test
+node dist/cli.js history --data-dir .boardroom/example
+node dist/cli.js history --json --data-dir .boardroom/example
+```
+
+History lists saved playback events and export operations from one consistent read. Events carry a global sequence and timestamp, and reference the saved meeting, message and position, or the export operation. They never include source or transcript bodies. Reading history never retries an export.
+
+## The saved decision
+
+```sh doc-test
+node dist/cli.js decision --data-dir .boardroom/example
+node dist/cli.js decision --json --data-dir .boardroom/example
+```
+
+The decision view shows the saved context, both proposal versions and each adviser's view of the version it judged. Two approvals keep the remaining `INSUFFICIENT_EVIDENCE`, and the human decision stays `pending`.
+
+Field-by-field contracts for both commands are in the [JSON output reference](/docs/reference/json-output/).

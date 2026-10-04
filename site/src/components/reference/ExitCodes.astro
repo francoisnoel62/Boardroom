@@ -1,0 +1,12 @@
+---
+import { documentedExitCodes } from '../../data/cli.ts';
+import { exitCodes } from '../../data/repo.ts';
+
+const found = new Set([0, ...exitCodes]);
+const rows = documentedExitCodes.filter(entry => found.has(entry.code));
+if (rows.length !== found.size) throw new Error('An exit code set in src/ is not documented.');
+---
+<table>
+  <thead><tr><th scope="col">Code</th><th scope="col">Meaning</th></tr></thead>
+  <tbody>{rows.map(entry => <tr data-exit-code={entry.code}><td><code>{entry.code}</code></td><td>{entry.meaning}</td></tr>)}</tbody>
+</table>

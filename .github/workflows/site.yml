@@ -1,0 +1,86 @@
+name: Website and documentation
+
+on:
+  push:
+    paths:
+      - 'site/**'
+      - 'scripts/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'assets/**'
+      - 'docs/**'
+      - 'boardroom-plans/**'
+      - 'README.md'
+      - 'SECURITY.md'
+      - 'vercel.json'
+      - 'LICENSE'
+      - 'package.json'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'scripts/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'assets/**'
+      - 'docs/**'
+      - 'boardroom-plans/**'
+      - 'README.md'
+      - 'SECURITY.md'
+      - 'vercel.json'
+      - 'LICENSE'
+      - 'package.json'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: site
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Documentation pages show their last update from git history.
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.12.0
+      - run: npm ci
+      - name: Type-check pages, components and content
+        run: npm run check
+      - name: Data contracts (fixture, claims, roadmap)
+        run: npm run test:unit
+      - run: npm run build
+        env:
+          # Raises the GitHub Releases API rate limit for the /download page.
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Built site (links, metadata, editorial rules, no third parties)
+        run: npm run test:build
+      - run: npx playwright install --with-deps chromium
+      - name: End-to-end and accessibility
+        run: npm run test:e2e
+      - name: Lighthouse budgets
+        run: npm run lighthouse
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: site-test-reports
+          path: |
+            site/playwright-report
+            site/test-results
+            site/.lighthouseci
+          if-no-files-found: ignore
+          include-hidden-files: true
+      - uses: actions/upload-artifact@v7
+        with:
+          name: site-dist
+          path: site/dist
+          if-no-files-found: error

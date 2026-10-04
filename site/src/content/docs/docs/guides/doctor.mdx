@@ -1,0 +1,23 @@
+---
+title: Diagnose your installation
+description: Run the local storage and document probes, and read which optional capabilities are blocked and why.
+status: available
+---
+
+```sh doc-test
+node dist/cli.js doctor --json --data-dir .boardroom/doctor
+```
+
+`doctor` runs separate local probes and prints a JSON report:
+
+| Field | What it reports |
+| :--- | :--- |
+| `platform`, `architecture`, `runtime` | Where the probes ran |
+| `checkpointReopen` | A real LangGraph SQLite checkpoint was written and reopened |
+| `fts5` | SQLite full-text search executed a real query |
+| `pdfDocx` | The packaged PDF and DOCX extractors read the bundled fictional fixtures |
+| `liveProviders`, `embeddings`, `commandsMcp` | Unavailable in this build |
+| `cloudTelemetry` | Always `off` |
+| `optionalProbes` | Optional capabilities with an explicit blocked reason, such as a missing account or runtime assets |
+
+`doctor` exits with code `1` if a required probe does not verify. An absent optional prerequisite is reported as blocked, never as a passed test.

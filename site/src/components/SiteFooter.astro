@@ -1,0 +1,144 @@
+---
+import { repository, sourceUrl } from '../data/labels.ts';
+import { releaseInfo } from '../data/release-source.ts';
+import Wordmark from './Wordmark.astro';
+
+const release = await releaseInfo();
+---
+<footer class="site-footer">
+  <div class="container grid">
+    <div class="brand">
+      <Wordmark />
+      <p class="display">Build something worth believing in.</p>
+    </div>
+    <nav aria-label="Footer">
+      <div>
+        <h2>Product</h2>
+        <ul>
+          <li><a href="/#story">The story</a></li>
+          <li><a href="/#principles">Principles</a></li>
+          <li><a href="/roadmap/">Roadmap</a></li>
+          <li><a href="/engineering/">Engineering</a></li>
+          <li><a href="/field-notes/">Field notes</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="/docs/">Introduction</a></li>
+          <li><a href="/docs/quickstart/">Quickstart</a></li>
+          <li><a href="/docs/your-data/">Your data</a></li>
+          <li><a href="/changelog/">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="/download/">Release status</a></li>
+          <li><a href={repository} rel="noopener">Source on GitHub</a></li>
+          <li><a href={sourceUrl('boardroom-plans/BOARDROOM_V1_SPEC.md')} rel="noopener">Product specification</a></li>
+          <li><a href="/brand/">Brand</a></li>
+          <li><a href="/design/">Design system</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Trust</h2>
+        <ul>
+          <li><a href="/privacy/">Privacy</a></li>
+          <li><a href="/security/">Security</a></li>
+          <li><a href="/docs/project/license/">License</a></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+  <div class="container small">
+    <p>
+      {release.state === 'published' ? `Latest release: ${release.release.version}.` : 'No release has been published yet.'}{' '}
+      Licensed under Apache-2.0.
+    </p>
+    <p>The recorded example is a scripted, fictional illustration.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    padding-block: var(--space-8) var(--space-6);
+    border-top: 1px solid var(--line);
+    background: var(--surface-1);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
+    gap: var(--space-7);
+  }
+
+  .brand {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+  }
+
+  .brand .display {
+    max-width: 16ch;
+    color: var(--text-strong);
+    font-size: var(--step-2);
+  }
+
+  nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+
+  h2 {
+    margin-bottom: var(--space-3);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    display: grid;
+    gap: var(--space-2);
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    color: var(--text);
+    font-size: var(--step--1);
+    text-decoration: none;
+  }
+
+  nav a:hover {
+    color: var(--text-strong);
+    text-decoration: underline;
+  }
+
+  .small {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 64rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

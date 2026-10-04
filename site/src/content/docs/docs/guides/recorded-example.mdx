@@ -1,0 +1,37 @@
+---
+title: Explore the recorded example
+description: Read the fictional launch discussion, one intervention at a time or all at once, and resume where you left off.
+status: available
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The recorded example is a scripted, fictional discussion about a SaaS launch. Its model labels are fictional and playback makes no model calls. Run these commands from a [source checkout](/docs/install/) after `npm run build`.
+
+## Read the discussion
+
+```sh doc-test
+node dist/cli.js demo --data-dir .boardroom/example
+```
+
+Repeating the command resumes from the saved position. After the last message it reports `Recording complete`.
+
+## One intervention at a time
+
+```sh doc-test
+node dist/cli.js demo --next --data-dir .boardroom/guide-next
+```
+
+Each run prints the next intervention and saves the position, across separate processes.
+
+## Start again
+
+Use a new `--data-dir` for a fresh copy of the example. Progress lives in that directory only.
+
+<Aside type="tip">
+  In an interactive terminal the transcript is rendered with Ink. Add `--terminal` to force that rendering when output is not a TTY.
+</Aside>
+
+## Next
+
+[Inspect the cited source](/docs/guides/documents/#the-recorded-source) or [export the plan and memo](/docs/guides/export/).

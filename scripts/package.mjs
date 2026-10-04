@@ -23,7 +23,7 @@ try {
   readFileSync(join(projectRoot, 'dist', 'cli.js'));
   mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output); // Never replace an existing candidate or user directory.
-  for (const entry of ['dist', 'assets', 'node_modules', 'package.json', 'package-lock.json', 'README.md', 'docs', 'boardroom-plans', 'qualification']) {
+  for (const entry of ['dist', 'assets', 'node_modules', 'package.json', 'package-lock.json', 'README.md', 'LICENSE', 'NOTICE', 'docs', 'boardroom-plans', 'qualification']) {
     copy(join(projectRoot, entry), join(output, entry));
   }
   copyFileSync(join(projectRoot, 'tests', 'support', 'terminal.ts'), join(output, 'qualification', 'terminal.ts'));

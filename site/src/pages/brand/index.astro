@@ -1,0 +1,256 @@
+---
+import { Image } from 'astro:assets';
+import capture from '../../../../docs/media/recorded-terminal.jpg';
+import Claim from '../../components/Claim.astro';
+import Mark from '../../components/Mark.astro';
+import { descriptions, markFiles, palette, wordCount } from '../../data/brand.ts';
+import { repository, sourceUrl } from '../../data/labels.ts';
+import Page from '../../layouts/Page.astro';
+---
+<Page
+  title="Brand and press kit — Boardroom"
+  description="The BOARDROOM mark, palette, typography, a real terminal capture and ready-to-use descriptions, with the rules for using them."
+  eyebrow="Brand"
+  heading="Brand and press kit"
+  lede="Everything you need to write about Boardroom or link to it: the mark, the palette, the typefaces, a real capture of the product and two descriptions that say what exists today."
+  wide
+>
+  <section aria-labelledby="mark-title">
+    <h2 id="mark-title">The mark</h2>
+    <p>
+      A table seen from above: three advisers around it, and you, highlighted, in the seat that decides. The number of
+      advisers is not a limit; the room is yours to compose.
+    </p>
+    <ul class="marks">
+      {markFiles.map(mark => (
+        <li class:list={['mark-card', mark.theme]}>
+          <img src={`/brand/${mark.file}`} alt="" width="96" height="96" loading="lazy" />
+          <p>{mark.label}</p>
+          <a download href={`/brand/${mark.file}`}>Download SVG<span class="visually-hidden">: {mark.label}</span></a>
+        </li>
+      ))}
+    </ul>
+    <h3>Wordmark</h3>
+    <p class="wordmark-sample"><Mark size={32} /><span>Boardroom</span></p>
+    <p>
+      The wordmark is the mark followed by the name set in Inter SemiBold, uppercase, tracked at 0.22 em. In running text,
+      write <strong>Boardroom</strong>; <strong>BOARDROOM</strong> is used in the repository and technical documents.
+    </p>
+  </section>
+
+  <section aria-labelledby="palette-title">
+    <h2 id="palette-title">Palette</h2>
+    <p>“The room at night”: deep blue-green surfaces, paper-coloured text and one lamp-lit accent. Every pair meets WCAG 2.2 AA in both themes.</p>
+    <ul class="swatches">
+      {palette.map(color => (
+        <li class="swatch" data-swatch={color.token}>
+          <span class="chips" aria-hidden="true">
+            <span style={`background:${color.dark}`}></span>
+            <span style={`background:${color.light}`}></span>
+          </span>
+          <strong>{color.name}</strong>
+          <span class="role">{color.role}</span>
+          <code>Dark {color.dark}</code>
+          <code>Light {color.light}</code>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section aria-labelledby="type-title">
+    <h2 id="type-title">Typography</h2>
+    <ul class="type">
+      <li><span class="sample display">Great decisions deserve a room.</span><span>Instrument Serif — display headings. SIL Open Font License 1.1.</span></li>
+      <li><span class="sample sans">Your models. Your experts. Your ambition.</span><span>Inter — text and interface. SIL Open Font License 1.1.</span></li>
+      <li><span class="sample mono">boardroom demo --data-dir ./example</span><span>The reader's own monospace font — terminal and code.</span></li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="capture-title">
+    <h2 id="capture-title">A real capture</h2>
+    <figure>
+      <Image src={capture} alt="Boardroom recorded example in a real terminal: a proposal, two objections citing context.md, a revised proposal, and final views with two approvals and one insufficient-evidence verdict; the human decision is pending." widths={[640, 969]} sizes="(max-width: 64rem) 100vw, 969px" loading="lazy" />
+      <figcaption>
+        The packaged application in a real Windows pseudoterminal, playing the recorded example — a scripted, fictional
+        meeting. The frame is added; no terminal line is rewritten. <a href={sourceUrl('docs/media/README.md')} rel="noopener">Provenance</a> ·
+        <a href={sourceUrl('docs/media/recorded-example.cast')} rel="noopener">Raw recording</a>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="descriptions-title">
+    <h2 id="descriptions-title">Descriptions</h2>
+    <div class="descriptions">
+      <div class="panel">
+        <h3>Short · {wordCount(descriptions.short)} words</h3>
+        <p data-description="short">{descriptions.short}</p>
+      </div>
+      <div class="panel">
+        <h3>Long · {wordCount(descriptions.long)} words</h3>
+        <p data-description="long">{descriptions.long}</p>
+      </div>
+    </div>
+    <Claim id="open-source-license" />
+  </section>
+
+  <section aria-labelledby="rules-title">
+    <h2 id="rules-title">Using the brand</h2>
+    <ul>
+      <li>Keep the mark's proportions and colours; use the version that matches your background.</li>
+      <li>Always present the recorded example as a scripted, fictional meeting. Live meetings arrive with Plan 02.</li>
+      <li>Verdict colours never stand alone: show the words Approved, Rejected or Insufficient evidence with them.</li>
+      <li>Do not suggest an endorsement, a partnership or usage figures. Boardroom publishes none.</li>
+      <li>For anything else, <a href={`${repository}/issues/new`} rel="noopener">open an issue on GitHub</a>.</li>
+    </ul>
+    <p>Current limits are listed on the <a href="/engineering/#limits-title">engineering page</a> and the next steps on the <a href="/roadmap/">roadmap</a>.</p>
+  </section>
+</Page>
+
+<style>
+  .marks,
+  .swatches,
+  .type {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .marks {
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  }
+
+  .mark-card {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+    font-size: var(--step--1);
+  }
+
+  .mark-card img {
+    padding: var(--space-3);
+    border-radius: var(--radius-m);
+  }
+
+  .mark-card.dark img {
+    background: #101924;
+  }
+
+  .mark-card.light img {
+    background: #f5f4ec;
+  }
+
+  .wordmark-sample {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--text-strong);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .swatches {
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  }
+
+  .swatch {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  .chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 3rem;
+    margin-bottom: var(--space-2);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-m);
+  }
+
+  .swatch strong {
+    color: var(--text-strong);
+  }
+
+  .role {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  .swatch code {
+    font-size: 0.78rem;
+  }
+
+  .type li {
+    display: grid;
+    gap: var(--space-1);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .sample {
+    color: var(--text-strong);
+  }
+
+  .sample.display {
+    font-size: var(--step-3);
+  }
+
+  .sample.sans {
+    font-size: var(--step-2);
+    font-weight: 600;
+  }
+
+  .sample.mono {
+    font-family: var(--font-mono);
+    font-size: var(--step-1);
+    overflow-wrap: anywhere;
+  }
+
+  figure {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  figure :global(img) {
+    width: 100%;
+    max-width: 969px;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+  }
+
+  figcaption {
+    max-width: 46rem;
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  .descriptions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: var(--space-4);
+  }
+
+  .descriptions .panel {
+    align-content: start;
+  }
+
+  .descriptions h3 {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+</style>

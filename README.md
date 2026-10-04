@@ -119,7 +119,7 @@ You can also [prepare your own question locally](docs/preparing-a-question.md): 
 
 If this is a problem you want to help solve, [build with us](docs/contributing.md). Bring a difficult decision, challenge a product assumption, or help engineer the room.
 
-[Architecture](docs/architecture.md) · [Engineering evidence](docs/plan-01-acceptance.md) · [Development plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) · [Project status and licensing](docs/getting-started.md#next-milestones)
+[Architecture](docs/architecture.md) · [Engineering evidence](docs/plan-01-acceptance.md) · [Development plans](boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) · [Project status](docs/getting-started.md#next-milestones) · [License: Apache-2.0](LICENSE) · [Security](SECURITY.md)
 
 ---
 

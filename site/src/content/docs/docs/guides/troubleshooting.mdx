@@ -1,0 +1,35 @@
+---
+title: Troubleshooting
+description: Fixes for common setup problems, and the known gaps of the current build.
+status: available
+---
+
+## `npm ci` fails on the SQLite driver
+
+The development checkout needs **Node 24.12.0**, the version the native driver and packaged runtime are qualified with. Check `node --version`, then reinstall with `npm ci`.
+
+## The transcript prints as plain text
+
+Ink rendering is used only when output is an interactive terminal. Add `--terminal` to force it.
+
+## `terminal-check` refuses to start
+
+It needs a TTY for both input and output and refuses piped input. Run it directly in a terminal window.
+
+## A document extraction failed
+
+Exit code `2` means the extraction failed; the message explains why. Scanned PDFs need OCR, which is not available. See [Inspect evidence](/docs/guides/documents/).
+
+## An export shows `unconfirmed`
+
+It is still running, or the process stopped before its outcome was saved. Inspect its directory before exporting again; BOARDROOM never retries it on its own.
+
+## `boardroom status` prints the help text
+
+The help text lists `status`, but this build has no handler for it. Use `doctor --json` to see local capabilities.
+
+## Paths with spaces or accents
+
+Supported: the packaged candidate is qualified from a directory named `Boardroom clean François` on all three platforms.
+
+Still stuck? [Open an issue](https://github.com/francoisnoel62/Boardroom/issues) with the output of `doctor --json`.

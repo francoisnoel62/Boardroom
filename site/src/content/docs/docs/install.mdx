@@ -1,0 +1,72 @@
+---
+title: Install
+description: Build BOARDROOM from source or package a candidate with its own runtime, then update or remove it cleanly.
+status: preview
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Aside type="caution" title="No published release yet">
+  Until the first release is published, BOARDROOM is installed from source. The one-line installers are ready and tested, and the [download page](/download/) will list them with each release.
+</Aside>
+
+## From source
+
+Requires **Node 24.12.0** and npm. The native SQLite driver is installed by `npm ci`.
+
+```sh
+git clone https://github.com/francoisnoel62/Boardroom.git
+cd Boardroom
+npm ci
+npm run build
+```
+
+Run any command with `node dist/cli.js`, for example `node dist/cli.js --help`.
+
+## A packaged candidate with Node included
+
+<Steps>
+
+1. Build a candidate for the machine you are on. The command prints a new directory under `release/`.
+
+   ```sh
+   npm run package
+   ```
+
+2. Open a terminal in that directory and run the launcher. No installed Node is needed from here.
+
+   <Tabs syncKey="os">
+     <TabItem label="macOS / Linux">
+       ```sh
+       ./boardroom --help
+       ```
+     </TabItem>
+     <TabItem label="Windows">
+       ```powershell
+       .\boardroom.cmd --help
+       ```
+     </TabItem>
+   </Tabs>
+
+</Steps>
+
+The candidate contains its own Node runtime, the compiled application, its assets and prepared native dependencies. It targets the current platform and architecture only and publishes nothing. See the [platform support matrix](/docs/reference/platforms/).
+
+## Update
+
+Build or download the newer candidate and replace the application directory. Your data lives elsewhere, in the [data directory](/docs/reference/data-directory/), and is reopened by the new version.
+
+## One-line installers
+
+Once a release exists, `scripts/install.sh` (macOS on Apple silicon, Linux x64) and `scripts/install.ps1` (Windows x64) download its package, refuse any SHA-256 mismatch against the release's `SHA256SUMS`, and install it for your user without administrator rights:
+
+| Platform | Application | Command |
+| :--- | :--- | :--- |
+| macOS, Linux | `~/.boardroom/versions/<version>` | `~/.local/bin/boardroom` |
+| Windows | `%LOCALAPPDATA%\Programs\Boardroom\versions\<version>` | `boardroom.cmd`, added to your user PATH |
+
+Set `BOARDROOM_VERSION`, `BOARDROOM_INSTALL_DIR` or `BOARDROOM_BIN_DIR` to change these defaults.
+
+## Remove
+
+Delete the application directory — for an installer, the directories in the table above, and the PATH entry on Windows. To remove your data as well, delete the data directory for your platform; exports are wherever you chose to write them and are never deleted by BOARDROOM.

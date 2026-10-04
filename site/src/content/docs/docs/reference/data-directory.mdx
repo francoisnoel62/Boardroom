@@ -1,0 +1,27 @@
+---
+title: Data directory
+description: Where BOARDROOM stores your data on each platform, and what each file is for.
+status: available
+---
+
+## Default location
+
+| Platform | Directory |
+| :--- | :--- |
+| Windows | `%LOCALAPPDATA%\Boardroom` |
+| macOS | `~/Library/Application Support/Boardroom` |
+| Linux | `$XDG_DATA_HOME/boardroom`, or `~/.local/share/boardroom` |
+
+Every command accepts `--data-dir <directory>` to use another location. Data never lives inside the application directory.
+
+## Contents
+
+| Path | Purpose |
+| :--- | :--- |
+| `domain.sqlite` | Versioned, schema-validated project, evidence, recorded-meeting and export records, plus an append-only event journal |
+| `snapshots/<sha256>` | Original source bytes, and content-addressed document extractions, written once and never modified |
+| `checkpoints.sqlite` | Created by `doctor`'s separate LangGraph probe; not used by the recorded example |
+
+Exports, traces and isolation reports are written where you point `--output`, never inside the data directory.
+
+Local files and databases are readable by the machine owner. Saved source paths may reveal local directory names.
