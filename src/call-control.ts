@@ -5,6 +5,7 @@ import { CallInputSchema, CallReceiptSchema, ExecutionSchema, ReservesSchema, Us
   type CallInput, type CallReceipt, type Reserves, type CallRequest, type ProviderBoundary } from './call-domain.ts';
 import type { LiveMeeting } from './live-domain.ts';
 import type { EventInput } from './domain.ts';
+import { pricingIsCurrent } from './providers/catalog.ts';
 
 export class CallController {
   private readonly clockId = randomUUID();
@@ -13,11 +14,14 @@ export class CallController {
   private readonly append: (event: EventInput) => void;
   private readonly now: () => number;
   private readonly authorize: (project: string, id: string, input: CallInput) => void;
+  private readonly utcNow: () => Date;
   constructor(db: Database.Database, getMeeting: (project: string, id: string) => LiveMeeting, append: (event: EventInput) => void,
-    now?: () => number, authorize: (project: string, id: string, input: CallInput) => void = () => {}) {
+    now?: () => number, authorize: (project: string, id: string, input: CallInput) => void = () => {}, utcNow: () => Date = () => new Date()) {
     this.db = db; this.getMeeting = getMeeting; this.append = append; this.now = now ?? (() => performance.now());
-    this.authorize = authorize;
+    this.authorize = authorize; this.utcNow = utcNow;
   }
+  /** The UTC day dated rates are judged against; the monotonic clock only measures durations. */
+  pricingDay() { return this.utcNow().toISOString().slice(0, 10); }
   private load(kind: string, id: string): unknown {
     const row = this.db.prepare('SELECT value FROM records WHERE kind = ? AND id = ?').get(kind, id) as { value: string } | undefined;
     return row ? JSON.parse(row.value) : undefined;
@@ -79,8 +83,7 @@ export class CallController {
     const adviser = meeting.team?.advisers.find(adviser => adviser.id === fields.adviserId);
     const route = meeting.team?.routes.find(route => route.id === adviser?.routeId);
     if (!route?.pricing) throw new PublicError('A dated pricing bound is required before reserving a call.');
-    const today = new Date().toISOString().slice(0, 10);
-    if (route.pricing.asOf > today || route.pricing.validUntil < today) throw new PublicError('The route pricing bound is not current.');
+    if (!pricingIsCurrent(route.pricing, this.pricingDay())) throw new PublicError('The route pricing bound is not current.');
     const receipt = CallReceiptSchema.parse({ ...fields, schemaVersion: 1, id: randomUUID(), projectId: project, meetingId: id,
       createdAt: new Date().toISOString(), status: 'reserved', pricing: route.pricing,
       route: { id: route.id, revision: route.revision, providerId: route.providerId, modelId: route.modelId },

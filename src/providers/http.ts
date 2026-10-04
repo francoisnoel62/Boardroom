@@ -2,7 +2,7 @@ import type { CallReceipt, ProviderBoundary, ProviderResult } from '../call-doma
 import type { ProviderRoute } from '../routes.ts';
 import { PublicError } from '../privacy.ts';
 import { validateSecret } from '../secrets.ts';
-import { supportedModel } from './catalog.ts';
+import { pricingIsCurrent, supportedModel } from './catalog.ts';
 
 async function* events(response: Response, signal: AbortSignal) {
   if (!response.body || !response.headers.get('content-type')?.includes('text/event-stream')) throw new Error('Invalid stream.');
@@ -29,10 +29,9 @@ async function* events(response: Response, signal: AbortSignal) {
 }
 
 // Only the application service creates this boundary, then passes it to a durable handle.
-export function providerBoundary(route: ProviderRoute, receipt: CallReceipt, secret: string, http: typeof fetch): ProviderBoundary {
+export function providerBoundary(route: ProviderRoute, receipt: CallReceipt, secret: string, http: typeof fetch, utcDay: string): ProviderBoundary {
   const model = supportedModel(route.providerId, route.modelId);
-  const today = new Date().toISOString().slice(0, 10);
-  if (JSON.stringify(route.pricing) !== JSON.stringify(model.pricing) || today < model.pricing.asOf || today > model.pricing.validUntil
+  if (JSON.stringify(route.pricing) !== JSON.stringify(model.pricing) || !pricingIsCurrent(model.pricing, utcDay)
     || receipt.limits.maxInputTokens < model.context || receipt.limits.maxOutputTokens > model.output) {
     throw new PublicError('Provider call requires the current catalog price and full-context input bound.');
   }

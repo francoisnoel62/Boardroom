@@ -6,10 +6,11 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { Boardroom } from '../../src/application.ts';
 import { SessionSecretStore } from '../../src/secrets.ts';
+import { catalogInstant } from './clock.ts';
 
-export function providerSetup(t: TestContext, fetch: typeof globalThis.fetch, monotonicNow?: () => number) {
+export function providerSetup(t: TestContext, fetch: typeof globalThis.fetch, monotonicNow?: () => number, now?: () => Date) {
   const root = mkdtempSync(join(tmpdir(), 'Boardroom provider '));
-  const app = new Boardroom(root, { fetch, ...(monotonicNow ? { monotonicNow } : {}) });
+  const app = new Boardroom(root, { fetch, ...(monotonicNow ? { monotonicNow } : {}), now: now ?? (() => new Date(catalogInstant())) });
   t.after(() => { app.close(); rmSync(root, { recursive: true, force: true }); });
   const store = new SessionSecretStore();
   for (const [id, providerId, modelId] of [['po', 'openai', 'gpt-4.1-mini-2025-04-14'],

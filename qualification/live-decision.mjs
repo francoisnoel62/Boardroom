@@ -20,7 +20,10 @@ export async function qualifyLiveDecision(t, { candidate, root, evidence, env, r
   for (const [id, providerId, modelId] of [['live-po', 'openai', 'gpt-4.1-mini-2025-04-14'],
     ['live-dev', 'anthropic', 'claude-haiku-4-5-20251001'], ['live-marketing', 'openai', 'gpt-4.1-2025-04-14']]) {
     writeFileSync(config, JSON.stringify({ id, providerId, modelId }));
-    assert.equal(JSON.parse(run('route-configure', '--catalog', '--input', config, '--json')).verification, 'unverified');
+    const route = JSON.parse(run('route-configure', '--catalog', '--input', config, '--json'));
+    assert.equal(route.verification, 'unverified');
+    // The shipped catalog's rates expire; the external fixture judges them on a day inside their window.
+    env.TEST_UTC_NOW = `${route.pricing.asOf}T12:00:00.000Z`;
   }
   writeFileSync(config, JSON.stringify({ id: 'live-team', proposalAuthorId: 'po', advisers: [
     { id: 'po', role: 'Product Owner', routeId: 'live-po' }, { id: 'dev', role: 'Lead Developer', routeId: 'live-dev' },

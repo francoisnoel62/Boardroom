@@ -1,5 +1,14 @@
 // External HTTP boundary for spawned CLI tests only. Never packaged as a product provider.
 import { appendFileSync } from 'node:fs';
+// Dated rates expire in production. Processes under test judge them against TEST_UTC_NOW (an instant inside the
+// catalog window, set by the suite) so the deterministic campaign does not depend on the day it runs.
+if (process.env.TEST_UTC_NOW) {
+  const RealDate = Date, offset = RealDate.parse(process.env.TEST_UTC_NOW) - RealDate.now();
+  globalThis.Date = class extends RealDate {
+    constructor(...args) { if (args.length) super(...args); else super(RealDate.now() + offset); }
+    static now() { return RealDate.now() + offset; }
+  };
+}
 globalThis.fetch = async (url, init) => {
   if (!['https://api.openai.com/v1/responses', 'https://api.anthropic.com/v1/messages'].includes(String(url))) throw new Error('Unexpected test origin.');
   const body = JSON.parse(init.body);

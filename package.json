@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test --test-concurrency=1 tests/*.test.ts",
+    "test": "npm run build && node --test --test-concurrency=1 --import ./tests/support/test-clock.ts tests/*.test.ts",
     "start": "node dist/cli.js",
     "package": "npm run build && node scripts/package.mjs"
   },

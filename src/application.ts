@@ -45,7 +45,7 @@ export class Boardroom {
   private decisionLoading?: Promise<LiveDecision>;
   readonly dataDirectory: string;
 
-  constructor(dataDirectory: string, options: { monotonicNow?: () => number; fetch?: typeof fetch } = {}) {
+  constructor(dataDirectory: string, options: { monotonicNow?: () => number; now?: () => Date; fetch?: typeof fetch } = {}) {
     this.dataDirectory = resolve(dataDirectory);
     mkdirSync(this.dataDirectory, { recursive: true });
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
@@ -61,7 +61,7 @@ export class Boardroom {
           const latest = this.all('live-proposal').map(value => ProposalVersionSchema.parse(value)).filter(p => p.meetingId === id).at(-1);
           if (latest?.version !== input.subjectVersion || latest.framingVersion !== input.framingVersion) throw new PublicError('Final view requires the current frozen proposal.');
         }
-      });
+      }, options.now);
     this.http = options.fetch ?? globalThis.fetch;
   }
 
@@ -227,7 +227,7 @@ export class Boardroom {
     for (let attempt = 0; attempt < 2; attempt++) {
       const handle = attempt === 0 ? first : this.reserveCall(projectId, meetingId, { ...input,
         phase: attempt && input.phase === 'framing' ? 'framing-correction' : input.phase });
-      const provider = providerBoundary(route, handle.receipt, key, this.http);
+      const provider = providerBoundary(route, handle.receipt, key, this.http, this.calls.pricingDay());
       let value: T | undefined;
       const result = await handle.execute({ text: output.text + (attempt ? '\nPrevious output was invalid. Return one complete object matching the schema and valid context references.' : ''), jsonSchema },
         async (request, signal, stream) => {
