@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PublicError } from './privacy.ts';
+import { PricingSchema } from './call-domain.ts';
 
 // Stable identifiers are metadata, never arbitrary request URLs or credentials.
 export const RouteIdSchema = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,99}$/);
@@ -10,6 +11,7 @@ export const RouteInputSchema = z.strictObject({
     tools: z.boolean(), cancellation: z.enum(['none', 'best-effort']), usage: z.enum(['none', 'tokens']),
   }),
   limitations: z.array(z.string().trim().min(1).max(500)).min(1).max(20),
+  pricing: PricingSchema.optional(),
 });
 export const ProviderRouteSchema = RouteInputSchema.extend({
   revision: z.number().int().positive(), verification: z.literal('unverified'), credentialRef: z.uuid(),

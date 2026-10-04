@@ -30,6 +30,10 @@ Usage:
   boardroom meeting-prepare --project <id> --input <json-file> [--team <id>]  Freeze a question and selected passages
   boardroom meeting --project <id> --id <meeting-id>          Inspect a prepared meeting
   boardroom meeting-context --project <id> --id <meeting-id>  Read its frozen text passages
+  boardroom execution-configure --project <id> --id <meeting-id> --input <json-file>  Freeze protected reserves
+  boardroom calls --project <id> --id <meeting-id>  Inspect budgets, time and call receipts
+  boardroom execution-stop --project <id> --id <meeting-id>  Stop pending and in-flight work
+  boardroom execution-conclude --project <id> --id <meeting-id>  Protect early conclusion
   boardroom demo [--next]                 Read or resume the recorded example
   boardroom evidence [--line 4]          Inspect the saved source revision
   boardroom document --source <file> --allow-source  Save authorized PDF/DOCX text
@@ -84,7 +88,7 @@ try {
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+    if (!['execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new PublicError('Unknown command. Run boardroom --help.');
     }
     if (['route-configure', 'team-configure'].includes(command) && !values.input) throw new PublicError('Configuration requires --input <json-file>.');
@@ -95,6 +99,10 @@ try {
     if (command === 'project' && !values.id) throw new PublicError('Project inspection requires --id <project-id>.');
     if (['meeting-prepare', 'meeting', 'meeting-context'].includes(command) && !values.project) throw new PublicError('Meeting commands require --project <project-id>.');
     if (command === 'meeting-prepare' && !values.input) throw new PublicError('Meeting preparation requires --input <json-file>.');
+    if (['execution-configure', 'calls', 'execution-stop', 'execution-conclude'].includes(command)) {
+      if (!values.project || !values.id) throw new PublicError('Execution commands require --project and --id.');
+      if (command === 'execution-configure' && !values.input) throw new PublicError('Execution configuration requires --input <json-file>.');
+    }
     if ((command === 'meeting' || command === 'meeting-context') && !values.id) throw new PublicError('Meeting inspection requires --id <meeting-id>.');
     if (command === 'export' && !values.output) throw new PublicError('Export requires --output <directory>.');
     if (command === 'trace' && !values.output) throw new PublicError('Trace export requires --output <directory>.');
@@ -107,7 +115,14 @@ try {
     if (command === 'evidence' && !values.id && (values.page || values.block)) throw new PublicError('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (command === 'route-configure' || command === 'team-configure' || command === 'configuration') {
+      if (['execution-configure', 'calls', 'execution-stop', 'execution-conclude'].includes(command)) {
+        const result = command === 'execution-configure'
+          ? app.configureExecution(values.project!, values.id!, JSON.parse(readFileSync(values.input!, 'utf8')))
+          : command === 'calls' ? app.callLedger(values.project!, values.id!)
+          : command === 'execution-stop' ? app.stopExecution(values.project!, values.id!)
+          : app.requestConclusion(values.project!, values.id!);
+        console.log(JSON.stringify(result, null, values.json ? undefined : 2));
+      } else if (command === 'route-configure' || command === 'team-configure' || command === 'configuration') {
         const result = command === 'configuration' ? app.configuration() : command === 'team-configure'
           ? app.configureTeam(JSON.parse(readFileSync(values.input!, 'utf8'))) : (() => {
             const { credentialRef: _secret, ...route } = app.configureRoute(JSON.parse(readFileSync(values.input!, 'utf8')));
@@ -150,7 +165,7 @@ try {
           ...(meeting.team ? [`Team: ${meeting.team.id} v${meeting.team.revision}`,
             ...meeting.team.routes.map(route => `${route.id} v${route.revision} | ${route.providerId}/${route.modelId} | ${route.verification}`)] : []),
           `Duration target: ${meeting.durationTargetSeconds}s | declared ceiling: ${meeting.costCeiling.amount} ${meeting.costCeiling.currency}`,
-          'Provider connections and operational budget enforcement are not available yet.',
+          'Use execution-configure to freeze protected reserves. Provider connections are not available yet.',
         ].join('\n'));
       } else if (command === 'meeting-context') {
         const context = app.readMeetingContext(values.project!, values.id!);
@@ -224,7 +239,8 @@ try {
           const events = history.events.map(event => {
             const detail = event.type === 'recorded.message'
               ? `${event.messageId} | position ${event.position}`
-              : event.type === 'live.meeting-prepared' ? `${event.meetingId} | context v${event.contextVersion}` : event.operationId;
+              : event.type === 'live.meeting-prepared' ? `${event.meetingId} | context v${event.contextVersion}`
+              : 'callId' in event ? event.callId : 'meetingId' in event ? event.meetingId : event.operationId;
             return `#${event.sequence} ${event.occurredAt} | ${event.type} | ${detail}`;
           });
           const operations = history.operations.map(operation => [

@@ -5,6 +5,8 @@ import { extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type Database from 'better-sqlite3';
 import { openDomainDatabase } from './local-database.ts';
+import { CallController } from './call-control.ts';
+import type { CallInput, Reserves } from './call-domain.ts';
 import { EvidenceSchema, EventSchema, ExportOperationSchema, FixtureSchema, ProjectSchema, RecordedMeetingSchema, RecordedDecisionSchema, type Project, type Evidence, type RecordedMeeting, type EventInput } from './domain.ts';
 import { DocumentLocatorSchema, ExtractionSchema, extractDocument, type DocumentLocator } from './extraction.ts';
 import { LiveProjectSchema, ProjectInputSchema, MeetingInputSchema, LiveMeetingSchema,
@@ -19,13 +21,21 @@ const hash = (content: Buffer) => createHash('sha256').update(content).digest('h
 /** Owns durable product state; terminal clients only issue commands and display results. */
 export class Boardroom {
   private readonly db: Database.Database;
+  private readonly calls: CallController;
   readonly dataDirectory: string;
 
-  constructor(dataDirectory: string) {
+  constructor(dataDirectory: string, options: { monotonicNow?: () => number } = {}) {
     this.dataDirectory = resolve(dataDirectory);
     mkdirSync(this.dataDirectory, { recursive: true });
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
+    this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow);
   }
+
+  configureExecution(projectId: string, meetingId: string, input: Reserves) { return this.calls.configure(projectId, meetingId, input); }
+  reserveCall(projectId: string, meetingId: string, input: CallInput) { return this.calls.reserve(projectId, meetingId, input); }
+  callLedger(projectId: string, meetingId: string) { return this.db.transaction(() => this.calls.ledger(projectId, meetingId))(); }
+  stopExecution(projectId: string, meetingId: string) { return this.calls.stop(projectId, meetingId); }
+  requestConclusion(projectId: string, meetingId: string) { return this.calls.stop(projectId, meetingId, true); }
 
   capabilities() {
     return {
@@ -406,7 +416,8 @@ export class Boardroom {
       sequence: event.sequence, type: event.type, occurredAt: event.occurredAt,
       ...(event.type === 'recorded.message' ? { position: event.position }
         : event.type === 'live.meeting-prepared' ? { meetingId: event.meetingId, contextVersion: event.contextVersion }
-        : { operationId: event.operationId }),
+        : 'callId' in event ? { meetingId: event.meetingId, callId: event.callId }
+        : 'meetingId' in event ? { meetingId: event.meetingId } : { operationId: event.operationId }),
     }));
     const root = resolve(outputDirectory);
     mkdirSync(root, { recursive: true });
