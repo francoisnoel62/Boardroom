@@ -29,10 +29,15 @@ export function parseHelp(source: string) {
 export function handledCommands(source: string) {
   const listed = /\[((?:'[a-z-]+',?\s*)+)\]\.includes\(command\)/.exec(source)?.[1];
   if (!listed) throw new Error('The list of accepted commands was not found in src/cli.ts.');
-  const fromList = [...listed.matchAll(/'([a-z-]+)'/g)].map(match => match[1]!);
+  const names = (list: string) => [...list.matchAll(/'([a-z-]+)'/g)].map(match => match[1]!);
   const compared = [...source.matchAll(/command === '([a-z-]+)'/g)].map(match => match[1]!);
-  const accepted = [...new Set([...fromList, ...compared])];
-  const withoutHandler = accepted.filter(command => !compared.includes(command));
+  // A handler is a comparison, a group of commands sharing one branch, or a branch on a command-name prefix.
+  // A list that only validates arguments (`if ([...].includes(command) && ...)`) is not a handler.
+  const grouped = [...source.matchAll(/else if \(\[((?:'[a-z-]+',?\s*)+)\]\.includes\(command\)\)/g)].flatMap(match => names(match[1]!));
+  const prefixes = [...source.matchAll(/else if \(command\.startsWith\('([a-z-]+)'\)\)/g)].map(match => match[1]!);
+  const accepted = [...new Set([...names(listed), ...compared])];
+  const handled = new Set([...compared, ...grouped]);
+  const withoutHandler = accepted.filter(command => !handled.has(command) && !prefixes.some(prefix => command.startsWith(prefix)));
   return { accepted, withoutHandler };
 }
 

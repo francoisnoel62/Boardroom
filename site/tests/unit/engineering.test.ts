@@ -10,8 +10,10 @@ const testSources = readdirSync(resolve(repo, 'tests'))
   .map(name => readFileSync(resolve(repo, 'tests', name), 'utf8'));
 
 test('the application test count is read from the test files themselves', () => {
-  // The CI log of the application workflow reports the same "tests" total for this suite (53 once the installer tests were added).
-  assert.equal(countTests(testSources), 53);
+  // The total follows the suite as it grows, so it is not pinned. Top-level declarations start at column 0 in this repository's
+  // style, which gives an independent count for the parser to agree with.
+  assert.equal(countTests(testSources), testSources.join('\n').match(/^test\(/gm)!.length);
+  assert.ok(countTests(testSources) >= 53);
 });
 
 test('only top-level test declarations are counted', () => {

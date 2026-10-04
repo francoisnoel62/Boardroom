@@ -5,9 +5,10 @@ import test from 'node:test';
 import { acceptedOnFromPlanFile, milestones, planFileName, publicStatus, roadmap, statusFromPlanFile } from '../../src/data/roadmap.ts';
 
 const plans = resolve(import.meta.dirname, '../../../boardroom-plans');
+// Each plan names its own file: a companion document may share the plan's number prefix.
 const planFile = (id: string) => {
-  const name = readdirSync(plans).find(file => file.startsWith(`${id}-`));
-  assert.ok(name, `plan ${id} has no file`);
+  const name = planFileName(id);
+  assert.ok(readdirSync(plans).includes(name), `plan ${id} has no file`);
   return readFileSync(resolve(plans, name), 'utf8');
 };
 

@@ -1,4 +1,11 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
+import { countTests } from '../../src/data/engineering.ts';
+
+// The published figure follows the application suite as it grows; it is recounted here from the same test files.
+const tests = resolve(import.meta.dirname, '../../../tests');
+const testCount = String(countTests(readdirSync(tests).filter(name => name.endsWith('.test.ts')).map(name => readFileSync(resolve(tests, name), 'utf8'))));
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -93,7 +100,7 @@ test('the FAQ answers cost, license and data questions honestly', async ({ page 
 });
 
 test('the engineering section shows figures derived from the repository', async ({ page }) => {
-  await expect(page.locator('#engineering [data-stat="tests"] [data-value]')).toHaveText('53');
+  await expect(page.locator('#engineering [data-stat="tests"] [data-value]')).toHaveText(testCount);
 });
 
 test('the footer states the license', async ({ page }) => {
