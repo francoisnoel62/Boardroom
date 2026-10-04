@@ -52,6 +52,7 @@ function Screen({ session, cancelled }: { session: LiveTerminalSession; cancelle
   const help = rows < 22 ? ['inspect | stop | conclude | export | quit; Esc/Ctrl+C saves'] : [
     'question TEXT | select 1,2 | start | approve N | correct N FILE',
     'analyse | debate | views N | decide N ACTION REASON | decision-file FILE',
+    'say ADVISER_ID|all TEXT | participation',
     'inspect | evidence | history | stop | conclude | export | quit; Esc/Ctrl+C saves',
   ];
   const draftLines = safe(draft).split('\n').slice(-3);

@@ -29,6 +29,7 @@ import type { LiveDebate } from './live-debate.ts';
 import type { LiveDecision } from './live-decision.ts';
 import type { HumanDecisionInput } from './decision-domain.ts';
 import { ProposalVersionSchema } from './deliberation-domain.ts';
+import { Participation, type ContributionCommand } from './participation.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -37,6 +38,7 @@ export class Boardroom {
   private readonly db: Database.Database;
   private readonly calls: CallController;
   private readonly http: typeof fetch;
+  private readonly participation: Participation;
   private readonly exportSecrets = new Set<string>();
   private framing?: LiveFraming;
   private framingLoading?: Promise<LiveFraming>;
@@ -52,6 +54,7 @@ export class Boardroom {
     this.dataDirectory = resolve(dataDirectory);
     mkdirSync(this.dataDirectory, { recursive: true });
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
+    this.participation = new Participation(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event));
     this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow,
       (project, id, input) => {
         this.assertProtectedReserves(project, id, input);
@@ -97,6 +100,8 @@ export class Boardroom {
     }
   }
   reserveCall(projectId: string, meetingId: string, input: CallInput) { return this.calls.reserve(projectId, meetingId, input); }
+  contribute(command: ContributionCommand) { return this.participation.contribute(command); }
+  inspectParticipation(project: string, id: string) { return this.db.transaction(() => this.participation.inspect(project, id))(); }
   callLedger(projectId: string, meetingId: string) { return this.db.transaction(() => this.calls.ledger(projectId, meetingId))(); }
   stopExecution(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, false); }
   requestConclusion(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, true); }
@@ -270,7 +275,7 @@ export class Boardroom {
             } catch { value = undefined; return { ...response, failure: 'invalid-output' }; }
           }
           return response;
-        });
+        }, (call, request) => this.participation.dispatch(call, request, attempt ? first.receipt.id : undefined));
       receipts.push(result.receipt);
       if (result.receipt.status === 'completed' && value !== undefined) return { value, receipts };
       if (result.receipt.reason !== 'invalid-output') break;

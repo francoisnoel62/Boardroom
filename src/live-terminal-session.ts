@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import type { Boardroom } from './application.ts';
 import { PublicError, publicDiagnostic } from './privacy.ts';
 import { TeamMeetingInputSchema, type TeamMeetingInput } from './live-domain.ts';
@@ -51,7 +52,19 @@ export class LiveTerminalSession {
   async command(input: string) {
     const text = input.trim(), [name = '', ...words] = text.split(/\s+/), rest = text.slice(name.length).trim();
     if (!name) return;
-    if (this.busy && !['stop', 'conclude', 'inspect', 'history', 'evidence', 'export'].includes(name)) throw new PublicError('Work is running; stop, conclude or inspect saved work.');
+    if (this.busy && !['say', 'participation', 'stop', 'conclude', 'inspect', 'history', 'evidence', 'export'].includes(name)) throw new PublicError('Work is running; contribute, stop, conclude or inspect saved work.');
+    if (name === 'say') {
+      const recipient = words[0];
+      if (!recipient || words.length < 2) throw new PublicError('Use say ADVISER_ID|all TEXT.');
+      const receipt = this.app.contribute({ commandId: randomUUID(), projectId: this.projectId, meetingId: this.id(), author: 'human',
+        expectedContextVersion: this.app.getMeeting(this.projectId, this.id()).context.version,
+        recipientId: recipient === 'all' ? null : recipient, text: rest.slice(recipient.length).trim() });
+      this.notice = `Contribution saved: ${receipt.status} | ${receipt.commandId}`; return;
+    }
+    if (name === 'participation') {
+      this.detail = JSON.stringify(this.app.inspectParticipation(this.projectId, this.id()), null, 2).slice(-8000);
+      this.notice = 'Saved participation (full record in CLI).'; return;
+    }
     if (name === 'question' || name === 'select') {
       if (this.meetingId || !this.preparation) throw new PublicError('Question/context are frozen after start.');
       if (name === 'question') { if (!rest) throw new PublicError('Question cannot be empty.'); this.preparation.question = rest; }
