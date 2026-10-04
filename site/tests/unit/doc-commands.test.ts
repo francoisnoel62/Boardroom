@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { extractDocCommands, toInvocation } from '../../scripts/doc-commands.mjs';
@@ -37,4 +39,26 @@ test('the documentation marks runnable commands for both the checkout and the ca
   assert.ok(commands.filter(command => command.startsWith('node dist/cli.js')).length >= 10);
   assert.ok(commands.some(command => command.startsWith('./boardroom')));
   for (const command of commands) toInvocation(command, { platform: 'linux', node: 'node' });
+});
+
+test('documented candidate commands run from a copied package with accents and spaces', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'boardroom-doc-candidate-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const repo = join(root, 'checkout'), candidate = join(root, 'paquet François avec espaces');
+  const documents = join(repo, 'site/src/content/docs');
+  mkdirSync(documents, { recursive: true });
+  mkdirSync(join(candidate, 'assets'), { recursive: true });
+  writeFileSync(join(candidate, 'assets/evidence.txt'), 'fictional evidence');
+  writeFileSync(join(documents, 'example.mdx'), '```sh doc-test\n./boardroom --help\n```\n');
+  const windows = process.platform === 'win32';
+  const launcher = join(candidate, windows ? 'boardroom.cmd' : 'boardroom');
+  writeFileSync(launcher, windows
+    ? '@echo off\r\nif not exist "%~dp0assets\\evidence.txt" exit /b 9\r\necho candidate-ok\r\n'
+    : '#!/bin/sh\nROOT=$(CDPATH= cd -- "${0%/*}" && pwd)\ntest -f "$ROOT/assets/evidence.txt" || exit 9\necho candidate-ok\n');
+  chmodSync(launcher, 0o755);
+  const result = spawnSync(process.execPath, [resolve(import.meta.dirname, '../../scripts/doc-commands.mjs'), '--repo', repo, '--candidate', candidate],
+    { encoding: 'utf8', timeout: 15000 });
+  assert.equal(result.status, 0, result.error?.message ?? result.stderr + result.stdout);
+  assert.match(result.stdout, /1 documented commands, 0 failed/);
+  assert.equal(readFileSync(join(candidate, 'assets/evidence.txt'), 'utf8'), 'fictional evidence');
 });

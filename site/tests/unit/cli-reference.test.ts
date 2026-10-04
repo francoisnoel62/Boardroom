@@ -22,6 +22,11 @@ test('commands in the help and commands the CLI accepts are the same set', () =>
   assert.deepEqual([...handledCommands(cli).accepted].sort(), [...documented].sort());
 });
 
+test('CLI help produces the same reference from LF and Windows CRLF checkouts', () => {
+  const lf = cli.replaceAll('\r\n', '\n');
+  assert.deepEqual(parseHelp(lf.replaceAll('\n', '\r\n')), parseHelp(lf));
+});
+
 test('a command accepted without its own handler is reported, not documented as working', () => {
   assert.deepEqual(handledCommands(cli).withoutHandler, ['status']);
 });
