@@ -99,7 +99,8 @@ export class CallController {
       this.save('call', receipt.id, receipt);
       this.append({ schemaVersion: 1, projectId: project, meetingId: id, callId: receipt.id, type: 'call.reserved', occurredAt: receipt.createdAt });
     }).immediate();
-    return { receipt, execute: (request: CallRequest, provider: ProviderBoundary, admit?: (call: CallReceipt, request: CallRequest) => CallRequest) => this.execute(receipt.id, request, provider, admit) };
+    return { receipt, execute: (request: CallRequest, provider: ProviderBoundary, admit?: (call: CallReceipt, request: CallRequest) => CallRequest,
+      accept?: (call: CallReceipt) => void) => this.execute(receipt.id, request, provider, admit, accept) };
   }
 
   stop(project: string, id: string, conclude = false) {
@@ -118,7 +119,7 @@ export class CallController {
     }).immediate();
   }
 
-  private async execute(id: string, request: CallRequest, provider: ProviderBoundary, admit?: (call: CallReceipt, request: CallRequest) => CallRequest) {
+  private async execute(id: string, request: CallRequest, provider: ProviderBoundary, admit?: (call: CallReceipt, request: CallRequest) => CallRequest, accept?: (call: CallReceipt) => void) {
     let receipt = CallReceiptSchema.parse(this.load('call', id));
     if (typeof request.text !== 'string' || Buffer.byteLength(JSON.stringify(request)) > receipt.limits.maxInputTokens) {
       throw new PublicError('Request exceeds its reserved input bound.');
@@ -179,6 +180,7 @@ export class CallController {
       catch { receipt = { ...receipt, status: 'failed', reason: 'cancelled' }; result = undefined; }
       this.save('call', id, receipt);
       if (receipt.reason === 'invalid-usage') this.stop(receipt.projectId, receipt.meetingId);
+      if (result && receipt.status === 'completed') accept?.(receipt);
       this.append({ schemaVersion: 1, projectId: receipt.projectId, meetingId: receipt.meetingId, callId: id, type: 'call.settled', occurredAt: receipt.finishedAt! });
     }).immediate();
     return { receipt: CallReceiptSchema.parse(receipt), ...(result && !result.failure ? { text: result.text } : {}) };

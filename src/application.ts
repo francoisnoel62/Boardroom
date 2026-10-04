@@ -30,6 +30,7 @@ import type { LiveDecision } from './live-decision.ts';
 import type { HumanDecisionInput } from './decision-domain.ts';
 import { ProposalVersionSchema } from './deliberation-domain.ts';
 import { Participation, type ContributionCommand } from './participation.ts';
+import { HumanRequests, withHumanRequests, type HumanRequestDraft, type HumanResponseCommand } from './human-requests.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -39,6 +40,7 @@ export class Boardroom {
   private readonly calls: CallController;
   private readonly http: typeof fetch;
   private readonly participation: Participation;
+  private readonly humanRequests: HumanRequests;
   private readonly exportSecrets = new Set<string>();
   private framing?: LiveFraming;
   private framingLoading?: Promise<LiveFraming>;
@@ -55,8 +57,10 @@ export class Boardroom {
     mkdirSync(this.dataDirectory, { recursive: true });
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
     this.participation = new Participation(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event));
+    this.humanRequests = new HumanRequests(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event));
     this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow,
       (project, id, input) => {
+        if ((!('status' in input) || input.status === 'reserved') && this.humanRequests.blockers(project, id, input).length) throw new PublicError('Work awaits an explicit human response.');
         this.assertProtectedReserves(project, id, input);
         if (!['analysis', 'revision', 'confrontation'].includes(input.phase) && !(input.phase === 'conclusion' && input.framingVersion !== undefined)) return;
         this.getMeeting(project, id);
@@ -101,7 +105,9 @@ export class Boardroom {
   }
   reserveCall(projectId: string, meetingId: string, input: CallInput) { return this.calls.reserve(projectId, meetingId, input); }
   contribute(command: ContributionCommand) { return this.participation.contribute(command); }
-  inspectParticipation(project: string, id: string) { return this.db.transaction(() => this.participation.inspect(project, id))(); }
+  inspectParticipation(project: string, id: string) { return this.db.transaction(() => ({ ...this.participation.inspect(project, id), requests: this.humanRequests.inspect(project, id) }))(); }
+  respondToRequest(command: HumanResponseCommand) { return this.humanRequests.respond(command); }
+  humanBlockers(project: string, id: string, input: CallInput) { return this.humanRequests.blockers(project, id, input); }
   callLedger(projectId: string, meetingId: string) { return this.db.transaction(() => this.calls.ledger(projectId, meetingId))(); }
   stopExecution(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, false); }
   requestConclusion(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, true); }
@@ -222,22 +228,42 @@ export class Boardroom {
 
   async callStructured<T>(projectId: string, meetingId: string, input: CallInput,
     output: { text: string; schema: z.ZodType<T>; validate?: (value: T) => boolean }, store: SecretStore,
-    emit?: (text: string) => void): Promise<{ value?: T; receipts: CallReceipt[] }> {
+    emit?: (text: string) => void): Promise<{ value?: T; receipts: CallReceipt[]; blockedRequestIds?: string[] }> {
+    const blockedRequestIds = this.humanBlockers(projectId, meetingId, input);
+    if (blockedRequestIds.length) return { receipts: [], blockedRequestIds };
     const run = await this.prepareStructured(projectId, meetingId, input, output, store, emit);
-    return run(this.reserveCall(projectId, meetingId, input));
+    const admission = this.db.transaction(() => {
+      const blockedRequestIds = this.humanBlockers(projectId, meetingId, input);
+      return blockedRequestIds.length ? { blockedRequestIds } : { handle: this.reserveCall(projectId, meetingId, input) };
+    }).immediate();
+    return admission.handle ? run(admission.handle) : { receipts: [], blockedRequestIds: admission.blockedRequestIds! };
   }
 
   /** All credentials and initial reservations succeed before any request can leave this process. */
   async callStructuredBatch<T>(project: string, id: string,
     requests: { input: CallInput; output: { text: string; schema: z.ZodType<T>; validate?: (value: T) => boolean } }[],
-    store: SecretStore, completed: (index: number, result: { value?: T; receipts: CallReceipt[] }) => void, emit?: (adviser: string, text: string) => void) {
-    const runners = await Promise.all(requests.map(request => this.prepareStructured(project, id, request.input, request.output, store,
-      emit ? text => emit(request.input.adviserId, text) : undefined)));
-    const handles = this.db.transaction(() => requests.map(request => this.reserveCall(project, id, request.input))).immediate();
+    store: SecretStore, completed: (index: number, result: { value?: T; receipts: CallReceipt[]; blockedRequestIds?: string[] }) => void, emit?: (adviser: string, text: string) => void) {
+    const waiting = requests.map(request => this.humanBlockers(project, id, request.input));
+    const runners = await Promise.all(requests.map(async (request, index) => waiting[index]!.length ? undefined
+      : this.prepareStructured(project, id, request.input, request.output, store, emit ? text => emit(request.input.adviserId, text) : undefined)));
+    // A human can answer while a credential boundary is awaited. Prepare each newly ready consumer once.
+    for (;;) {
+      const ready = requests.map((request, index) => ({ request, index })).filter(({ request, index }) => !runners[index] && !this.humanBlockers(project, id, request.input).length);
+      if (!ready.length) break;
+      await Promise.all(ready.map(async ({ request, index }) => {
+        runners[index] = await this.prepareStructured(project, id, request.input, request.output, store, emit ? text => emit(request.input.adviserId, text) : undefined);
+      }));
+    }
+    const handles = this.db.transaction(() => requests.map((request, index) => {
+      const blockedRequestIds = this.humanBlockers(project, id, request.input);
+      return blockedRequestIds.length || !runners[index] ? { blockedRequestIds: blockedRequestIds.length ? blockedRequestIds : waiting[index]! } : { handle: this.reserveCall(project, id, request.input) };
+    })).immediate();
     await Promise.all(runners.map(async (run, index) => {
+      const entry = handles[index]!;
+      if (!entry.handle || !run) { completed(index, { receipts: [], blockedRequestIds: entry.blockedRequestIds ?? [] }); return; }
       let result: { value?: T; receipts: CallReceipt[] };
-      try { result = await run(handles[index]!); }
-      catch { result = { receipts: this.callLedger(project, id).calls.filter(call => call.id === handles[index]!.receipt.id) }; }
+      try { result = await run(entry.handle); }
+      catch { result = { receipts: this.callLedger(project, id).calls.filter(call => call.id === entry.handle.receipt.id) }; }
       completed(index, result);
     }));
   }
@@ -257,7 +283,8 @@ export class Boardroom {
     if (!key) throw new PublicError('Credential unavailable for the frozen route.');
     this.exportSecrets.add(key);
     // The provider receives only its documented subset; the original Zod schema still enforces every local bound.
-    const jsonSchema = providerSchema(route.providerId, z.toJSONSchema(output.schema) as Record<string, unknown>);
+    const responseSchema = input.phase === 'preflight' ? output.schema : withHumanRequests(output.schema);
+    const jsonSchema = providerSchema(route.providerId, z.toJSONSchema(responseSchema) as Record<string, unknown>);
     return async (first: ReturnType<Boardroom['reserveCall']>): Promise<{ value?: T; receipts: CallReceipt[] }> => {
     const receipts: CallReceipt[] = [];
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -265,17 +292,26 @@ export class Boardroom {
         phase: attempt && input.phase === 'framing' ? 'framing-correction' : input.phase });
       const provider = providerBoundary(route, handle.receipt, key, this.http, this.calls.pricingDay());
       let value: T | undefined;
+      let humanRequests: HumanRequestDraft[] = [];
       const result = await handle.execute({ text: output.text + (attempt ? '\nPrevious output was invalid. Return one complete object matching the schema and valid context references.' : ''), jsonSchema },
         async (request, signal, stream) => {
           const response = await provider(request, signal, text => { stream(text); emit?.(text); });
           if (!response.failure) {
             try {
-              value = output.schema.parse(JSON.parse(response.text));
+              const parsed = responseSchema.parse(JSON.parse(response.text));
+              if (input.phase === 'preflight') value = parsed as T;
+              else {
+                const { humanRequests: drafts, ...body } = parsed as Record<string, unknown> & { humanRequests: HumanRequestDraft[] };
+                humanRequests = drafts;
+                if (!this.humanRequests.validate(humanRequests, meeting)) throw new Error('Invalid human request scope.');
+                value = output.schema.parse(body);
+              }
               if (output.validate && !output.validate(value)) throw new Error('Invalid references.');
             } catch { value = undefined; return { ...response, failure: 'invalid-output' }; }
           }
           return response;
-        }, (call, request) => this.participation.dispatch(call, request, attempt ? first.receipt.id : undefined));
+        }, (call, request) => this.participation.dispatch(call, attempt ? request : this.humanRequests.decorate(call, request), attempt ? first.receipt.id : undefined),
+        call => this.humanRequests.capture(call, humanRequests));
       receipts.push(result.receipt);
       if (result.receipt.status === 'completed' && value !== undefined) return { value, receipts };
       if (result.receipt.reason !== 'invalid-output') break;

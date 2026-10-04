@@ -41,6 +41,11 @@ test('a list that only validates arguments is not a handler', () => {
   assert.deepEqual(handledCommands(source).withoutHandler, ['b', 'status']);
 });
 
+test('a first grouped dispatch branch is a handler just like an else-if branch', () => {
+  const source = "if (!['answer', 'deny', 'status'].includes(command)) throw 1;\nif (['answer', 'deny'].includes(command)) {}\n";
+  assert.deepEqual(handledCommands(source).withoutHandler, ['status']);
+});
+
 test('documented exit codes are exactly the codes set in the source', () => {
   assert.deepEqual(exitCodesIn([cli, terminal]), [1, 2, 130]);
   assert.deepEqual(documentedExitCodes.map(entry => entry.code), [0, ...exitCodesIn([cli, terminal])]);

@@ -33,7 +33,7 @@ export function handledCommands(source: string) {
   const compared = [...source.matchAll(/command === '([a-z-]+)'/g)].map(match => match[1]!);
   // A handler is a comparison, a group of commands sharing one branch, or a branch on a command-name prefix.
   // A list that only validates arguments (`if ([...].includes(command) && ...)`) is not a handler.
-  const grouped = [...source.matchAll(/else if \(\[((?:'[a-z-]+',?\s*)+)\]\.includes\(command\)\)/g)].flatMap(match => names(match[1]!));
+  const grouped = [...source.matchAll(/\bif \(\[((?:'[a-z-]+',?\s*)+)\]\.includes\(command\)\)/g)].flatMap(match => names(match[1]!));
   const prefixes = [...source.matchAll(/else if \(command\.startsWith\('([a-z-]+)'\)\)/g)].map(match => match[1]!);
   const accepted = [...new Set([...names(listed), ...compared])];
   const handled = new Set([...compared, ...grouped]);
