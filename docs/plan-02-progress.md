@@ -94,3 +94,16 @@ Native Windows/macOS vaults are required in CI; Linux producer tests require a r
 - Remote Windows/Linux/macOS results are tracked in [PR #9's checks](https://github.com/francoisnoel62/Boardroom/pull/9/checks); use the latest commit's checks and generated installation proofs. No Hotelix file was needed or modified in this increment; no real credential was used.
 
 The initial CI found a latent startup race at `PRAGMA journal_mode = WAL`, before the first-reader test's ready message. SQLite can refuse this lock promotion without invoking its normal busy handler. The constructor now retries only idempotent local setup within a monotonic five-second bound and restores the normal 5,000 ms busy timeout afterward. Non-busy errors and domain operations are never replayed. The existing concurrent regression now synchronizes all four constructor entries and includes child diagnostics, making the original failure locally reproducible instead of depending on timing.
+
+## Increment 6 — three independent initial analyses
+
+Based on Plan 02 PR 5 (#12); service and actual CLI are the previously approved test boundaries. The new real LangGraph node stores only meeting/frame identities in its SQLite checkpoint; structured bodies and each completion live in the domain database. No Hotelix input, real credentials or paid API request was used.
+
+Observed red → green:
+- `node --test tests/analyses.test.ts`: public `analyseMeeting` missing; green after concurrent analysis dispatch, common immutable facts/digest, typed assertions and per-result commits. The test reads two durable successes from a second service while the third HTTP response remains blocked, then checks all captured inputs for cross-response sentinels.
+- `node --test --test-name-pattern='insufficient batch' tests/analyses.test.ts`: missing advisers omitted (`[]` instead of three failed outcomes); green after explicit outcomes. Entire initial reservation transaction rolls back and no analysis HTTP request occurs.
+- `node --test tests/analyses-cli.test.ts`: unknown `meeting-analyse`; green after explicit paid consent, per-route session credential map and inspection commands. Anthropic's external test fixture now emits its own actual stream format.
+
+Additional boundary checks: two successes/one adviser invalid twice; foreign line references refused; one separately billed correction; no call before framing approval; historical analyses excluded after correction; repeated phase refused. The complete live decision and real provider qualification remain open.
+
+Validation finale PR6 : Windows x64 / Node 24.12.0, typecheck/build et npm test **99/99**, zéro échec/skip, 108,5 s, coffre hôte obligatoire et qualification du paquet installé inclus. git diff --check passé. Résultats multi-OS dans les contrôles de la PR.
