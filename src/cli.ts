@@ -48,6 +48,7 @@ Usage:
   boardroom meeting-decide --project <id> --id <meeting-id> --input <json-file>  Save a human decision
   boardroom meeting-decision --project <id> --id <meeting-id>  Inspect the live decision record
   boardroom meeting-export --project <id> --id <meeting-id> --output <directory> [--with-json] [--session]  New live exports
+  boardroom live --project <id> (--id <meeting-id> | --team <id> --input <question-json>) --output <directory> --allow-provider [--session]  Interactive live terminal
   boardroom execution-configure --project <id> --id <meeting-id> --input <json-file>  Freeze protected reserves
   boardroom calls --project <id> --id <meeting-id>  Inspect budgets, time and call receipts
   boardroom execution-stop --project <id> --id <meeting-id>  Stop pending and in-flight work
@@ -109,12 +110,12 @@ try {
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export', 'meeting-debate', 'meeting-proposals', 'meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+    if (!['live', 'meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export', 'meeting-debate', 'meeting-proposals', 'meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new PublicError('Unknown command. Run boardroom --help.');
     }
     if (['route-configure', 'team-configure'].includes(command) && !values.input) throw new PublicError('Configuration requires --input <json-file>.');
     if (command.startsWith('credential-') && !values.route) throw new PublicError('Credential commands require --route <route-id>.');
-    if (values.session && !['meeting-views', 'meeting-export', 'meeting-debate', 'meeting-analyse', 'credential-check', 'provider-preflight', 'meeting-start'].includes(command)) throw new PublicError('Session injection requires a credential check or explicit provider operation.');
+    if (values.session && !['live', 'meeting-views', 'meeting-export', 'meeting-debate', 'meeting-analyse', 'credential-check', 'provider-preflight', 'meeting-start'].includes(command)) throw new PublicError('Session injection requires a credential check or explicit provider operation.');
     if (['meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop'].includes(command)) {
       if (!values.project || !values.id) throw new PublicError('Framing commands require --project and --id.');
       if (command === 'meeting-start' && !values['allow-provider']) throw new PublicError('Paid framing requires explicit --allow-provider.');
@@ -146,7 +147,31 @@ try {
     if (command === 'evidence' && !values.id && (values.page || values.block)) throw new PublicError('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (['meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export'].includes(command)) {
+      if (command === 'live') {
+        if (!process.stdin.isTTY || !process.stdout.isTTY) throw new PublicError('Live terminal requires an interactive TTY.');
+        if (!values.project || !values.output || !values['allow-provider'] || (!values.id && (!values.input || !values.team))) throw new PublicError('Live terminal requires project, output, explicit --allow-provider and a saved meeting or team/input.');
+        const store = values.session ? new SessionSecretStore() : new HostSecretStore();
+        try {
+          let preparation;
+          if (!values.id) {
+            const input = JSON.parse(readFileSync(values.input!, 'utf8'));
+            if ('projectId' in input || 'teamId' in input) throw new PublicError('Use --project and --team outside the preparation file.');
+            preparation = { ...input, projectId: values.project, teamId: values.team };
+          }
+          if (values.session) {
+            let keys: any;
+            try { keys = JSON.parse(sessionKeys ?? 'null'); } catch { throw new PublicError('Invalid session credential map.'); }
+            if (!keys || typeof keys !== 'object' || Array.isArray(keys)) throw new PublicError('Session terminal requires BOARDROOM_SESSION_KEYS.');
+            const routes = values.id ? app.getMeeting(values.project, values.id).team!.routes
+              : app.configuration().teams.find(team => team.id === values.team)?.advisers.map(a => app.getRoute(a.routeId));
+            if (!routes) throw new PublicError('Team unavailable.');
+            for (const route of routes) { if (typeof keys[route.id] !== 'string') throw new PublicError('Session credential missing for a route.'); await app.setRouteCredential(route.id, keys[route.id], store); }
+          }
+          const { LiveTerminalSession } = await import('./live-terminal-session.ts');
+          const { runLiveTerminal } = await import('./live-terminal.tsx');
+          await runLiveTerminal(new LiveTerminalSession(app, values.project, store, values.output, values.id ? { meetingId: values.id } : { preparation }));
+        } finally { if (store instanceof SessionSecretStore) store.clear(); }
+      } else if (['meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export'].includes(command)) {
         if (!values.project || !values.id) throw new PublicError('Live decision commands require --project and --id.');
         let result;
         if (command === 'meeting-views' || command === 'meeting-export') {

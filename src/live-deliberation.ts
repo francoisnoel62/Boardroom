@@ -40,7 +40,7 @@ export class LiveDeliberation {
       status: current?.status === 'analysing' ? 'uncertain' : current?.status ?? 'not-started',
       outcomes: current?.outcomes ?? [], states, analyses, current: analyses.filter(analysis => analysis.framingVersion === frame.approvedVersion && frame.status === 'approved') };
   }
-  async analyse(project: string, id: string, store: SecretStore) {
+  async analyse(project: string, id: string, store: SecretStore, emit?: (adviser: string, text: string) => void) {
     const meeting = this.app.getMeeting(project, id), frame = await this.app.inspectMeeting(project, id);
     if (frame.status !== 'approved' || frame.approvedVersion !== frame.latestVersion) throw new PublicError('Analysis requires the current approved framing.');
     const version = frame.approvedVersion!, key = `${id}:${version}`;
@@ -85,7 +85,7 @@ export class LiveDeliberation {
           this.save('analysis-state', key, state);
           this.append({ schemaVersion: 1, type: 'analysis.settled', projectId: project, meetingId: id, version, adviserId: adviser.id, occurredAt: new Date().toISOString() });
         }).immediate();
-      });
+      }, emit);
       return {};
     }).addEdge(START, 'analyse').addEdge('analyse', END).compile({ checkpointer: this.saver });
     try { await graph.invoke({ projectId: project, meetingId: id, framingVersion: version }, { configurable: { thread_id: `analyses:${key}` } }); }
