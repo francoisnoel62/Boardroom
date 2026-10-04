@@ -61,6 +61,33 @@ test('installed launcher completes the account-free journey with only the bundle
   assert.equal(history.operations.length, 2);
   assert.deepEqual(JSON.parse(run('history', '--json')), history);
   assert.equal(JSON.parse(run('decision', '--json')).humanDecision, 'pending');
+  const liveProject = JSON.parse(run('project-create', '--name', 'Local pilot', '--language', 'en', '--json'));
+  assert.equal(liveProject.recorded, false);
+  assert.deepEqual(JSON.parse(run('project', '--id', liveProject.id, '--json')), liveProject);
+  const liveSource = join(root, 'pilot-context.md');
+  copyFileSync(original, liveSource);
+  const liveEvidence = JSON.parse(run('source', '--project', liveProject.id, '--source', liveSource, '--allow-source', '--json'));
+  const question = JSON.parse(readFileSync(join(candidate, 'assets', 'validation', 'live-question.json'), 'utf8'));
+  question.passages[0].evidenceId = liveEvidence.id;
+  question.costCeiling.amount = 0;
+  const questionPath = join(root, 'question.json');
+  writeFileSync(questionPath, JSON.stringify(question));
+  const prepared = JSON.parse(run('meeting-prepare', '--project', liveProject.id, '--input', questionPath, '--json'));
+  assert.equal(prepared.status, 'prepared');
+  assert.equal(prepared.initialPlan, undefined);
+  assert.deepEqual(JSON.parse(run('meeting', '--project', liveProject.id, '--id', prepared.id, '--json')), prepared);
+  assert.equal(hash(liveSource), originalHash);
+  writeFileSync(liveSource, 'Changed local copy.');
+  const frozen = JSON.parse(run('meeting-context', '--project', liveProject.id, '--id', prepared.id, '--json'));
+  assert.equal(frozen.passages[0].text, 'Team: two engineers; four weeks available for the launch.');
+  assert.equal(frozen.passages[0].originalChanged, true);
+  assert.deepEqual(JSON.parse(run('history', '--project', liveProject.id, '--json')).events.map(event => event.type), ['live.meeting-prepared']);
+  assert.match(run('status'), /Live meetings: unavailable/);
+  writeFileSync(join(evidence, 'live-preparation.json'), JSON.stringify({
+    schemaVersion: 1, status: prepared.status, noModelCalls: true,
+    originalPreserved: hash(original) === originalHash, frozenPassage: frozen.passages[0].text,
+    contextVersion: prepared.context.version, sourceSha256: liveEvidence.sha256,
+  }, null, 2) + '\n');
   assert.match(run('demo', '--next'), /Marketing Manager/);
   assert.match(run('demo'), /INSUFFICIENT_EVIDENCE/);
   const pdf = join(root, 'launch.pdf');

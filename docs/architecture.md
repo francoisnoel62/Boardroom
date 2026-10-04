@@ -1,6 +1,8 @@
-# Local recorded-example architecture
+# Local recorded and prepared-question architecture
 
 Status: Plan 01 accepted with reservations, updated 2026-10-03. [Acceptance evidence](plan-01-acceptance.md) covers the local recorded workflow and three-platform installation campaign. Live meetings and public release remain later milestones.
+
+The first Plan 02 increment adds local real-project creation and frozen-question preparation. [Prepared-question workflow](preparing-a-question.md) and [TDD evidence](plan-02-progress.md) describe its limits. It makes no provider calls and does not yet use a meeting graph.
 
 ## Public boundaries
 
@@ -9,6 +11,10 @@ The approved plan defines the seams: application commands, the terminal/CLI, and
 `Boardroom` opens a fictional project, captures explicitly authorized UTF-8/PDF/DOCX sources, resolves saved citations, advances recorded playback, and creates new exports. PDF/DOCX extraction runs on the exact bytes read after source consent. The CLI passes commands and displays results. Ink renders the transcript; it does not own domain state. The recorded workflow remains command-oriented. A separate `terminal-check` command exercises typing, multiline paste, resize, and cancellation during a fictional stream; it opens no application service or database.
 
 ## Durable data
+
+Real projects use a separate version-1 schema discriminated by `recorded: false`; recorded project readers remain unchanged. `live-meeting` records hold the question, constraints, language, declared adviser/model/route selection, proposal author, duration/cost settings, optional initial plan and immutable context v1. Each passage pins evidence ID, revision, hash and line range. The record and `live.meeting-prepared` event commit in one immediate transaction. Inspection resolves saved bytes and rejects broken snapshot integrity; it never substitutes an edited original. Adviser/route labels are declarations, not verified connections. Individual proposal/view/decision records remain future work.
+
+Text capture now serializes snapshot publication and revision allocation across processes. Original reading and UTF-8 validation precede the transaction; snapshot writes under the lock are bounded to 4 MiB. Selected context is independently bounded to 64 KiB UTF-8. This extends the former recorded-only source seam without introducing network/human waits or a general migration runner.
 
 The current configuration consists of CLI options and the saved English fictional project; durable state stays in the documented OS data location unless explicitly overridden. No credential is accepted or stored. Future provider secrets belong in host credential storage, separate from the application package, domain snapshots and exported context. Plan 02 configures provider keys; Plan 07 adds guided onboarding and subscription connections.
 

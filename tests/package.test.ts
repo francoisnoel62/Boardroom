@@ -70,8 +70,17 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.match(readFileSync(join(candidate, 'docs', 'architecture.md'), 'utf8'), /Public boundaries/);
   assert.match(readFileSync(join(candidate, 'LICENSE'), 'utf8'), /Apache License\s+Version 2\.0/);
   assert.match(readFileSync(join(candidate, 'NOTICE'), 'utf8'), /BOARDROOM/);
+  // This must be an independent runner: an inherited child-v8 context makes
+  // Node skip --test files as recursive execution while returning exit code 0.
+  const installedEnv: NodeJS.ProcessEnv = { ...env };
+  delete installedEnv.NODE_TEST_CONTEXT;
   const installed = spawnSync(runtime, ['--test', join(candidate, 'qualification', 'installed.test.mjs')], {
-    cwd: root, encoding: 'utf8', env: { ...env, BOARDROOM_INSTALLATION_MODE: 'local-empty-path', BOARDROOM_QUALIFICATION_OUTPUT: join(root, 'installation evidence') },
+    cwd: root, encoding: 'utf8', env: { ...installedEnv, BOARDROOM_INSTALLATION_MODE: 'local-empty-path', BOARDROOM_QUALIFICATION_OUTPUT: join(root, 'installation evidence') },
   });
   assert.equal(installed.status, 0, installed.stdout + installed.stderr);
+  const livePreparation = JSON.parse(readFileSync(join(root, 'installation evidence', 'live-preparation.json'), 'utf8'));
+  assert.equal(livePreparation.status, 'prepared');
+  assert.equal(livePreparation.noModelCalls, true);
+  assert.equal(livePreparation.originalPreserved, true);
+  assert.equal(livePreparation.frozenPassage, 'Team: two engineers; four weeks available for the launch.');
 });

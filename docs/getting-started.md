@@ -6,7 +6,7 @@ This guide documents the current implementation, setup, and validation. The READ
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 complete — local recorded example.** Explore a fictional discussion, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. A separate terminal check lets you try input during a fictional stream. Live AI meetings are planned for Plan 02.
+**Current build: Plan 01 complete, first Plan 02 increment implemented locally.** Explore a fictional discussion, inspect immutable text/PDF/DOCX evidence, export a plan and memo, and reopen your progress and export history. You can also [prepare your own question](preparing-a-question.md) in a real project with selected text context. A separate terminal check lets you try input during a fictional stream. Live AI meetings remain unavailable.
 
 [Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](architecture.md) · [Acceptance evidence](plan-01-acceptance.md)
 
@@ -154,7 +154,7 @@ A GitHub Actions workflow runs 53 deterministic integration/E2E tests, including
 
 ## Next milestones
 
-Plan 02 adds the first real decision using three distinct models from at least two providers. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. In this recorded build, optional embeddings are not attempted, while provider streaming and cloud traces remain blocked without authorized accounts. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
+Plan 02 adds the first real decision using three distinct models from at least two providers. Its first increment already saves real projects and frozen questions; the [ten-PR plan](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md) covers connections, spending controls and debate. Later milestones add live participation, incident recovery, retrieval, protected tools and guided onboarding. Optional embeddings are not attempted, while provider streaming and cloud traces remain unavailable. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
 
 The project is currently a development checkout, not a public release. BOARDROOM is licensed under the [Apache License 2.0](../LICENSE); release and signing arrangements await later decisions. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 

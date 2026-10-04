@@ -1,0 +1,15 @@
+{
+  "question": "What scope can this team deliver in four weeks?",
+  "constraints": ["Four-week pilot"],
+  "advisers": [
+    { "id": "po", "role": "Product Owner", "providerId": "provider-a", "modelId": "model-po" },
+    { "id": "dev", "role": "Lead Developer", "providerId": "provider-b", "modelId": "model-dev" },
+    { "id": "marketing", "role": "Marketing Manager", "providerId": "provider-a", "modelId": "model-marketing" }
+  ],
+  "proposalAuthorId": "po",
+  "durationTargetSeconds": 600,
+  "costCeiling": { "amount": 1, "currency": "USD" },
+  "passages": [
+    { "evidenceId": "REPLACE_WITH_SAVED_EVIDENCE_ID", "firstLine": 4, "lastLine": 4 }
+  ]
+}
