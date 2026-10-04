@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { test, type TestContext } from 'node:test';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { openTerminal } from './support/terminal.ts';
@@ -51,7 +51,8 @@ test('real live PTY selects a question, approves framing, revises, decides and e
   assert.equal(app.getMeeting(project.id, saved.meetingId).question, 'Café 😀 pilot?');
 });
 
-for (const [cancelName, cancelKey] of [['Ctrl+C', '\x03'], ['Escape', '\x1b']] as const) test(`live streaming preserves multiline Unicode drafts across resize and ${cancelName} saves uncertain partial work`, { timeout: 30000 }, async t => {
+// One scenario, run for each way of cancelling; declared as two tests so each is counted where the suite is published.
+const streamingScenario = (cancelName: string, cancelKey: string) => async (t: TestContext) => {
   let terminal: ReturnType<typeof openTerminal> | undefined, finished = false;
   t.after(async () => { if (terminal && !finished) { terminal.write('\x03'); await terminal.finish(); } });
   const { app, project, meeting, root } = providerSetup(t, async () => { throw new Error('PTY only'); });
@@ -77,7 +78,9 @@ for (const [cancelName, cancelKey] of [['Ctrl+C', '\x03'], ['Escape', '\x1b']] a
   assert.equal(calls.length, 3); assert.ok(calls.every(c => c.status === 'uncertain' && c.knownCostMicros === undefined));
   const [directory] = readdirSync(out); assert.ok(directory);
   assert.match(readFileSync(join(out, directory, 'plan.md'), 'utf8'), /No final plan has been established/);
-});
+};
+test(`live streaming preserves multiline Unicode drafts across resize and Ctrl+C saves uncertain partial work`, { timeout: 30000 }, streamingScenario('Ctrl+C', '\x03'));
+test(`live streaming preserves multiline Unicode drafts across resize and Escape saves uncertain partial work`, { timeout: 30000 }, streamingScenario('Escape', '\x1b'));
 
 test('live PTY refuses a ceiling that could never reach the final views, before any meeting or request', { timeout: 30000 }, async t => {
   let terminal: ReturnType<typeof openTerminal> | undefined, finished = false;

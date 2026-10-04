@@ -23,24 +23,22 @@ async function attempt(t: Parameters<typeof providerSetup>[0], day: string) {
   return { outcome, requests, ledger: app.callLedger(project.id, meeting.id) };
 }
 
-for (const [label, day, allowed] of [
-  ['the day before the rates take effect', shift(asOf, -1), false],
-  ['the first day the rates are valid', asOf, true],
-  ['the last day the rates are valid', validUntil, true],
-  ['the day after the rates expire', shift(validUntil, 1), false],
-] as const) {
-  test(`dated rates are judged against the injected UTC date: ${label}`, async t => {
-    const { outcome, requests, ledger } = await attempt(t, day);
-    assert.equal(outcome.allowed, allowed);
-    if (outcome.allowed) {
-      assert.equal(requests, 1); assert.equal(ledger.calls.length, 1);
-    } else {
-      assert.match(outcome.message, /pricing bound is not current/);
-      assert.equal(requests, 0, 'no request may leave when the rates are outside their validity');
-      assert.equal(ledger.calls.length, 0, 'a refused call leaves no reservation');
-    }
-  });
-}
+const admitted = (day: string) => async (t: Parameters<typeof providerSetup>[0]) => {
+  const { outcome, requests, ledger } = await attempt(t, day);
+  assert.equal(outcome.allowed, true); assert.equal(requests, 1); assert.equal(ledger.calls.length, 1);
+};
+const refused = (day: string) => async (t: Parameters<typeof providerSetup>[0]) => {
+  const { outcome, requests, ledger } = await attempt(t, day);
+  assert.equal(outcome.allowed, false);
+  if (!outcome.allowed) assert.match(outcome.message, /pricing bound is not current/);
+  assert.equal(requests, 0, 'no request may leave when the rates are outside their validity');
+  assert.equal(ledger.calls.length, 0, 'a refused call leaves no reservation');
+};
+
+test('dated rates are judged against the injected UTC date: the day before the rates take effect', refused(shift(asOf, -1)));
+test('dated rates are judged against the injected UTC date: the first day the rates are valid', admitted(asOf));
+test('dated rates are judged against the injected UTC date: the last day the rates are valid', admitted(validUntil));
+test('dated rates are judged against the injected UTC date: the day after the rates expire', refused(shift(validUntil, 1)));
 
 test('rates that expire between two calls stop the second one before any request leaves', async t => {
   let requests = 0, today = asOf;
