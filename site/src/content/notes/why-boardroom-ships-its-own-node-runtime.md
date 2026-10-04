@@ -16,7 +16,7 @@ Boardroom does not do that yet. It ships a copy of the exact Node runtime it was
 
 ## The dependency that decides
 
-Boardroom keeps its meetings durable: a meeting interrupted by a crash must resume without replaying what already happened. The orchestration layer, LangGraph, does this with a checkpointer, and the official SQLite checkpointer depends on `better-sqlite3 ^12.10.0`.
+Boardroom keeps completed work durable; guided recovery after a crash remains Plan 04. The orchestration layer, LangGraph, checkpoints phase identities while domain records and receipts prevent blind replay. The official SQLite checkpointer depends on `better-sqlite3 ^12.10.0`.
 
 That driver is a native module. Version 12 is written against Node's V8 interfaces, not the stable Node-API; version 13 moves to Node-API, but it sits outside the range the checkpointer accepts. Bun implements Node-API, so its compatibility says nothing about a module built on V8 internals. Compiling with Bun would have meant either betting on behaviour no one had demonstrated, or replacing a dependency the durability story rests on.
 

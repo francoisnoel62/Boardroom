@@ -1,6 +1,6 @@
 # Call control and receipts
 
-The call controller is local infrastructure. In increment 3, no provider is connected. Routes used for an execution must have a current, dated, bounded text-only USD pricing record. Declared prices do not verify a provider or an account; production adapters will additionally require an official supported bound.
+The call controller is shared by all live phases and the OpenAI/Anthropic adapters. Routes used for an execution must have a current, dated, bounded text-only USD pricing record matching the supported catalog. Declared prices do not verify a provider or an account; real-account qualification remains pending.
 
 After preparing a meeting with a frozen team and a USD ceiling, freeze its protected reserves. Without a file they are **computed from the frozen team's routes and the call bounds**:
 
@@ -17,7 +17,7 @@ boardroom execution-stop --project <project-id> --id <meeting-id>
 
 One micro is one millionth of a USD. A correction is funded from the same pool once the failed attempt's cost is known. If that cost is unknown (timeout, cancellation, missing usage), the failed attempt's reservation stays committed, the correction is refused and the view or revision stays missing: nothing is fabricated and nothing is replayed.
 
-The ceiling and duration must also admit the largest concurrent batch of ordinary work, the independent analyses. For the example team the smallest funded ceiling is **6.37 USD** and the smallest duration target **390 s**. `execution-configure` and the terminal's `start` refuse anything lower, with these figures, before any request or meeting is created. The floor is high because every call reserves its whole context window; it is not a forecast of the charge, which is released as reliable usage arrives.
+The ceiling and duration must also admit the largest concurrent batch of ordinary work, the independent analyses. For the example team the smallest funded ceiling is **6.37 USD** and the smallest duration target **390 s**. Default `execution-configure` refuses anything lower on an already prepared meeting, before any request. The terminal's `start` checks this before creating its meeting. The floor is high because every call reserves its whole context window; it is not a forecast of the charge, which is released as reliable usage arrives.
 
 For an advanced case, `--input reserves.json` freezes explicit figures, for example `{"revisionMicros":200000,"conclusionMicros":200000,"revisionMs":30000,"conclusionMs":30000}`. Explicit reserves below the computed minimum are accepted for a connection test, but framing, analyses, confrontations, revisions and final views all refuse to start until they match it; `provider-preflight` is exempt. Routes outside the catalog cannot reach a provider, so their reserves remain the caller's. Freeze reserves once; they must fit both the declared ceiling and duration target. Ordinary work cannot spend revision/conclusion pools. A conclusion request (`execution-conclude`) stops ordinary work and preserves the ability to call the conclusion phase; it does not yet generate a conclusion.
 

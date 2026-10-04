@@ -2,6 +2,8 @@
 
 Statut : à réaliser. Dépendance : [plan 02](02-PREMIERE-DECISION-REELLE.md) accepté. Suite : [plan 04](04-REPRISE-ET-INCIDENTS.md). Références : spec §3–5, §7 et §10. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
 
+[Découpage d'implémentation en 10 PR](03-PLAN-IMPLEMENTATION-EN-10-PR.md), établi le 4 octobre 2026 sur `main` après la fusion de la PR #21. L'étude peut avancer ; la livraison de 03 reste conditionnée à l'acceptation réelle de 02.
+
 ## Ce qui devient utilisable
 
 L'utilisateur peut adresser un conseiller, ajouter un fait, répondre à une question, corriger une contrainte, suspendre la réunion et demander une conclusion. La réunion réagit à ces interventions sans mélanger des travaux fondés sur des contextes différents.

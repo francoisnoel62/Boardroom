@@ -1,5 +1,7 @@
 # Plan 01 — technical qualification and isolation limits
 
+This report preserves the Plan 01 probe results. The current build also implements the complete live workflow: see [Plan 02 qualification](plan-02-acceptance.md). `doctor` now reports providers as `implemented-unverified`; the real-account campaign remains pending. The historical blocks below do not mean adapters are absent today.
+
 The tests execute the packaged application on Windows x64, Linux x64 and macOS arm64. `doctor --json`, `trace --output <directory>` and `isolation-check --output <directory>` produce separate technical evidence. None enables model advisers, command tools or MCP adapters.
 
 ## Required and optional probes

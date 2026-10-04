@@ -1,23 +1,47 @@
 ---
 title: Your first real meeting
-description: What the first live meeting will involve once Plan 02 delivers it, and what you can do today instead.
-status: planned
+description: Prepare the implemented live workflow, authorize its calls and keep its pending real-account qualification visible.
+status: preview
 plan: '02'
 ---
 
-import { LinkCard } from '@astrojs/starlight/components';
+import { Aside, LinkCard } from '@astrojs/starlight/components';
 
-Live meetings are not available in this build. This page states what Plan 02 commits to, so you know what to expect; it will become a step-by-step guide once that milestone is accepted.
+The complete live CLI and terminal workflow is implemented. It has passed deterministic tests with the real application, databases, terminal and installed package, replacing only provider HTTP responses. **Plan 02 is not accepted yet:** the complete meeting with real accounts, remote usage and cancellation checks remains pending. See the [qualification record](https://github.com/francoisnoel62/Boardroom/blob/main/docs/plan-02-acceptance.md).
 
-## What Plan 02 commits to
+## Prepare before sending anything
 
-- A real question answered by **three distinct models from at least two providers**, with your own API keys.
-- Independent first analyses, then challenges against specific claims, a revised proposal and final views on that same version.
-- A duration target and a cost ceiling, with partial results labelled as partial.
-- Your decision recorded separately from the advisers' views.
+1. [Build or extract a candidate](/docs/install/). Use `node dist/cli.js` from a checkout, `./boardroom` in a macOS/Linux candidate, or `.\boardroom.cmd` in a Windows candidate.
+2. Follow the [live quickstart](https://github.com/francoisnoel62/Boardroom/blob/main/docs/live-quickstart.md) to create a project, authorize one text source and select its exact saved lines. An initial plan is optional.
+3. Configure the Product Owner, Lead Developer and Marketing Manager with three distinct catalog models from OpenAI and Anthropic. The [route guide](https://github.com/francoisnoel62/Boardroom/blob/main/docs/configuring-routes.md) covers host vaults and explicit session injection. Never put keys in question JSON or command arguments.
+4. Review the dated rates, selected context, duration and USD ceiling. The quickstart starts at zero and refuses execution until you explicitly choose a funded ceiling. For its team, the current catalog requires at least 6.37 USD and 390 seconds of conservative headroom; this is not a forecast of the charge. See [call controls](https://github.com/francoisnoel62/Boardroom/blob/main/docs/controlling-calls.md).
 
-Selected context will then be sent to the providers you configure, under their pricing and terms. Nothing is sent in the current build.
+<Aside type="caution" title="Explicit, potentially billable calls">
+  Live phases send selected text and phase inputs to your configured providers under their pricing and terms. A separate, explicitly authorized preflight exercises each required schema with synthetic inputs and consumes budget. Catalog rates expire after 2026-10-14; refresh the catalog through its documented review before later calls. Local cancellation does not prove zero remote billing.
+</Aside>
 
-## What you can do today
+## Advance the meeting
+
+After preparing the team and `question.json`, the following checkout command opens the terminal and authorizes provider calls when you advance phases. Replace the IDs with those returned by preparation.
+
+```sh
+node dist/cli.js live --project PROJECT_ID --team TEAM_ID --input question.json --output ./exports --allow-provider
+```
+
+| Terminal command | What happens |
+| :--- | :--- |
+| `start` | Freeze the selected context and reserves, ask the PO for framing, then wait for you. |
+| `approve N` | Approve the actual displayed framing version; `correct N FILE` saves a correction requiring approval again. |
+| `analyse` | Ask all three advisers independently on the same factual baseline. |
+| `debate` | Build the proposal, confront sourced objections and preserve revisions. |
+| `views N` | Collect each adviser's view on the exact displayed proposal version. |
+| `decide N deferred REASON` | Save your choice separately; accept, reject or request investigation are also available. |
+| `export` | Write a new plan, memo and sanitized JSON record; review them before sharing. |
+
+During a phase, `inspect`, `history`, `evidence`, `stop`, `conclude` and `export` remain available. `conclude` stops ordinary work; request `views N` explicitly on a saved proposal. Escape/Ctrl+C cancels, settles outstanding work and attempts a partial export. It cannot guarantee that the remote provider stops charging.
+
+Free messages to advisers, scoped context changes, pause/resume and extensions are planned in Plan 03. Missing or stale views remain visible; they never become approval. [Full terminal reference](https://github.com/francoisnoel62/Boardroom/blob/main/docs/interactive-live-terminal.md).
+
+## Try without an account
 
 <LinkCard title="Explore the recorded example" description="See how an objection changes a plan, with no account or key." href="/docs/guides/recorded-example/" />

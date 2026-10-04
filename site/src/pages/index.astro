@@ -263,7 +263,7 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
         <div class="trust-col">
           <h3>Sent to the providers you choose</h3>
           <ul>
-            <li>Selected meeting context, once live meetings exist</li>
+            <li>Selected text and phase inputs, after explicit live-call authorization</li>
             <li>Through the model accounts you configure, at their pricing</li>
           </ul>
           <Claim id="live-meetings" />
@@ -339,7 +339,7 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
           <div class="answer">
             <p>
               The recorded example costs nothing and needs no account. Boardroom itself has no account, subscription or
-              payment. Live meetings will use your own model provider accounts, billed by those providers.
+              payment. Live meetings use your own model provider accounts, billed by those providers.
             </p>
           </div>
         </details>
@@ -368,7 +368,7 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
           <summary>Do I need an API key?</summary>
           <div class="answer">
             <p>
-              Not for the recorded example. Live meetings will use the model keys you supply. Official ChatGPT and Claude
+              Not for the recorded example. The live preview uses the model keys you supply. Official ChatGPT and Claude
               subscription routes are being studied and will be announced only once tested end to end.
             </p>
             <Claim id="live-meetings" />
@@ -378,8 +378,9 @@ const humanDecision = story.humanDecision.charAt(0).toUpperCase() + story.humanD
           <summary>What leaves my machine?</summary>
           <div class="answer">
             <p>
-              Today, nothing: playback makes no model or cloud calls, and the application sends no telemetry. Live
-              meetings will send selected context to the providers you configure. <a href="/docs/your-data/">Read how your data is handled</a>.
+              Recorded playback makes no model or cloud calls, and the application sends no telemetry. Authorized live
+              phases send selected context and phase inputs to the providers you configure. Real-account qualification
+              is pending. <a href="/docs/your-data/">Read how your data is handled</a> · <a href="/docs/first-real-meeting/">Try the live workflow</a>.
             </p>
           </div>
         </details>

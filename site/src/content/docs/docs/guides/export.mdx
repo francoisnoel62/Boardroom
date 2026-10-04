@@ -8,7 +8,9 @@ status: available
 node dist/cli.js export --output .boardroom/exports --data-dir .boardroom/example
 ```
 
-Each export creates a **new** directory named `boardroom-recorded-<operation-id>` containing two UTF-8 Markdown files, `plan.md` and `memo.md`. Existing plans and sources are never overwritten. The memo records the saved evidence identity, the remaining disagreement and the pending human decision.
+Each recorded export creates a **new** directory named `boardroom-recorded-<operation-id>` containing two UTF-8 Markdown files, `plan.md` and `memo.md`. Existing plans and sources are never overwritten. The memo records the saved evidence identity, the remaining disagreement and the pending human decision.
+
+For a live meeting, use `meeting-export --project PROJECT_ID --id MEETING_ID --output ./exports` (add `--with-json` for `meeting.json`), or `export` in the live terminal. The artifacts preserve proposal/view versions, the separate human choice, missing views and known/unknown costs. They filter known keys, but still require review before sharing. [Live export contract](https://github.com/francoisnoel62/Boardroom/blob/main/docs/live-decisions.md).
 
 ## Receipts
 

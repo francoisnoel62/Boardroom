@@ -13,6 +13,7 @@ const tone = (status: string) => status === 'Next' ? 'next' : status.startsWith(
   lede="Nine delivery plans take Boardroom from a recorded example to a public beta. Each status is read from the plan itself and checked in CI, so this page cannot announce progress that has not been accepted."
 >
   <section aria-label="Delivery plans">
+    <p>Plan 02 is the next acceptance gate: its live workflow is implemented, but the real-account campaign remains pending. <a href="/docs/first-real-meeting/">Live preview and its limits</a>.</p>
     <ol class="plans">
       {roadmap.map((plan, index, plans) => {
         const status = publicStatus(plan, index, plans);
@@ -55,7 +56,7 @@ const tone = (status: string) => status === 'Next' ? 'next' : status.startsWith(
   <section aria-labelledby="not-planned">
     <h2 id="not-planned">What is not on the roadmap</h2>
     <ul>
-      <li>A mandatory Boardroom account or a hosted Boardroom backend. Your meetings and documents stay on your machine.</li>
+      <li>A mandatory Boardroom account or hosted Boardroom backend. Saved meetings and documents stay local; authorized live phases send selected context to your model providers.</li>
       <li>A default upload of your data anywhere. Observability (Plan 08) stays optional, locally or in your own Langfuse account.</li>
     </ul>
     <p><a href={sourceUrl('boardroom-plans/BOARDROOM_V1_SPEC.md')} rel="noopener">Source: product specification</a></p>

@@ -70,9 +70,9 @@ export const decisions: Array<EngineeringNote & { tradeoff: string }> = [
 /** Reservations and gaps stated by the acceptance evidence. */
 export const limits: EngineeringNote[] = [
   {
-    title: 'No live model call yet',
-    text: 'Provider streaming and cloud traces were blocked without authorized accounts. The first real meeting is Plan 02.',
-    evidence: ['docs/plan-01-acceptance.md'],
+    title: 'Real-account qualification pending',
+    text: 'OpenAI and Anthropic adapters, protected call bounds and the complete live workflow are implemented. Deterministic HTTP tests do not prove real account access, schema acceptance or remote billing/cancellation.',
+    evidence: ['docs/plan-02-acceptance.md', 'docs/provider-preflight.md'],
   },
   {
     title: 'No tool isolation demonstrated',
@@ -85,9 +85,9 @@ export const limits: EngineeringNote[] = [
     evidence: ['docs/plan-01-acceptance.md'],
   },
   {
-    title: 'Input tested against a fictional stream',
-    text: 'Typing during output was proven against a 200 ms fictional tick, not a long provider transcript.',
-    evidence: ['docs/plan-01-acceptance.md'],
+    title: 'Participation during phases remains limited',
+    text: 'The installed live terminal is tested with external deterministic HTTP streams. During work, inspection, stop, conclusion and export are allowed; free contributions and pause/resume belong to Plan 03.',
+    evidence: ['docs/interactive-live-terminal.md', 'docs/plan-02-acceptance.md'],
   },
   {
     title: 'Release engineering still ahead',

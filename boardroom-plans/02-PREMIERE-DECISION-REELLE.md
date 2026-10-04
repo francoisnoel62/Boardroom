@@ -2,6 +2,8 @@
 
 Statut : à réaliser. Dépendance : [plan 01](01-PARCOURS-LOCAL-INSTALLABLE.md) accepté. Suite : [plan 03](03-PARTICIPATION-HUMAINE.md). Références : spec §3–5, §8, §10–11. [Ordre général](00-ORDRE-ET-DEPENDANCES.md).
 
+Mise à jour du 4 octobre 2026 : les dix incréments et la PR corrective 11 sont fusionnés sur `main` (`ac9111f`). Le parcours déterministe complet est implémenté ; « à réaliser » désigne ici l'acceptation encore ouverte, pas une absence de code. La campagne avec trois modèles réels de deux fournisseurs, ses preuves et les réserves TDD restent à traiter dans le [dossier d'acceptation](../docs/plan-02-acceptance.md). [État des lieux courant](../docs/etat-des-lieux-2026-10-04.md).
+
 ## Ce qui devient utilisable
 
 Avec ses clés API, l'utilisateur pose une question sur un petit contexte texte/Markdown, échange avec trois conseillers, obtient un nouveau plan et un mémo, puis consigne sa décision. La réunion utilise réellement trois modèles distincts de deux fournisseurs au moins.

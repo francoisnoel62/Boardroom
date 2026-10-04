@@ -17,7 +17,7 @@ export interface RoadmapPlan {
 
 export const roadmap: RoadmapPlan[] = [
   { id: '01', title: 'Installable local journey', outcome: 'Install, explore the recorded example, inspect sources and export a plan.', status: 'accepted-with-reservations', file: '01-PARCOURS-LOCAL-INSTALLABLE.md', acceptedOn: '2026-10-03', evidence: 'docs/plan-01-acceptance.md' },
-  { id: '02', title: 'First real decision', outcome: 'Three distinct models from two providers produce an argued plan.', status: 'planned', file: '02-PREMIERE-DECISION-REELLE.md' },
+  { id: '02', title: 'First real decision', outcome: 'Live workflow implemented; acceptance still requires the real three-model, two-provider campaign.', status: 'planned', file: '02-PREMIERE-DECISION-REELLE.md' },
   { id: '03', title: 'Human participation', outcome: 'Intervene, change the context, pause and ask for a conclusion.', status: 'planned', file: '03-PARTICIPATION-HUMAINE.md' },
   { id: '04', title: 'Recovery and incidents', outcome: 'Resume interrupted meetings without replaying completed actions.', status: 'planned', file: '04-REPRISE-ET-INCIDENTS.md' },
   { id: '05', title: 'Knowledge and memory', outcome: 'Work on your documents and reuse retained decisions.', status: 'planned', file: '05-CONNAISSANCE-ET-MEMOIRE.md' },

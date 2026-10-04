@@ -1,6 +1,6 @@
 # Plan 02 — Implémentation en 10 PR
 
-Date : 3 octobre 2026, heure de Bangkok. Base auditée : `f87a42f3c7bc9255e010da95a847344a177cc717`. Statut : PR1–9 qualifiées localement et en CI sur les trois OS ; PR10 implémente la qualification déterministe complète du paquet, avec parcours Windows local vert et résultats finaux dans ses contrôles PR. Aucun appel fournisseur réel effectué ; [acceptation 02 ouverte](../docs/plan-02-acceptance.md). [Preuves des incréments](../docs/plan-02-progress.md).
+Date de conception : 3 octobre 2026, heure de Bangkok. Base initiale : `f87a42f3c7bc9255e010da95a847344a177cc717`. Mise à jour du 4 octobre : PR1–10 et une PR corrective 11 fusionnées sur `main` (`ac9111f`), avec [CI finale verte](https://github.com/francoisnoel62/Boardroom/actions/runs/37205684977) sur les trois OS, producteurs et installations indépendantes. Le découpage original en dix PR reste conservé ci-dessous. Aucun appel fournisseur réel effectué ; [acceptation 02 ouverte](../docs/plan-02-acceptance.md). [Preuves des incréments](../docs/plan-02-progress.md).
 
 Références : [cahier des charges 02](02-PREMIERE-DECISION-REELLE.md), [état des lieux](../docs/etat-des-lieux-2026-10-03.md), [spec §3–5, §8, §10–11](BOARDROOM_V1_SPEC.md), [TDD et README](EXIGENCES-TDD-ET-README.md), [réserves 01](../docs/plan-01-acceptance.md), [direction produit et PR dépendantes](../docs/contributing.md).
 

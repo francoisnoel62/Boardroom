@@ -24,7 +24,9 @@ Ce document est une **piste parallèle** aux neuf plans de livraison, pas un dix
 
 ---
 
-## 1. Point de départ : ce que le site peut promettre aujourd'hui
+## 1. Point de départ historique du 3 octobre 2026
+
+Le tableau ci-dessous conserve les constats au début de la conception, avant les décisions et fusions de la journée. Il ne décrit plus l'état courant. Au 4 octobre, Apache-2.0 est adoptée, le site est hébergé sur Vercel sans mesure d'audience, et le parcours live du plan 02 est implémenté sur `main` avec qualification réelle encore ouverte. Le site doit présenter ce parcours comme **Preview**, expliquer les envois aux fournisseurs après autorisation et conserver **Planned** pour la participation libre de 03. Voir [l'audit courant](../docs/etat-des-lieux-2026-10-04.md) et [l'acceptation 02](../docs/plan-02-acceptance.md). Les exemples de statuts et de texte des sections suivantes décrivent la conception initiale ; le registre actuel est `site/src/data/claims.ts`.
 
 | Fait vérifié dans le dépôt | Conséquence pour le site |
 |---|---|

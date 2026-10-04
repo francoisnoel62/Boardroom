@@ -8,7 +8,9 @@ sources:
   - docs/plan-01-progress.md
 ---
 
-When Boardroom exports a meeting, it writes two files — a plan and a memo — and remembers that it did. The remembering happens in SQLite. The writing happens in the filesystem. Those are two systems, and no transaction spans both.
+This note describes the Plan 01 recorded export. The implemented live export also supports an optional JSON artifact and individual file receipts; see the [live export guide](https://github.com/francoisnoel62/Boardroom/blob/main/docs/live-decisions.md).
+
+When Boardroom exports the recorded meeting, it writes two files — a plan and a memo — and remembers that it did. The remembering happens in SQLite. The writing happens in the filesystem. Those are two systems, and no transaction spans both.
 
 Most applications paper over that gap: write the files, then mark the export done, and hope nothing happens in between. For a decision tool whose value is a trustworthy record, "hope" is the wrong word to find in the design. This note describes what Boardroom does instead.
 

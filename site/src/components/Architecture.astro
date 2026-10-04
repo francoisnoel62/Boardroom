@@ -4,8 +4,8 @@ import { sourceUrl } from '../data/labels.ts';
 <figure class="architecture">
   <p class="visually-hidden">
     The CLI and its Ink renderer call the application service, which owns state in a domain SQLite database with
-    immutable source snapshots and writes each new Markdown plan and decision memo. Separately, the doctor command
-    runs a LangGraph probe against the official SQLite checkpointer.
+    immutable source snapshots and writes each new Markdown plan and decision memo. Live phases use LangGraph
+    checkpoints containing identities; the application controls authorized provider calls and their receipts. The doctor probe stays separate.
   </p>
   <div class="arch" aria-hidden="true">
     <span class="node">CLI · Ink</span>
@@ -15,16 +15,16 @@ import { sourceUrl } from '../data/labels.ts';
     <span class="node">Domain SQLite<small>+ immutable snapshots</small></span>
     <span class="branch">↳</span>
     <span class="node node--output">New Markdown plan + decision memo</span>
-    <span class="node node--probe">doctor</span>
+    <span class="node node--probe">Live phases</span>
     <span class="arrow arrow--probe">→</span>
-    <span class="node node--probe">Separate LangGraph probe</span>
+    <span class="node node--probe">LangGraph<small>phase identities</small></span>
     <span class="arrow arrow--probe">→</span>
     <span class="node node--probe">Official SQLite checkpointer</span>
   </div>
   <figcaption>
     The terminal renders results; the application service owns state.{' '}
     <a href={sourceUrl('docs/architecture.md')} rel="noopener">Architecture and tradeoffs</a>{' · '}
-    <a href={sourceUrl('docs/plan-01-acceptance.md')} rel="noopener">Acceptance evidence</a>
+    <a href={sourceUrl('docs/plan-02-acceptance.md')} rel="noopener">Qualification evidence</a>
   </figcaption>
 </figure>
 

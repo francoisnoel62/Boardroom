@@ -6,7 +6,7 @@ This guide documents the current implementation, setup, and validation. The READ
 
 A local decision workspace for technical founders: a human works with a Product Owner, Lead Developer, and Marketing Manager to turn a proposal into an inspectable plan. Evidence, revised proposals, and unresolved objections stay visible. The human makes the decision.
 
-**Current build: Plan 01 complete; Plan 02 deterministic workflow implemented.** [Start a live decision](live-quickstart.md) with configured API accounts, selected text and an explicit spending ceiling, or explore the fictional example below. [The interactive terminal](interactive-live-terminal.md) drives framing approval, independent analyses, sourced revision, individual views, human decisions and exports. [Qualification evidence](plan-02-acceptance.md) distinguishes installed deterministic checks from the still pending real-account campaign; Plan 02 is not accepted yet.
+**Current build: Plan 01 accepted with reservations; Plan 02 deterministic workflow implemented.** [Start a live decision](live-quickstart.md) with configured API accounts, selected text and an explicit spending ceiling, or explore the fictional example below. [The interactive terminal](interactive-live-terminal.md) drives framing approval, independent analyses, sourced revision, individual views, human decisions and exports. [Qualification evidence](plan-02-acceptance.md) distinguishes installed deterministic checks from the still pending real-account campaign; Plan 02 is not accepted yet.
 
 [Try the local example](#try-the-local-example) · [See the discussion](#an-objection-that-changes-the-plan) · [Architecture](architecture.md) · [Acceptance evidence](plan-01-acceptance.md)
 
@@ -116,7 +116,7 @@ The screen is labeled **Technical validation — fictional stream**. Input stays
 
 For separate technical evidence, `trace --output <directory>` creates a new local JSON file with allowlisted event metadata: sequence, type, time, playback position or export-operation ID. It excludes paths, source/transcript bodies and receipts. Nothing is uploaded. `isolation-check --output <directory>` measures fixed fictional temporary targets and loopback networking, then writes a report; it accepts no arbitrary command or MCP endpoint. Both commands support `--json`.
 
-`doctor --json` explains optional blocks. No embedding runtime/model assets or provider/cloud-trace account is configured in this build. FTS5 and local filtered traces remain available; real streaming must be validated in Plan 02. See the [technical qualification report](technical-qualification.md).
+`doctor --json` explains optional blocks. It reports live providers as `implemented-unverified`; it does not contact your accounts. No embedding runtime/model assets or cloud-trace integration are enabled. FTS5 and local filtered traces remain available; real streaming still requires the Plan 02 account campaign. See the [technical qualification report](technical-qualification.md).
 
 - Playback reads only the bundled fictional source. Source ingestion through the application service requires explicit authorization for the chosen file and project.
 - Saved citations point to a SHA-256 identified revision. Editing the original does not change that snapshot; inspection warns if the original has changed or disappeared.
@@ -136,12 +136,14 @@ The terminal renders results; the application service owns state. Domain records
 ```text
 CLI / Ink → Application service → Domain SQLite + immutable snapshots
                 │
-                └─ New Markdown plan + decision memo
+                ├─ Live LangGraph phases → identity-only SQLite checkpoints
+                ├─ Call controller → authorized OpenAI / Anthropic requests
+                └─ New Markdown plan + decision memo (+ optional live JSON)
 
 doctor → Separate LangGraph probe → Official SQLite checkpointer
 ```
 
-TypeScript, Ink/React, Zod, and a pinned `better-sqlite3` driver underpin this first increment. The official checkpointer is retained with its compatible native driver family. See the [architecture and tradeoffs](architecture.md).
+TypeScript, Ink/React, Zod, and a pinned `better-sqlite3` driver underpin the application. Live graphs use the official checkpointer with its compatible native driver family. See the [architecture and tradeoffs](architecture.md).
 
 ```sh
 npm run typecheck
