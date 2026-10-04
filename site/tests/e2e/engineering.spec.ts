@@ -1,4 +1,11 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
+import { countTests } from '../../src/data/engineering.ts';
+
+// The published figure follows the application suite as it grows; it is recounted here from the same test files.
+const tests = resolve(import.meta.dirname, '../../../tests');
+const testCount = String(countTests(readdirSync(tests).filter(name => name.endsWith('.test.ts')).map(name => readFileSync(resolve(tests, name), 'utf8'))));
 
 test('the engineering page is reachable from the main navigation', async ({ page }) => {
   await page.goto('/');
@@ -9,7 +16,7 @@ test('the engineering page is reachable from the main navigation', async ({ page
 
 test('figures are derived from the repository', async ({ page }) => {
   await page.goto('/engineering/');
-  await expect(page.locator('[data-stat="tests"] [data-value]')).toHaveText('53');
+  await expect(page.locator('[data-stat="tests"] [data-value]')).toHaveText(testCount);
   await expect(page.locator('[data-stat="platforms"] [data-value]')).toHaveText('3');
   await expect(page.locator('[data-stat="platforms"]')).toContainText('Windows x64, Linux x64, macOS arm64');
 });

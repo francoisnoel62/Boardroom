@@ -11,8 +11,9 @@ const terminal = readFileSync(resolve(repo, 'src/terminal-validation.tsx'), 'utf
 test('the reference is read from the help text the CLI prints', () => {
   const help = parseHelp(cli);
   assert.equal(help.title, 'BOARDROOM — local decision workspace');
-  assert.equal(help.usage.length, 13);
-  assert.deepEqual(help.usage[0], { command: 'demo', synopsis: 'boardroom demo [--next]', description: 'Read or resume the recorded example' });
+  // The help grows with the CLI, so the count is not pinned: parseHelp throws on any line it cannot read, which keeps the parse lossless.
+  assert.ok(help.usage.length >= 13);
+  assert.deepEqual(help.usage.find(entry => entry.command === 'demo'), { command: 'demo', synopsis: 'boardroom demo [--next]', description: 'Read or resume the recorded example' });
   assert.deepEqual(help.options, ['--data-dir <directory>', '--terminal (Ink rendering)', '--json', '--help']);
 });
 
@@ -23,6 +24,16 @@ test('commands in the help and commands the CLI accepts are the same set', () =>
 
 test('a command accepted without its own handler is reported, not documented as working', () => {
   assert.deepEqual(handledCommands(cli).withoutHandler, ['status']);
+});
+
+test('handlers written as groups or by prefix are recognised, and an accepted command with none is reported', () => {
+  const source = "if (!['a', 'b', 'c', 'credential-x', 'status'].includes(command)) throw 1;\nif (command === 'a') {}\nelse if (['b', 'c'].includes(command)) {}\nelse if (command.startsWith('credential-')) {}\n";
+  assert.deepEqual(handledCommands(source).withoutHandler, ['status']);
+});
+
+test('a list that only validates arguments is not a handler', () => {
+  const source = "if (!['a', 'b', 'status'].includes(command)) throw 1;\nif (['b'].includes(command) && !values.id) throw 2;\nif (command === 'a') {}\n";
+  assert.deepEqual(handledCommands(source).withoutHandler, ['b', 'status']);
 });
 
 test('documented exit codes are exactly the codes set in the source', () => {

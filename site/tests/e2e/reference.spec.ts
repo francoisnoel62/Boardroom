@@ -1,14 +1,21 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
+import { handledCommands, parseHelp } from '../../src/data/cli.ts';
+
+// Expectations come from the CLI source itself, so the reference test follows the CLI as it grows.
+const cli = readFileSync(resolve(import.meta.dirname, '../../../src/cli.ts'), 'utf8');
 
 test('the CLI reference lists every command from the help text', async ({ page }) => {
   await page.goto('/docs/reference/cli/');
-  await expect(page.locator('[data-command]')).toHaveCount(13);
+  await expect(page.locator('[data-command]')).toHaveCount(parseHelp(cli).usage.length);
   await expect(page.locator('[data-command="demo"]')).toContainText('boardroom demo [--next]');
 });
 
 test('a command the CLI accepts without a handler is flagged instead of documented as working', async ({ page }) => {
   await page.goto('/docs/reference/cli/');
   await expect(page.locator('[data-command="status"] [data-caveat]')).toContainText('prints the help text');
+  await expect(page.locator('[data-caveat]')).toHaveCount(handledCommands(cli).withoutHandler.length);
 });
 
 test('exit codes match the codes set in the source', async ({ page }) => {
