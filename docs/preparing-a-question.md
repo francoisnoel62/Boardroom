@@ -1,6 +1,6 @@
 # Prepare your own question locally
 
-This increment creates real projects and saves a question with immutable text context. **It does not contact model providers or run a debate.** Provider/model labels, duration and monetary ceiling are saved declarations; connections and operational budget enforcement follow in later Plan 02 PRs.
+Preparation creates real projects and saves a question with immutable text context. **These commands do not contact model providers or run a debate.** Provider/model labels, duration and monetary ceiling are saved declarations. To execute a supported route, also configure [protected reserves](controlling-calls.md), [explicit preflight](provider-preflight.md) and [human framing](framing-a-question.md).
 
 A question and selected context are sufficient. An initial plan is optional. The recorded example remains available with its existing commands.
 
@@ -34,7 +34,7 @@ The selected passage is `Team: two engineers; four weeks available for the launc
 - `question` and optional `initialPlan`; `constraints` defaults to an empty list.
 - Optional `language`, otherwise the saved project language.
 - `advisers`: stable IDs, role labels, provider/model identifiers; `proposalAuthorId` must identify one selected adviser. IDs must be unique. This local increment records a configurable selection; it does not certify any provider, model, team size or debate profile.
-- `durationTargetSeconds`: positive integer; `costCeiling`: nonnegative amount and three-uppercase-letter currency label. Zero can be declared. Prices, supported currencies and actual spending controls will be verified when provider calls are implemented.
+- `durationTargetSeconds`: positive integer; `costCeiling`: nonnegative amount and three-uppercase-letter currency label. Zero can be declared. The bounded execution path currently requires USD with at most six decimal places and a supported, current pricing catalog; a preparation alone does not authorize spending.
 - `passages`: saved evidence ID and inclusive 1-based `firstLine` / `lastLine` ranges. Multiple passages/files are supported.
 
 Do not place `projectId` or credentials in this JSON. The CLI takes the project exclusively from `--project` and rejects unknown preparation fields. These are declarative data, not instructions granting filesystem/network/tool access.

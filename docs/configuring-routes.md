@@ -1,12 +1,12 @@
 # Configure routes and protect credentials
 
-Routes and teams can now be configured locally. A route identifies one provider/model pair and declares its capabilities and limitations. **These declarations do not verify a provider account, model availability or pricing. No provider request is implemented yet.** Cost enforcement and actual adapters follow in Plan 02 PRs 3 and 4.
+Routes and teams can be configured locally. A route identifies one provider/model pair and declares its capabilities and limitations. **Declarations do not verify a provider account, model availability or pricing.** [Supported adapters and paid preflight](provider-preflight.md) use a restricted dated catalog; [call control](controlling-calls.md) reserves budget/time before any request. A [PO framing](framing-a-question.md) can then await explicit human approval. The full decision workflow remains under development.
 
 The qualified Plan 02 profile has a Product Owner, Lead Developer and Marketing Manager, three distinct provider/model identities and at least two providers. Adviser IDs are independent of role labels. The PO authors the shared proposal. Other team sizes belong to later implementation of the configurable product vision.
 
 ## Configure a disposable example
 
-From the development checkout, build first with `npm run build`. These fictitious provider/model identifiers exercise local configuration only. Replace them with your chosen routes when adapters become available; declaring an identifier does not make that model accessible.
+From the development checkout, build first with `npm run build`. These fictitious provider/model identifiers exercise local configuration only. Use `route-configure --catalog` with supported pinned identifiers for execution; declaring an arbitrary identifier does not make that model accessible.
 
 ```powershell
 $data = '.boardroom/configured-question'
@@ -40,7 +40,7 @@ node dist/cli.js meeting --project $project.id --id $meeting.id --data-dir $data
 
 Changing a route increments its revision; changing a team increments its revision. Preparation takes a single database snapshot of the selected team and its routes. The saved meeting retains these identities, capability declarations, limitations and opaque credential references after configuration changes. A provider ID cannot be changed under an existing route: create a new route and credential. Existing PR 1 meetings remain readable; preparations without `--team` retain the earlier metadata-only mode and do not become executable profiles.
 
-Preparation revalidates three distinct identities, provider diversity, declared streaming, JSON or JSON Schema output, best-effort cancellation and token usage. Declared tool support is descriptive; tools, commands and MCP remain disabled. Cancellation and usage declarations are not proof of billing behavior; actual checks arrive with the adapters.
+Preparation revalidates three distinct identities, provider diversity, declared streaming, JSON or JSON Schema output, best-effort cancellation and token usage. Declared tool support is descriptive; tools, commands and MCP remain disabled. Cancellation and usage declarations are not proof of billing behavior; the adapter notes describe deterministic checks and the outstanding real-account qualification.
 
 ## Store a key
 

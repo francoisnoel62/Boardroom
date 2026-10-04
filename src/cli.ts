@@ -12,7 +12,8 @@ delete process.env.BOARDROOM_SESSION_KEY;
 const help = `BOARDROOM — local decision workspace
 
 Recorded example: available without an account
-Live meetings: unavailable
+Live meetings: unavailable (full decision workflow)
+PO framing: available with explicit paid access and human approval
 Commands and MCP: unavailable
 Cloud telemetry: off
 
@@ -31,6 +32,11 @@ Usage:
   boardroom meeting-prepare --project <id> --input <json-file> [--team <id>]  Freeze a question and selected passages
   boardroom meeting --project <id> --id <meeting-id>          Inspect a prepared meeting
   boardroom meeting-context --project <id> --id <meeting-id>  Read its frozen text passages
+  boardroom meeting-start --project <id> --id <meeting-id> --allow-provider [--session]  Produce PO framing and wait
+  boardroom meeting-framing --project <id> --id <meeting-id>  Inspect durable framing versions
+  boardroom meeting-approve --project <id> --id <meeting-id> --version <n>  Approve the displayed framing
+  boardroom meeting-correct --project <id> --id <meeting-id> --version <n> --input <json-file>  Save a human correction
+  boardroom meeting-stop --project <id> --id <meeting-id>  Stop and preserve saved framing
   boardroom execution-configure --project <id> --id <meeting-id> --input <json-file>  Freeze protected reserves
   boardroom calls --project <id> --id <meeting-id>  Inspect budgets, time and call receipts
   boardroom execution-stop --project <id> --id <meeting-id>  Stop pending and in-flight work
@@ -72,6 +78,7 @@ try {
       route: { type: 'string' }, team: { type: 'string' }, session: { type: 'boolean' },
       'secret-stdin': { type: 'boolean' },
       catalog: { type: 'boolean' }, adviser: { type: 'string' }, 'allow-provider': { type: 'boolean' },
+      version: { type: 'string' },
     },
   });
   const command = positionals[0];
@@ -90,12 +97,19 @@ try {
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+    if (!['meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new PublicError('Unknown command. Run boardroom --help.');
     }
     if (['route-configure', 'team-configure'].includes(command) && !values.input) throw new PublicError('Configuration requires --input <json-file>.');
     if (command.startsWith('credential-') && !values.route) throw new PublicError('Credential commands require --route <route-id>.');
-    if (values.session && !['credential-check', 'provider-preflight'].includes(command)) throw new PublicError('Session injection requires a credential check or explicit provider operation.');
+    if (values.session && !['credential-check', 'provider-preflight', 'meeting-start'].includes(command)) throw new PublicError('Session injection requires a credential check or explicit provider operation.');
+    if (['meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop'].includes(command)) {
+      if (!values.project || !values.id) throw new PublicError('Framing commands require --project and --id.');
+      if (command === 'meeting-start' && !values['allow-provider']) throw new PublicError('Paid framing requires explicit --allow-provider.');
+      if (['meeting-approve', 'meeting-correct'].includes(command) && (!values.version || !/^[1-9][0-9]*$/.test(values.version)
+        || !Number.isSafeInteger(Number(values.version)))) throw new PublicError('Human agreement/correction requires an explicit --version <positive-integer>.');
+      if (command === 'meeting-correct' && !values.input) throw new PublicError('Correction requires --input <json-file>.');
+    }
     if (command === 'provider-preflight' && (!values.project || !values.id || !values.adviser || !values['allow-provider'])) {
       throw new PublicError('Paid preflight requires --project, --id, --adviser and explicit --allow-provider.');
     }
@@ -120,7 +134,29 @@ try {
     if (command === 'evidence' && !values.id && (values.page || values.block)) throw new PublicError('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (command === 'provider-preflight') {
+      if (['meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop'].includes(command)) {
+        let result;
+        if (command === 'meeting-start') {
+          const meeting = app.getMeeting(values.project!, values.id!);
+          const routeId = meeting.team?.advisers.find(adviser => adviser.id === meeting.proposalAuthorId)?.routeId;
+          if (!routeId) throw new PublicError('Frozen PO route unavailable.');
+          const store = values.session ? new SessionSecretStore() : new HostSecretStore();
+          try {
+            if (values.session) {
+              if (!sessionKey) throw new PublicError('Session injection requires BOARDROOM_SESSION_KEY for this process.');
+              await app.setRouteCredential(routeId, sessionKey, store);
+            }
+            result = await app.startMeeting(values.project!, values.id!, store);
+          } finally { if (store instanceof SessionSecretStore) store.clear(); }
+          if (result.status !== 'awaiting-human') process.exitCode = 2;
+        } else if (command === 'meeting-approve') result = await app.approveFraming(values.project!, values.id!, Number(values.version));
+        else if (command === 'meeting-correct') result = await app.correctFraming(values.project!, values.id!, Number(values.version), JSON.parse(readFileSync(values.input!, 'utf8')));
+        else {
+          if (command === 'meeting-stop') app.stopExecution(values.project!, values.id!);
+          result = await app.inspectMeeting(values.project!, values.id!);
+        }
+        console.log(JSON.stringify(result, null, values.json ? undefined : 2));
+      } else if (command === 'provider-preflight') {
         const meeting = app.getMeeting(values.project!, values.id!);
         const routeId = meeting.team?.advisers.find(adviser => adviser.id === values.adviser)?.routeId;
         if (!routeId) throw new PublicError('Frozen adviser route unavailable.');

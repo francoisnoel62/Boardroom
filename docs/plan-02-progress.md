@@ -1,5 +1,13 @@
 # Plan 02 implementation evidence
 
+## Increment 5 — PO framing behind explicit human approval
+
+Observed red cycles: an analysis reservation succeeded before human agreement; approval API absent; compiled CLI framing command unknown; superseded in-flight analysis timed out instead of cancelling; a response between cancellation polls was still accepted; filtered trace omitted the approved version. Their tests passed after adding the domain approval gate, real graph/CLI, version invalidation at polling/settlement and bounded trace version metadata. A further controller regression reproduced acceptance after a monotonic deadline when the timer callback had not run; settlement now refuses that output while retaining known metering and actual elapsed time.
+
+Ten service/compiled-CLI tests use the actual product LangGraph and SQLite checkpointer, real domain/source files and an external HTTP boundary. They cover question without an initial plan, selected-only prompt content, durable human wait and reopen, correction history, explicit exact-version agreement, stale consent/intention refusal, interrupted process with no replay, invalid source references with one reserved correction, waiting stop with completed work preserved, and domain approval despite a missing checkpoint. A synchronized two-process start produces exactly one PO call/version. A monotonic clock boundary proves human waiting/approval makes no new call and consumes no active duration.
+
+The original controller budget tests now use preflight intents for their isolated admission scenarios: analyses are correctly unavailable until a current framing has been approved. The installed qualification loads the new framing inspection path with the bundled runtime and observes prepared/no-frame/no-checkpoint state; the full installed/live debate journey is still deferred to increments 6–10. [The framing guide](framing-a-question.md) exposes the partial scope and costs. No live user credential, paid model call or Hotelix file is used. Final complete validation is recorded in the PR.
+
 ## Increment 4 — two bounded provider adapters
 
 Official API/model/pricing pages were read on 2026-10-03 before selecting the restricted candidates: OpenAI Responses (`gpt-4.1-mini-2025-04-14`, `gpt-4.1-2025-04-14`) and Anthropic Messages (`claude-haiku-4-5-20251001`). [Route notes](provider-preflight.md) give primary sources, dated rates and exclusions. Catalog expiry is deliberately short. No live account or paid smoke was authorized or used; real availability/cancellation acceptance remains open.
