@@ -59,7 +59,7 @@ export const descriptions = {
     'and the decision stays with you. Records stay on your machine, with no Boardroom account or server; authorized live calls send selected context to your model providers. ' +
     'The current build, qualified on Windows x64, Linux x64 and macOS arm64, plays a recorded example of the whole journey, ' +
     'from proposal to exported plan and memo. The live workflow with three models from two providers is implemented; real-account qualification remains pending. ' +
-    'Free participation during phases and a public beta are planned later.',
+    'Durable contributions begin Plan 03; context revisions, pause/resume and a public beta remain planned.',
 };
 
 export const wordCount = (text: string) => text.split(/\s+/).filter(word => /[\p{L}\p{N}]/u.test(word)).length;

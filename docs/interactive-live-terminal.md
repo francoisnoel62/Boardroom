@@ -22,6 +22,7 @@ Enter submits a typed command. Pasted multiline text remains a draft until Enter
 | `approve N` | Explicitly approve the displayed framing version |
 | `correct N FILE` | Save a complete human framing body from JSON; approval is needed again |
 | `analyse` | Dispatch the three independent analyses |
+| `say ADVISER_ID\|all TEXT`, `participation` | Save a contribution during streams or inspect its delivery; [full guide](human-participation.md) |
 | `debate` | Build, confront and revise the common proposal |
 | `views N` | Collect final individual views on that exact proposal |
 | `decide N ACTION REASON` | Record accepted, rejected, deferred or investigation-requested |
@@ -34,6 +35,6 @@ Enter submits a typed command. Pasted multiline text remains a draft until Enter
 
 Escape/Ctrl+C requests cancellation, waits for settlement, attempts a partial export to the explicit output directory, restores terminal modes and exits with code 130. Cancellation does not establish zero remote billing. Export can fail (for example, unavailable storage); inspect the saved operation/receipts rather than assuming all files exist. Idle `quit` exits normally and does not automatically export.
 
-Streams are labeled provisional until schema/reference validation and domain commit. All three model identities, phase status, proposal/view versions, known cost, held unknown cost, protected reserves and active duration are visible. Missing/stale views never become approvals. The human choice is separate. During a phase only inspection, stop, conclude and export are admitted; free interventions and guided recovery belong to later plans.
+Streams are labeled provisional until schema/reference validation and domain commit. All three model identities, phase status, proposal/view versions, known cost, held unknown cost, protected reserves and active duration are visible. Missing/stale views never become approvals. The human choice is separate. During a phase, contributions, participation inspection, other inspection, stop, conclude and export are admitted. Structural interventions and guided recovery belong to later increments.
 
 Five real OS PTY scenarios cover the full journey, three simultaneous streams, Unicode/multiline drafts and resizing, Ctrl+C and Escape, zero-budget refusal without HTTP, early conclusion, a missing view alongside insufficient evidence, long saved history and partial exports. Internal graphs, SQLite and filesystem remain real. [Installed qualification](plan-02-acceptance.md) adds the full journey with the bundled runtime and retained artifacts.

@@ -86,7 +86,7 @@ export const limits: EngineeringNote[] = [
   },
   {
     title: 'Participation during phases remains limited',
-    text: 'The installed live terminal is tested with external deterministic HTTP streams. During work, inspection, stop, conclusion and export are allowed; free contributions and pause/resume belong to Plan 03.',
+    text: 'The installed live terminal is tested with external deterministic HTTP streams. During work, durable contributions, inspection, stop, conclusion and export are allowed. Context revisions and pause/resume remain later Plan 03 increments.',
     evidence: ['docs/interactive-live-terminal.md', 'docs/plan-02-acceptance.md'],
   },
   {

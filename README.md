@@ -122,7 +122,7 @@ You can also [prepare your own question locally](docs/preparing-a-question.md) a
 
 [Configure your advisers and protected credentials](docs/configuring-routes.md) before deliberately authorizing any paid request.
 
-During a running phase you can inspect, stop, request conclusion or export. Free contributions, scoped context changes, pause/resume and explicit extensions are the next participation milestone; they are not available yet. [Current project assessment](docs/etat-des-lieux-2026-10-04.md).
+During a running phase you can [send a durable contribution to an adviser](docs/human-participation.md), inspect, stop, request conclusion or export. Contributions wait for the recipient's next eligible work and preserve the inputs already sent. Scoped context changes, pause/resume and explicit extensions remain later participation increments. [Development evidence and acceptance gate](docs/plan-03-progress.md).
 
 If this is a problem you want to help solve, [build with us](docs/contributing.md). Bring a difficult decision, challenge a product assumption, or help engineer the room.
 

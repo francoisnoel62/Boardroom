@@ -34,6 +34,8 @@ Usage:
   boardroom meeting-prepare --project <id> --input <json-file> [--team <id>]  Freeze a question and selected passages
   boardroom meeting --project <id> --id <meeting-id>          Inspect a prepared meeting
   boardroom meeting-context --project <id> --id <meeting-id>  Read its frozen text passages
+  boardroom meeting-say --project <id> --id <meeting-id> --input <command-json>  Queue a durable human contribution
+  boardroom meeting-participation --project <id> --id <meeting-id>  Inspect contributions and delivery inputs
   boardroom meeting-start --project <id> --id <meeting-id> --allow-provider [--session]  Produce PO framing and wait
   boardroom meeting-framing --project <id> --id <meeting-id>  Inspect durable framing versions
   boardroom meeting-approve --project <id> --id <meeting-id> --version <n>  Approve the displayed framing
@@ -110,7 +112,7 @@ try {
     console.log(values.json ? JSON.stringify({ mode: 'technical-isolation-validation', path })
       : `Technical isolation report: ${path}\nCommands and MCP remain unavailable.`);
   } else {
-    if (!['live', 'meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export', 'meeting-debate', 'meeting-proposals', 'meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
+    if (!['meeting-say', 'meeting-participation', 'live', 'meeting-views', 'meeting-final-views', 'meeting-decide', 'meeting-decision', 'meeting-export', 'meeting-debate', 'meeting-proposals', 'meeting-analyse', 'meeting-analyses', 'meeting-start', 'meeting-framing', 'meeting-approve', 'meeting-correct', 'meeting-stop', 'provider-preflight', 'execution-configure', 'calls', 'execution-stop', 'execution-conclude', 'route-configure', 'team-configure', 'configuration', 'credential-set', 'credential-check', 'credential-delete', 'project-create', 'project', 'source', 'meeting-prepare', 'meeting', 'meeting-context', 'demo', 'evidence', 'export', 'status', 'doctor', 'document', 'history', 'decision', 'trace'].includes(command) || positionals.length !== 1) {
       throw new PublicError('Unknown command. Run boardroom --help.');
     }
     if (['route-configure', 'team-configure'].includes(command) && !values.input) throw new PublicError('Configuration requires --input <json-file>.');
@@ -146,7 +148,14 @@ try {
     if (command === 'evidence' && !values.id && (values.page || values.block)) throw new PublicError('A document locator requires --id <evidence-id>.');
     const app = new Boardroom(values['data-dir'] ?? defaultDataDirectory());
     try {
-      if (command === 'live') {
+      if (command === 'meeting-say' || command === 'meeting-participation') {
+        if (!values.project || !values.id) throw new PublicError('Participation requires --project and --id.');
+        if (command === 'meeting-say' && !values.input) throw new PublicError('Contribution requires --input <command-json>.');
+        const input = command === 'meeting-say' ? JSON.parse(readFileSync(values.input!, 'utf8')) : undefined;
+        if (input && ((input.projectId && input.projectId !== values.project) || (input.meetingId && input.meetingId !== values.id))) throw new PublicError('Command belongs to a different project or meeting.');
+        const result = input ? app.contribute({ ...input, projectId: values.project, meetingId: values.id }) : app.inspectParticipation(values.project, values.id);
+        console.log(JSON.stringify(result, null, values.json ? undefined : 2));
+      } else if (command === 'live') {
         if (!process.stdin.isTTY || !process.stdout.isTTY) throw new PublicError('Live terminal requires an interactive TTY.');
         if (!values.project || !values.output || !values['allow-provider'] || (!values.id && (!values.input || !values.team))) throw new PublicError('Live terminal requires project, output, explicit --allow-provider and a saved meeting or team/input.');
         const store = values.session ? new SessionSecretStore() : new HostSecretStore();

@@ -132,7 +132,7 @@ export class LiveDecision {
       debate = await this.app.inspectDebate(project, id), finalViews = await this.inspectViews(project, id);
     const decisions = this.all('human-decision').map(value => HumanDecisionSchema.parse(value)).filter(d => d.meetingId === id);
     return { projectId: project, meetingId: id, question: meeting.question, language: meeting.language, constraints: meeting.constraints,
-      context: meeting.context, framing, analyses, debate, finalViews, decisions, decision: decisions.at(-1),
+      context: meeting.context, framing, analyses, debate, finalViews, decisions, decision: decisions.at(-1), participation: this.app.inspectParticipation(project, id),
       calls: this.load('execution', id) ? this.app.callLedger(project, id) : null,
       status: decisions.length > 0 && finalViews.advisers.every(a => a.status === 'current') && this.load('execution', id)?.status !== 'stopped' ? 'complete' : 'partial' };
   }
@@ -155,7 +155,7 @@ export class LiveDecision {
         analyses: this.all('analysis').map(v => AnalysisSchema.parse(v)).filter(a => a.meetingId === id), analysisStates, debateStates,
         proposals, proposal: proposals.at(-1) ?? null,
         confrontations: this.all('confrontation').map(v => ConfrontationSchema.parse(v)).filter(c => c.meetingId === id),
-        finalViews: views, decisions, decision: decisions.at(-1) ?? null, calls };
+        finalViews: views, decisions, decision: decisions.at(-1) ?? null, calls, participation: this.app.inspectParticipation(project, id) };
     })();
     const sanitized = await this.app.redactExport(project, id, snapshot, store), content = { ...sanitized.value, secretScan: sanitized.secretScan, reviewBeforeSharing: true };
     const root = resolve(output), operationId = randomUUID(), directory = join(root, `boardroom-live-${operationId}`), plan = join(directory, 'plan.md'), memo = join(directory, 'memo.md');
@@ -178,6 +178,7 @@ export class LiveDecision {
       `## Objections, including rejected and unresolved amendments\n\n${content.confrontations.map(c => `${c.adviserId}, round ${c.round}, proposal v${c.proposalVersion}, ${c.status}\n${JSON.stringify(c.body)}`).join('\n\n') || 'No confrontation completed.'}`,
       `## Individual final views\n\n${content.finalViews.advisers.map(a => `${a.adviserId}: ${a.status}${a.view ? ` | ${a.view.body.verdict} | confidence ${a.view.body.confidence}/100 (declared assurance) | ${a.view.route.providerId}/${a.view.route.modelId} | proposal v${a.view.body.proposalVersion}\n${JSON.stringify(a.view.body)}` : ' | no opinion received'}`).join('\n\n')}\n\nConfidence is not a probability or a decision weight. Missing/stale views are never approvals.\n\nHistorical views: ${JSON.stringify(content.finalViews.views)}`,
       `## Human decisions\n\n${JSON.stringify(content.decisions)}`,
+      `## Human participation\n\n${JSON.stringify(content.participation.contributions)}`,
       `## Selected saved evidence\n\n${content.passages.map(p => `${reference(p)}\n${p.text}`).join('\n\n')}`,
       `## Usage, limits and receipts\n\n${content.calls ? `Known cost: ${content.calls.knownCostMicros} USD micros; held commitments (usage unknown): ${content.calls.committedMicros}.\nActive: ${content.calls.activeMs} ms; committed: ${content.calls.committedMs} ms.\n${JSON.stringify(content.calls)}` : 'Execution not configured; no call receipts available.'}`,
     ];

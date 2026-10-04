@@ -99,7 +99,7 @@ export class CallController {
       this.save('call', receipt.id, receipt);
       this.append({ schemaVersion: 1, projectId: project, meetingId: id, callId: receipt.id, type: 'call.reserved', occurredAt: receipt.createdAt });
     }).immediate();
-    return { receipt, execute: (request: CallRequest, provider: ProviderBoundary) => this.execute(receipt.id, request, provider) };
+    return { receipt, execute: (request: CallRequest, provider: ProviderBoundary, admit?: (call: CallReceipt, request: CallRequest) => CallRequest) => this.execute(receipt.id, request, provider, admit) };
   }
 
   stop(project: string, id: string, conclude = false) {
@@ -118,7 +118,7 @@ export class CallController {
     }).immediate();
   }
 
-  private async execute(id: string, request: CallRequest, provider: ProviderBoundary) {
+  private async execute(id: string, request: CallRequest, provider: ProviderBoundary, admit?: (call: CallReceipt, request: CallRequest) => CallRequest) {
     let receipt = CallReceiptSchema.parse(this.load('call', id));
     if (typeof request.text !== 'string' || Buffer.byteLength(JSON.stringify(request)) > receipt.limits.maxInputTokens) {
       throw new PublicError('Request exceeds its reserved input bound.');
@@ -129,6 +129,8 @@ export class CallController {
       const execution = ExecutionSchema.parse(this.load('execution', receipt.meetingId));
       if (execution.status === 'stopped' || (execution.status === 'concluding' && receipt.pool !== 'conclusion')) throw new PublicError('Execution no longer accepts this work.');
       if (receipt.status !== 'reserved') throw new PublicError('Call was already attempted; it cannot be replayed.');
+      if (admit) request = admit(receipt, request);
+      if (Buffer.byteLength(JSON.stringify(request)) > receipt.limits.maxInputTokens) throw new PublicError('Request exceeds its reserved input bound.');
       receipt = { ...receipt, status: 'running', clockId: this.clockId, startedMonoMs: this.now() };
       this.save('call', id, receipt);
       this.append({ schemaVersion: 1, projectId: receipt.projectId, meetingId: receipt.meetingId, callId: id, type: 'call.started', occurredAt: new Date().toISOString() });
