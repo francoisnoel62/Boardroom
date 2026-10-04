@@ -73,6 +73,7 @@ const EventEnvelope = z.object({
 });
 
 export const EventSchema = z.discriminatedUnion('type', [
+  EventEnvelope.extend({ type: z.enum(['view.settled', 'human.decided']), meetingId: z.uuid(), version: z.number().int().positive(), adviserId: z.string().optional() }),
   EventEnvelope.extend({ type: z.enum(['debate.started', 'proposal.completed', 'confrontation.settled']), meetingId: z.uuid(), version: z.number().int().positive(), adviserId: z.string().optional() }),
   EventEnvelope.extend({ type: z.enum(['analysis.started', 'analysis.settled', 'analysis.finished']), meetingId: z.uuid(), version: z.number().int().positive(), adviserId: z.string().optional() }),
   EventEnvelope.extend({ type: z.enum(['execution.configured', 'execution.stopped', 'execution.conclusion-requested']), meetingId: z.uuid() }),
@@ -97,9 +98,10 @@ export type EventInput = WithoutSequence<DomainEvent>;
 
 export const ExportOperationSchema = z.object({
   schemaVersion: z.literal(1), id: z.string().uuid(), projectId: z.string(), meetingId: z.string(),
-  type: z.literal('recorded.export'), status: z.enum(['unconfirmed', 'completed', 'failed']),
+  type: z.enum(['recorded.export', 'live.export']), status: z.enum(['unconfirmed', 'completed', 'failed']),
   createdAt: z.iso.datetime(), startedAt: z.iso.datetime().optional(), finishedAt: z.iso.datetime().optional(),
   directory: z.string(), plan: z.string(), memo: z.string(),
+  json: z.string().optional(),
   errorCode: z.string().optional(),
   receipts: z.array(z.object({ path: z.string(), sha256: z.string().regex(/^[a-f0-9]{64}$/) })),
 });

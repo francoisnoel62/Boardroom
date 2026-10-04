@@ -23,6 +23,9 @@ import { FramingStateSchema, type FramingBody } from './framing-domain.ts';
 import type { LiveFraming } from './live-framing.ts';
 import type { LiveDeliberation } from './live-deliberation.ts';
 import type { LiveDebate } from './live-debate.ts';
+import type { LiveDecision } from './live-decision.ts';
+import type { HumanDecisionInput } from './decision-domain.ts';
+import { ProposalVersionSchema } from './deliberation-domain.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -31,12 +34,15 @@ export class Boardroom {
   private readonly db: Database.Database;
   private readonly calls: CallController;
   private readonly http: typeof fetch;
+  private readonly exportSecrets = new Set<string>();
   private framing?: LiveFraming;
   private framingLoading?: Promise<LiveFraming>;
   private deliberation?: LiveDeliberation;
   private deliberationLoading?: Promise<LiveDeliberation>;
   private debate?: LiveDebate;
   private debateLoading?: Promise<LiveDebate>;
+  private decision?: LiveDecision;
+  private decisionLoading?: Promise<LiveDecision>;
   readonly dataDirectory: string;
 
   constructor(dataDirectory: string, options: { monotonicNow?: () => number; fetch?: typeof fetch } = {}) {
@@ -45,12 +51,16 @@ export class Boardroom {
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
     this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow,
       (project, id, input) => {
-        if (!['analysis', 'revision', 'confrontation'].includes(input.phase)) return;
+        if (!['analysis', 'revision', 'confrontation'].includes(input.phase) && !(input.phase === 'conclusion' && input.framingVersion !== undefined)) return;
         this.getMeeting(project, id);
         const state = FramingStateSchema.safeParse(this.load('framing-state', id));
         if (!state.success || state.data.status !== 'approved' || state.data.approvedVersion !== state.data.latestVersion
           || (input.phase !== 'analysis' && input.framingVersion !== state.data.approvedVersion)
           || (input.phase === 'analysis' && input.subjectVersion !== state.data.approvedVersion)) throw new PublicError('Work requires the current approved framing.');
+        if (input.phase === 'conclusion') {
+          const latest = this.all('live-proposal').map(value => ProposalVersionSchema.parse(value)).filter(p => p.meetingId === id).at(-1);
+          if (latest?.version !== input.subjectVersion || latest.framingVersion !== input.framingVersion) throw new PublicError('Final view requires the current frozen proposal.');
+        }
       });
     this.http = options.fetch ?? globalThis.fetch;
   }
@@ -109,6 +119,41 @@ export class Boardroom {
   }
   async debateMeeting(project: string, id: string, store: SecretStore) { return (await this.debateService()).debate(project, id, store); }
   async inspectDebate(project: string, id: string) { return (await this.debateService()).inspect(project, id); }
+  private decisionService() {
+    this.decisionLoading ??= import('./live-decision.ts').then(({ LiveDecision }) => {
+      this.decision = new LiveDecision(this.db, this, event => this.appendEvent(event)); return this.decision;
+    });
+    return this.decisionLoading;
+  }
+  async collectFinalViews(project: string, id: string, version: number, store: SecretStore) { return (await this.decisionService()).collect(project, id, version, store); }
+  async inspectFinalViews(project: string, id: string) { return (await this.decisionService()).inspectViews(project, id); }
+  async recordHumanDecision(project: string, id: string, input: HumanDecisionInput) { return (await this.decisionService()).record(project, id, input); }
+  async inspectLiveDecision(project: string, id: string) { return (await this.decisionService()).inspect(project, id); }
+  async prepareLiveExport(project: string, id: string, output: string, options: { json?: boolean } = {}, store?: SecretStore) {
+    return (await this.decisionService()).prepareExport(project, id, output, options, store);
+  }
+  async exportLiveMeeting(project: string, id: string, output: string, options: { json?: boolean } = {}, store?: SecretStore) {
+    return (await this.prepareLiveExport(project, id, output, options, store)).execute();
+  }
+  async redactExport<T>(project: string, id: string, value: T, store?: SecretStore) {
+    const secrets = new Set(this.exportSecrets);
+    let scan: 'known-credentials' | 'partial' = 'known-credentials';
+    if (!store) { const { HostSecretStore } = await import('./secrets.ts'); store = new HostSecretStore(); }
+    for (const route of this.getMeeting(project, id).team?.routes ?? []) {
+      try { const secret = await store.get(route.credentialRef); if (secret) secrets.add(secret); }
+      catch { scan = 'partial'; }
+    }
+    const clean = (node: any): any => {
+      if (typeof node === 'string') {
+        for (const secret of [...secrets].sort((a, b) => b.length - a.length)) node = node.split(secret).join('[REDACTED]');
+        return node.replace(/\bsk-[A-Za-z0-9_-]{12,}\b/g, '[REDACTED]').replace(/Bearer\s+[A-Za-z0-9._-]{12,}/g, 'Bearer [REDACTED]');
+      }
+      if (Array.isArray(node)) return node.map(clean);
+      if (node && typeof node === 'object') return Object.fromEntries(Object.entries(node).map(([key, child]) => [key, clean(child)]));
+      return node;
+    };
+    return { value: clean(value) as T, secretScan: scan, reviewBeforeSharing: true as const };
+  }
 
   configureSupportedRoute(input: { id: string; providerId: string; modelId: string }) {
     return this.configureRoute(supportedRoute(input));
@@ -167,6 +212,7 @@ export class Boardroom {
     try { key = await store.get(route.credentialRef); }
     catch { throw new PublicError('Protected credential store unavailable. Use explicit session injection.'); }
     if (!key) throw new PublicError('Credential unavailable for the frozen route.');
+    this.exportSecrets.add(key);
     const jsonSchema = z.toJSONSchema(output.schema) as Record<string, unknown>;
     // Provider schemas constrain shape. The original Zod schema still enforces local value bounds.
     const removeUnsupportedBounds = (node: any) => {
@@ -251,6 +297,7 @@ export class Boardroom {
   async setRouteCredential(id: string, secret: string, store: SecretStore): Promise<void> {
     const route = this.getRoute(id);
     const token = validateSecret(secret);
+    this.exportSecrets.add(token);
     try { await store.set(route.credentialRef, token); }
     catch { throw new PublicError('Protected credential store unavailable. Use explicit session injection.'); }
     this.invalidateRouteVerification(id);
@@ -678,5 +725,5 @@ export class Boardroom {
       .run(kind, id, JSON.stringify(value));
   }
 
-  close(): void { this.debate?.close(); this.deliberation?.close(); this.framing?.close(); this.db.close(); }
+  close(): void { this.exportSecrets.clear(); this.decision?.close(); this.debate?.close(); this.deliberation?.close(); this.framing?.close(); this.db.close(); }
 }
