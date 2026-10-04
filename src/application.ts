@@ -15,6 +15,10 @@ import { LiveProjectSchema, ProjectInputSchema, MeetingInputSchema, LiveMeetingS
 import { RouteInputSchema, ProviderRouteSchema, TeamInputSchema, TeamSchema, validateTeamRoutes,
   type RouteInput, type TeamInput, type FrozenTeam } from './routes.ts';
 import { validateSecret, type SecretStore } from './secrets.ts';
+import { z } from 'zod';
+import { supportedRoute, supportedModel } from './providers/catalog.ts';
+import { providerBoundary } from './providers/http.ts';
+import type { CallReceipt } from './call-domain.ts';
 
 const hash = (content: Buffer) => createHash('sha256').update(content).digest('hex');
 
@@ -22,13 +26,15 @@ const hash = (content: Buffer) => createHash('sha256').update(content).digest('h
 export class Boardroom {
   private readonly db: Database.Database;
   private readonly calls: CallController;
+  private readonly http: typeof fetch;
   readonly dataDirectory: string;
 
-  constructor(dataDirectory: string, options: { monotonicNow?: () => number } = {}) {
+  constructor(dataDirectory: string, options: { monotonicNow?: () => number; fetch?: typeof fetch } = {}) {
     this.dataDirectory = resolve(dataDirectory);
     mkdirSync(this.dataDirectory, { recursive: true });
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
     this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow);
+    this.http = options.fetch ?? globalThis.fetch;
   }
 
   configureExecution(projectId: string, meetingId: string, input: Reserves) { return this.calls.configure(projectId, meetingId, input); }
@@ -36,6 +42,75 @@ export class Boardroom {
   callLedger(projectId: string, meetingId: string) { return this.db.transaction(() => this.calls.ledger(projectId, meetingId))(); }
   stopExecution(projectId: string, meetingId: string) { return this.calls.stop(projectId, meetingId); }
   requestConclusion(projectId: string, meetingId: string) { return this.calls.stop(projectId, meetingId, true); }
+
+  configureSupportedRoute(input: { id: string; providerId: string; modelId: string }) {
+    return this.configureRoute(supportedRoute(input));
+  }
+
+  async preflight(projectId: string, meetingId: string, adviserId: string, store: SecretStore) {
+    const meeting = this.getMeeting(projectId, meetingId);
+    const adviser = meeting.team?.advisers.find(item => item.id === adviserId);
+    const route = meeting.team?.routes.find(item => item.id === adviser?.routeId);
+    if (!route) throw new PublicError('Frozen adviser route unavailable.');
+    const model = supportedModel(route.providerId, route.modelId);
+    const result = await this.callStructured(projectId, meetingId, { adviserId, phase: 'preflight', contextVersion: 1,
+      subjectVersion: 1, pool: 'work', limits: { maxInputTokens: model.context, maxOutputTokens: 256, maxDurationMs: 30000 } },
+      { text: 'This is an explicitly authorized connection test. Return {"ok":true}.', schema: z.strictObject({ ok: z.literal(true) }) }, store);
+    const verified = result.value?.ok === true && result.receipts.every(receipt => receipt.knownCostMicros !== undefined);
+    if (verified) this.db.transaction(() => {
+      const current = this.getRoute(route.id);
+      if (current.revision === route.revision) this.save('provider-route', route.id, {
+        ...current, verification: 'verified', verifiedAt: new Date().toISOString(),
+      });
+    }).immediate();
+    return { routeId: route.id, modelId: route.modelId, verified, receipts: result.receipts };
+  }
+
+  async callStructured<T>(projectId: string, meetingId: string, input: CallInput,
+    output: { text: string; schema: z.ZodType<T>; validate?: (value: T) => boolean }, store: SecretStore,
+    emit?: (text: string) => void): Promise<{ value?: T; receipts: CallReceipt[] }> {
+    const meeting = this.getMeeting(projectId, meetingId);
+    const adviser = meeting.team?.advisers.find(item => item.id === input.adviserId);
+    const route = meeting.team?.routes.find(item => item.id === adviser?.routeId);
+    if (!route) throw new PublicError('Frozen adviser route unavailable.');
+    const model = supportedModel(route.providerId, route.modelId);
+    if (input.limits.maxInputTokens < model.context || input.limits.maxOutputTokens > model.output
+      || JSON.stringify(route.pricing) !== JSON.stringify(model.pricing)) throw new PublicError('Provider call requires the current catalog price and full-context input bound.');
+    let key: string | undefined;
+    try { key = await store.get(route.credentialRef); }
+    catch { throw new PublicError('Protected credential store unavailable. Use explicit session injection.'); }
+    if (!key) throw new PublicError('Credential unavailable for the frozen route.');
+    const jsonSchema = z.toJSONSchema(output.schema) as Record<string, unknown>;
+    // Provider schemas constrain shape. The original Zod schema still enforces local value bounds.
+    const removeUnsupportedBounds = (node: any) => {
+      if (!node || typeof node !== 'object') return;
+      for (const name of ['$schema', 'minimum', 'maximum', 'minLength', 'maxLength', 'minItems', 'maxItems', 'format']) delete node[name];
+      for (const child of Object.values(node)) removeUnsupportedBounds(child);
+    };
+    removeUnsupportedBounds(jsonSchema);
+    const receipts: CallReceipt[] = [];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const handle = this.reserveCall(projectId, meetingId, { ...input,
+        phase: attempt && input.phase === 'framing' ? 'framing-correction' : input.phase });
+      const provider = providerBoundary(route, handle.receipt, key, this.http);
+      let value: T | undefined;
+      const result = await handle.execute({ text: output.text + (attempt ? '\nPrevious output was invalid. Return one complete object matching the schema and valid context references.' : ''), jsonSchema },
+        async (request, signal, stream) => {
+          const response = await provider(request, signal, text => { stream(text); emit?.(text); });
+          if (!response.failure) {
+            try {
+              value = output.schema.parse(JSON.parse(response.text));
+              if (output.validate && !output.validate(value)) throw new Error('Invalid references.');
+            } catch { value = undefined; return { ...response, failure: 'invalid-output' }; }
+          }
+          return response;
+        });
+      receipts.push(result.receipt);
+      if (result.receipt.status === 'completed' && value !== undefined) return { value, receipts };
+      if (result.receipt.reason !== 'invalid-output') break;
+    }
+    return { receipts };
+  }
 
   capabilities() {
     return {
@@ -89,12 +164,21 @@ export class Boardroom {
     const token = validateSecret(secret);
     try { await store.set(route.credentialRef, token); }
     catch { throw new PublicError('Protected credential store unavailable. Use explicit session injection.'); }
+    this.invalidateRouteVerification(id);
   }
 
   async deleteRouteCredential(id: string, store: SecretStore): Promise<void> {
     const route = this.getRoute(id);
     try { await store.delete(route.credentialRef); }
     catch { throw new PublicError('Protected credential store unavailable.'); }
+    this.invalidateRouteVerification(id);
+  }
+
+  private invalidateRouteVerification(id: string) {
+    this.db.transaction(() => {
+      const { verifiedAt: _previous, ...route } = this.getRoute(id);
+      this.save('provider-route', id, { ...route, verification: 'unverified' });
+    }).immediate();
   }
 
   async routeCredentialStatus(id: string, store: SecretStore) {

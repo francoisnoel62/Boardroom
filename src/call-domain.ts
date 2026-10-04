@@ -31,12 +31,13 @@ export const CallReceiptSchema = CallFieldsSchema.extend({ schemaVersion: z.lite
   knownCostMicros: money.optional(), usage: UsageSchema.optional(),
   clockId: z.uuid().optional(), startedMonoMs: z.number().nonnegative().optional(), finishedMonoMs: z.number().nonnegative().optional(),
   elapsedMs: z.number().nonnegative().optional(), finishedAt: z.iso.datetime().optional(),
-  reason: z.enum(['success', 'provider-error', 'cancelled', 'timeout', 'invalid-output', 'invalid-usage', 'not-started']).optional(),
+  reason: z.enum(['success', 'provider-error', 'cancelled', 'timeout', 'invalid-output', 'invalid-usage', 'not-started', 'refusal', 'truncated', 'tool-blocked', 'authentication', 'quota', 'identity-mismatch']).optional(),
   streamedBytes: z.number().int().nonnegative().default(0),
 }).refine(correctPool, 'Phase cannot spend this protected pool.');
 export type CallReceipt = z.infer<typeof CallReceiptSchema>;
 export interface CallRequest { text: string; jsonSchema?: Record<string, unknown> }
-export interface ProviderResult { text: string; usage?: { inputTokens: number; outputTokens: number } }
+export interface ProviderResult { text: string; usage?: { inputTokens: number; outputTokens: number };
+  failure?: 'provider-error' | 'refusal' | 'truncated' | 'tool-blocked' | 'authentication' | 'quota' | 'identity-mismatch' | 'invalid-output' }
 export type ProviderBoundary = (request: CallRequest, signal: AbortSignal, emit: (text: string) => void) => Promise<ProviderResult>;
 
 export function tokenCost(price: Pricing, input: number, output: number): number {

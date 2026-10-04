@@ -144,7 +144,7 @@ export class CallController {
       } else if (usage.success) {
         receipt = { ...receipt, usage: usage.data, knownCostMicros: tokenCost(receipt.pricing, usage.data.inputTokens, usage.data.outputTokens) };
       }
-      if (result) receipt = { ...receipt, status: 'completed', reason: 'success' };
+      if (result) receipt = { ...receipt, status: result.failure ? 'failed' : 'completed', reason: result.failure ?? 'success' };
     } catch {
       receipt = { ...receipt, status: 'uncertain', reason: controller.signal.aborted ? controller.signal.reason : 'provider-error' };
       result = undefined;
@@ -158,6 +158,6 @@ export class CallController {
       if (receipt.reason === 'invalid-usage') this.stop(receipt.projectId, receipt.meetingId);
       this.append({ schemaVersion: 1, projectId: receipt.projectId, meetingId: receipt.meetingId, callId: id, type: 'call.settled', occurredAt: receipt.finishedAt! });
     }).immediate();
-    return { receipt: CallReceiptSchema.parse(receipt), ...(result ? { text: result.text } : {}) };
+    return { receipt: CallReceiptSchema.parse(receipt), ...(result && !result.failure ? { text: result.text } : {}) };
   }
 }

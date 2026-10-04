@@ -117,7 +117,7 @@ Start with a fictional launch, follow the objection, and inspect the resulting p
 
 You can also [prepare your own question locally](docs/preparing-a-question.md): create a project, select text passages, and keep an inspectable snapshot. Live adviser calls are still under development.
 
-[Call control](docs/controlling-calls.md) freezes protected budgets and time, exposes durable receipts and supports stopping in-flight work. Provider adapters and the human framing workflow follow in the next increments.
+[Call control](docs/controlling-calls.md) freezes protected budgets and time, exposes durable receipts and supports stopping in-flight work. [Explicit paid preflight](docs/provider-preflight.md) supports bounded OpenAI and Anthropic text routes. The human framing workflow follows in the next increment; actual provider/account qualification remains open.
 
 [Configure your advisers and protected credentials](docs/configuring-routes.md) before connecting real models in the upcoming increments.
 

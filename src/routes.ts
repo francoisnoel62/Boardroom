@@ -14,7 +14,8 @@ export const RouteInputSchema = z.strictObject({
   pricing: PricingSchema.optional(),
 });
 export const ProviderRouteSchema = RouteInputSchema.extend({
-  revision: z.number().int().positive(), verification: z.literal('unverified'), credentialRef: z.uuid(),
+  revision: z.number().int().positive(), verification: z.enum(['unverified', 'verified']), credentialRef: z.uuid(),
+  verifiedAt: z.iso.datetime().optional(),
 });
 export type RouteInput = z.input<typeof RouteInputSchema>;
 export type ProviderRoute = z.infer<typeof ProviderRouteSchema>;
