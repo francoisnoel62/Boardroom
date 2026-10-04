@@ -116,7 +116,7 @@ Boardroom is for founders, CEOs, and builders who want to assemble the expertise
 
 Start with a fictional launch, follow the objection, and inspect the resulting plan. Setup and current availability live in the guide.
 
-You can also [prepare your own question locally](docs/preparing-a-question.md): create a project, select text passages, and keep an inspectable snapshot. [Live PO framing](docs/framing-a-question.md) can then propose a framing and await your explicit version-specific approval. The complete adviser debate and decision exports remain under development.
+You can also [prepare your own question locally](docs/preparing-a-question.md) and [start a live decision](docs/live-quickstart.md): your approval of the framing, three independent analyses, sourced objections with a versioned revision, individual final views, your own decision and two exports. The whole workflow is implemented and exercised deterministically on Windows, Linux and macOS. **It has not yet been qualified with real provider accounts**, so no real meeting is shown here until one has run ([acceptance status](docs/plan-02-acceptance.md)).
 
 [Call control](docs/controlling-calls.md) freezes protected budgets and time, exposes durable receipts and supports stopping in-flight work. [Explicit paid preflight](docs/provider-preflight.md) supports bounded OpenAI and Anthropic text routes; actual provider/account qualification remains open.
 

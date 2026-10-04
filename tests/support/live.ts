@@ -10,9 +10,16 @@ export function providerResponse(model: string, body: unknown) {
     { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 10 } }, { type: 'message_stop' },
   ] : openaiEvents(text, { model }));
 }
-export async function liveSetup(t: TestContext, override?: (phase: string, request: any, normal: any) => unknown | Promise<unknown>) {
+const syntheticMarker = 'Return exactly this JSON object and nothing else: ';
+/** The reply of a provider that obeys a preflight: it returns the synthetic instance the request carries. */
+export function echoSynthetic(init: RequestInit | undefined) {
+  const wire = JSON.parse(String(init?.body)), prompt: string = wire.input ?? wire.messages[0].content;
+  return providerResponse(wire.model, JSON.parse(prompt.slice(prompt.indexOf(syntheticMarker) + syntheticMarker.length)));
+}
+export async function liveSetup(t: TestContext, override?: (phase: string, request: any, normal: any) => unknown | Promise<unknown>, ceiling?: number) {
   let references: any;
   const sent: { phase: string; request: any }[] = [];
+  const wires: { phase: string; providerId: 'openai' | 'anthropic'; schema: any }[] = [];
   const fixture = providerSetup(t, async (_url, init) => {
     const wire = JSON.parse(String(init?.body)), prompt = wire.input ?? wire.messages[0].content;
     const request = JSON.parse(prompt.split('\n')[1]);
@@ -27,11 +34,12 @@ export async function liveSetup(t: TestContext, override?: (phase: string, reque
       : phase === 'revision' ? { proposal: revised, dispositions: [{ adviserId: 'dev', objectionId: 'capacity', action: 'accepted', reason: 'Staffing supports a smaller pilot.', changedItemIds: ['integrations'] }] }
       : { proposalVersion: request.proposalVersion, proposalSha256: request.proposalSha256, verdict: wire.model.startsWith('claude') ? 'REJECTED' : 'APPROVED', confidence: 70, justification: 'Limited pilot', criticalUncertainty: 'Demand', conditions: ['Measure willingness to pay'], references };
     sent.push({ phase, request });
+    wires.push({ phase, providerId: wire.messages ? 'anthropic' : 'openai', schema: wire.text?.format.schema ?? wire.output_config.format.schema });
     return providerResponse(wire.model, override ? await override(phase, { ...request, model: wire.model }, normal) : normal);
-  });
+  }, undefined, undefined, ceiling);
   references = fixture.meeting.context.passages;
   for (const id of ['po', 'dev', 'marketing']) await fixture.app.setRouteCredential(id, 'DUMMY_PRIVATE_KEY', fixture.store);
   await fixture.app.startMeeting(fixture.project.id, fixture.meeting.id, fixture.store);
   await fixture.app.approveFraming(fixture.project.id, fixture.meeting.id, 1);
-  return { ...fixture, sent };
+  return { ...fixture, sent, wires };
 }

@@ -6,10 +6,11 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { Boardroom } from '../../src/application.ts';
 import { SessionSecretStore } from '../../src/secrets.ts';
+import { catalogInstant } from './clock.ts';
 
-export function providerSetup(t: TestContext, fetch: typeof globalThis.fetch, monotonicNow?: () => number) {
+export function providerSetup(t: TestContext, fetch: typeof globalThis.fetch, monotonicNow?: () => number, now?: () => Date, ceiling = 10) {
   const root = mkdtempSync(join(tmpdir(), 'Boardroom provider '));
-  const app = new Boardroom(root, { fetch, ...(monotonicNow ? { monotonicNow } : {}) });
+  const app = new Boardroom(root, { fetch, ...(monotonicNow ? { monotonicNow } : {}), now: now ?? (() => new Date(catalogInstant())) });
   t.after(() => { app.close(); rmSync(root, { recursive: true, force: true }); });
   const store = new SessionSecretStore();
   for (const [id, providerId, modelId] of [['po', 'openai', 'gpt-4.1-mini-2025-04-14'],
@@ -24,10 +25,9 @@ export function providerSetup(t: TestContext, fetch: typeof globalThis.fetch, mo
   const source = join(root, 'source.md'); writeFileSync(source, 'Two engineers.\nPRIVATE_UNSELECTED');
   const evidence = app.captureSource(project.id, source, { authorized: true });
   const meeting = app.prepareTeamMeeting({ projectId: project.id, teamId: 'team', question: 'First?',
-    constraints: ['Four weeks'], durationTargetSeconds: 600, costCeiling: { amount: 10, currency: 'USD' },
+    constraints: ['Four weeks'], durationTargetSeconds: 600, costCeiling: { amount: ceiling, currency: 'USD' },
     passages: [{ evidenceId: evidence.id, firstLine: 1, lastLine: 1 }] });
-  app.configureExecution(project.id, meeting.id, { revisionMicros: 1000000, conclusionMicros: 1000000,
-    revisionMs: 10000, conclusionMs: 10000 });
+  app.configureExecution(project.id, meeting.id);
   return { app, store, project, meeting, root, evidence };
 }
 

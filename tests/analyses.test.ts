@@ -20,8 +20,9 @@ test('insufficient batch budget refuses all three before HTTP and exposes each m
     calls++; return response(JSON.parse(String(init?.body)).model, frame);
   });
   const bounded = app.prepareTeamMeeting({ projectId: project.id, teamId: 'team', question: 'Budget?', durationTargetSeconds: 600,
-    costCeiling: { currency: 'USD', amount: 3 }, passages: meeting.context.passages.map(({ evidenceId, firstLine, lastLine }) => ({ evidenceId, firstLine, lastLine })) });
-  app.configureExecution(project.id, bounded.id, { revisionMicros: 1000000, conclusionMicros: 1000000, revisionMs: 10000, conclusionMs: 10000 });
+    costCeiling: { currency: 'USD', amount: 4.1 }, passages: meeting.context.passages.map(({ evidenceId, firstLine, lastLine }) => ({ evidenceId, firstLine, lastLine })) });
+  // The funded minimum for this team (see reserves.test.ts) fits the ceiling and the framing call, but not the first analysis batch.
+  app.configureExecution(project.id, bounded.id, { revisionMicros: 851168, conclusionMicros: 2744084, revisionMs: 120000, conclusionMs: 90000 });
   frame = { decisionQuestion: 'Budget?', summary: 'Frame', initialProposal: null, assumptions: [], references: bounded.context.passages };
   for (const id of ['po', 'dev', 'marketing']) await app.setRouteCredential(id, 'KEY', store);
   await app.startMeeting(project.id, bounded.id, store); await app.approveFraming(project.id, bounded.id, 1);
@@ -29,7 +30,7 @@ test('insufficient batch budget refuses all three before HTTP and exposes each m
   assert.equal(result.status, 'incomplete'); assert.equal(calls, 1); assert.equal(result.analyses.length, 0);
   assert.deepEqual(result.outcomes.map(o => [o.adviserId, o.status]), [['po', 'failed'], ['dev', 'failed'], ['marketing', 'failed']]);
   assert.equal(app.callLedger(project.id, bounded.id).calls.length, 1);
-  assert.equal(app.callLedger(project.id, bounded.id).heldReserveMicros, 2000000);
+  assert.equal(app.callLedger(project.id, bounded.id).heldReserveMicros, 3595252);
 });
 
 test('three independent analyses share frozen facts and persist each completion before the slow adviser', async t => {

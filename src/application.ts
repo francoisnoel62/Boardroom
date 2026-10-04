@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import type Database from 'better-sqlite3';
 import { openDomainDatabase } from './local-database.ts';
 import { CallController } from './call-control.ts';
-import type { CallInput, Reserves } from './call-domain.ts';
+import { ExecutionSchema, type CallInput, type Reserves } from './call-domain.ts';
 import { EvidenceSchema, EventSchema, ExportOperationSchema, FixtureSchema, ProjectSchema, RecordedMeetingSchema, RecordedDecisionSchema, type Project, type Evidence, type RecordedMeeting, type EventInput } from './domain.ts';
 import { DocumentLocatorSchema, ExtractionSchema, extractDocument, type DocumentLocator } from './extraction.ts';
 import { LiveProjectSchema, ProjectInputSchema, MeetingInputSchema, LiveMeetingSchema,
@@ -18,6 +18,9 @@ import { validateSecret, type SecretStore } from './secrets.ts';
 import { z } from 'zod';
 import { supportedRoute, supportedModel } from './providers/catalog.ts';
 import { providerBoundary } from './providers/http.ts';
+import { providerSchema } from './providers/schema.ts';
+import { checksFor, syntheticRequest } from './providers/preflight.ts';
+import { assertFundable, phaseLimits, reserveRequirement } from './reserves.ts';
 import type { CallReceipt } from './call-domain.ts';
 import { FramingStateSchema, type FramingBody } from './framing-domain.ts';
 import type { LiveFraming } from './live-framing.ts';
@@ -45,12 +48,13 @@ export class Boardroom {
   private decisionLoading?: Promise<LiveDecision>;
   readonly dataDirectory: string;
 
-  constructor(dataDirectory: string, options: { monotonicNow?: () => number; fetch?: typeof fetch } = {}) {
+  constructor(dataDirectory: string, options: { monotonicNow?: () => number; now?: () => Date; fetch?: typeof fetch } = {}) {
     this.dataDirectory = resolve(dataDirectory);
     mkdirSync(this.dataDirectory, { recursive: true });
     this.db = openDomainDatabase(join(this.dataDirectory, 'domain.sqlite'));
     this.calls = new CallController(this.db, (project, id) => this.getMeeting(project, id), event => this.appendEvent(event), options.monotonicNow,
       (project, id, input) => {
+        this.assertProtectedReserves(project, id, input);
         if (!['analysis', 'revision', 'confrontation'].includes(input.phase) && !(input.phase === 'conclusion' && input.framingVersion !== undefined)) return;
         this.getMeeting(project, id);
         const state = FramingStateSchema.safeParse(this.load('framing-state', id));
@@ -61,11 +65,37 @@ export class Boardroom {
           const latest = this.all('live-proposal').map(value => ProposalVersionSchema.parse(value)).filter(p => p.meetingId === id).at(-1);
           if (latest?.version !== input.subjectVersion || latest.framingVersion !== input.framingVersion) throw new PublicError('Final view requires the current frozen proposal.');
         }
-      });
+      }, options.now);
     this.http = options.fetch ?? globalThis.fetch;
   }
 
-  configureExecution(projectId: string, meetingId: string, input: Reserves) { return this.calls.configure(projectId, meetingId, input); }
+  /** Without `input` the reserves are computed from the frozen team's routes and call bounds; `input` is the advanced override. */
+  configureExecution(projectId: string, meetingId: string, input?: Reserves) {
+    if (input) return this.calls.configure(projectId, meetingId, input);
+    const meeting = this.getMeeting(projectId, meetingId), required = meeting.team && reserveRequirement(meeting.team);
+    if (!required) throw new PublicError('Protected reserves can only be computed for catalog routes; supply them explicitly.');
+    assertFundable(required, meeting.costCeiling, meeting.durationTargetSeconds);
+    return this.calls.configure(projectId, meetingId, required.reserves);
+  }
+  /** Before a team's meeting is even prepared: refuse a ceiling or duration that could never run the workflow. */
+  assertTeamFundable(teamId: string, ceiling: { amount: number; currency: string }, durationTargetSeconds: number) {
+    const stored = this.load('team', teamId);
+    if (!stored) throw new PublicError('Team unavailable.');
+    const team = TeamSchema.parse(stored), required = reserveRequirement({ ...team, routes: team.advisers.map(adviser => this.getRoute(adviser.routeId)) });
+    if (required) assertFundable(required, ceiling, durationTargetSeconds);
+  }
+  /** Declared reserves must at least match what the team's calls need before any phase may spend. */
+  private assertProtectedReserves(project: string, id: string, input: CallInput) {
+    if (input.phase === 'preflight') return;
+    const meeting = this.getMeeting(project, id), required = meeting.team && reserveRequirement(meeting.team);
+    const execution = ExecutionSchema.safeParse(this.load('execution', id));
+    if (!required || !execution.success) return;
+    const held = execution.data, minimum = required.reserves;
+    if (held.revisionMicros < minimum.revisionMicros || held.conclusionMicros < minimum.conclusionMicros
+      || held.revisionMs < minimum.revisionMs || held.conclusionMs < minimum.conclusionMs) {
+      throw new PublicError('Protected reserves are below the funded minimum for this team; freeze computed reserves on a new meeting.');
+    }
+  }
   reserveCall(projectId: string, meetingId: string, input: CallInput) { return this.calls.reserve(projectId, meetingId, input); }
   callLedger(projectId: string, meetingId: string) { return this.db.transaction(() => this.calls.ledger(projectId, meetingId))(); }
   stopExecution(projectId: string, meetingId: string) { return this.haltExecution(projectId, meetingId, false); }
@@ -165,17 +195,24 @@ export class Boardroom {
     const route = meeting.team?.routes.find(item => item.id === adviser?.routeId);
     if (!route) throw new PublicError('Frozen adviser route unavailable.');
     const model = supportedModel(route.providerId, route.modelId);
-    const result = await this.callStructured(projectId, meetingId, { adviserId, phase: 'preflight', contextVersion: 1,
-      subjectVersion: 1, pool: 'work', limits: { maxInputTokens: model.context, maxOutputTokens: 256, maxDurationMs: 30000 } },
-      { text: 'This is an explicitly authorized connection test. Return {"ok":true}.', schema: z.strictObject({ ok: z.literal(true) }) }, store);
-    const verified = result.value?.ok === true && result.receipts.every(receipt => receipt.knownCostMicros !== undefined);
+    // One synthetic call per schema this adviser will receive. The first failure stops the campaign: nothing is retried.
+    const required = checksFor(adviserId === meeting.proposalAuthorId), checks: { name: string; ok: boolean; receiptIds: string[] }[] = [], receipts: CallReceipt[] = [];
+    for (const check of required) {
+      const result = await this.callStructured(projectId, meetingId, { adviserId, phase: 'preflight', contextVersion: 1, subjectVersion: 1, pool: 'work',
+        limits: phaseLimits('preflight', route) }, { text: syntheticRequest(check), schema: check.schema }, store);
+      receipts.push(...result.receipts);
+      const ok = result.value !== undefined && result.receipts.every(receipt => receipt.knownCostMicros !== undefined);
+      checks.push({ name: check.name, ok, receiptIds: result.receipts.map(receipt => receipt.id) });
+      if (!ok) break;
+    }
+    const verified = checks.length === required.length && checks.every(check => check.ok);
     if (verified) this.db.transaction(() => {
       const current = this.getRoute(route.id);
       if (current.revision === route.revision) this.save('provider-route', route.id, {
         ...current, verification: 'verified', verifiedAt: new Date().toISOString(),
       });
     }).immediate();
-    return { routeId: route.id, modelId: route.modelId, verified, receipts: result.receipts };
+    return { routeId: route.id, modelId: route.modelId, verified, checks, receipts };
   }
 
   async callStructured<T>(projectId: string, meetingId: string, input: CallInput,
@@ -214,20 +251,14 @@ export class Boardroom {
     catch { throw new PublicError('Protected credential store unavailable. Use explicit session injection.'); }
     if (!key) throw new PublicError('Credential unavailable for the frozen route.');
     this.exportSecrets.add(key);
-    const jsonSchema = z.toJSONSchema(output.schema) as Record<string, unknown>;
-    // Provider schemas constrain shape. The original Zod schema still enforces local value bounds.
-    const removeUnsupportedBounds = (node: any) => {
-      if (!node || typeof node !== 'object') return;
-      for (const name of ['$schema', 'minimum', 'maximum', 'minLength', 'maxLength', 'minItems', 'maxItems', 'format']) delete node[name];
-      for (const child of Object.values(node)) removeUnsupportedBounds(child);
-    };
-    removeUnsupportedBounds(jsonSchema);
+    // The provider receives only its documented subset; the original Zod schema still enforces every local bound.
+    const jsonSchema = providerSchema(route.providerId, z.toJSONSchema(output.schema) as Record<string, unknown>);
     return async (first: ReturnType<Boardroom['reserveCall']>): Promise<{ value?: T; receipts: CallReceipt[] }> => {
     const receipts: CallReceipt[] = [];
     for (let attempt = 0; attempt < 2; attempt++) {
       const handle = attempt === 0 ? first : this.reserveCall(projectId, meetingId, { ...input,
         phase: attempt && input.phase === 'framing' ? 'framing-correction' : input.phase });
-      const provider = providerBoundary(route, handle.receipt, key, this.http);
+      const provider = providerBoundary(route, handle.receipt, key, this.http, this.calls.pricingDay());
       let value: T | undefined;
       const result = await handle.execute({ text: output.text + (attempt ? '\nPrevious output was invalid. Return one complete object matching the schema and valid context references.' : ''), jsonSchema },
         async (request, signal, stream) => {

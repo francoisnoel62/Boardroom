@@ -1,8 +1,8 @@
-import type { CallReceipt, ProviderBoundary, ProviderResult } from '../call-domain.ts';
+import type { CallReceipt, Diagnostic, ProviderBoundary, ProviderResult } from '../call-domain.ts';
 import type { ProviderRoute } from '../routes.ts';
 import { PublicError } from '../privacy.ts';
 import { validateSecret } from '../secrets.ts';
-import { supportedModel } from './catalog.ts';
+import { pricingIsCurrent, supportedModel } from './catalog.ts';
 
 async function* events(response: Response, signal: AbortSignal) {
   if (!response.body || !response.headers.get('content-type')?.includes('text/event-stream')) throw new Error('Invalid stream.');
@@ -28,11 +28,26 @@ async function* events(response: Response, signal: AbortSignal) {
   } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
 }
 
+const safe = (value: unknown, pattern: RegExp) => typeof value === 'string' && pattern.test(value) ? value : undefined;
+/** HTTP status, the provider's request id and its short error type: enough to report a rejected request, never its body. */
+async function failureDiagnostic(response: Response): Promise<Diagnostic> {
+  const requestId = safe(response.headers.get('request-id') ?? response.headers.get('x-request-id'), /^[A-Za-z0-9_.:-]{1,128}$/);
+  let errorType: string | undefined;
+  try {
+    const reader = response.body?.getReader(), decoder = new TextDecoder('utf-8', { fatal: true });
+    let text = '';
+    while (reader && text.length < 16384) { const { done, value } = await reader.read(); if (done) break; text += decoder.decode(value, { stream: true }); }
+    await reader?.cancel().catch(() => {});
+    const error = JSON.parse(text)?.error;
+    errorType = safe(error?.type, /^[A-Za-z0-9_.-]{1,64}$/) ?? safe(error?.code, /^[A-Za-z0-9_.-]{1,64}$/);
+  } catch { /* An unreadable body adds nothing, and it is never kept. */ }
+  return { httpStatus: response.status, ...(requestId ? { requestId } : {}), ...(errorType ? { errorType } : {}) };
+}
+
 // Only the application service creates this boundary, then passes it to a durable handle.
-export function providerBoundary(route: ProviderRoute, receipt: CallReceipt, secret: string, http: typeof fetch): ProviderBoundary {
+export function providerBoundary(route: ProviderRoute, receipt: CallReceipt, secret: string, http: typeof fetch, utcDay: string): ProviderBoundary {
   const model = supportedModel(route.providerId, route.modelId);
-  const today = new Date().toISOString().slice(0, 10);
-  if (JSON.stringify(route.pricing) !== JSON.stringify(model.pricing) || today < model.pricing.asOf || today > model.pricing.validUntil
+  if (JSON.stringify(route.pricing) !== JSON.stringify(model.pricing) || !pricingIsCurrent(model.pricing, utcDay)
     || receipt.limits.maxInputTokens < model.context || receipt.limits.maxOutputTokens > model.output) {
     throw new PublicError('Provider call requires the current catalog price and full-context input bound.');
   }
@@ -51,8 +66,8 @@ export function providerBoundary(route: ProviderRoute, receipt: CallReceipt, sec
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...(openai
         ? { Authorization: `Bearer ${key}` } : { 'x-api-key': key, 'anthropic-version': '2023-06-01' }) }, body: JSON.stringify(body),
     });
-    if (!response.ok) { await response.body?.cancel(); return { text: '', failure: response.status === 401 || response.status === 403
-      ? 'authentication' : response.status === 429 ? 'quota' : 'provider-error' }; }
+    if (!response.ok) return { text: '', diagnostic: await failureDiagnostic(response), failure: response.status === 401 || response.status === 403
+      ? 'authentication' : response.status === 429 ? 'quota' : 'provider-error' };
     let text = '', input: number | undefined, output: number | undefined, terminal = false, failed: ProviderResult['failure'];
     let started = false, stopReceived = false;
     for await (const event of events(response, signal)) {

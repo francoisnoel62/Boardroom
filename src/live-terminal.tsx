@@ -45,7 +45,7 @@ function Screen({ session, cancelled }: { session: LiveTerminalSession; cancelle
     `Views: ${view?.views ?? '-'} | Human: ${view?.human ?? 'pending'}`,
     view?.viewsDetail ?? '',
     view?.calls ? `USD ceiling ${view.calls.execution.ceilingMicros / 1e6} | known ${view.calls.knownCostMicros / 1e6} | held/unknown ${view.calls.committedMicros / 1e6} | reserve ${view.calls.heldReserveMicros / 1e6}`
-      : `Budget ${view?.ceiling?.amount ?? '-'} ${view?.ceiling?.currency ?? ''}; 10% revision + 10% conclusion, 10%/15% active time reserved at start.`,
+      : `Budget ${view?.ceiling?.amount ?? '-'} ${view?.ceiling?.currency ?? ''}; revision and conclusion reserves are computed from the team's call bounds at start.`,
     view?.calls ? `Execution: ${view.calls.execution.status} | Active ${Math.round(view.calls.activeMs)}ms / ${view.calls.execution.durationTargetMs}ms` : 'Active duration excludes human waiting.',
     `Phase: ${view?.busy || 'human input'} | ${view?.notice ?? ''}`,
   ];

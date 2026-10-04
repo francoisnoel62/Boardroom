@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'zod';
 import { providerSetup, streamResponse, openaiEvents } from './support/providers.ts';
+import { echoSynthetic } from './support/live.ts';
 const schema = z.strictObject({ ok: z.literal(true) });
 const call = (adviserId = 'po') => ({ adviserId, phase: 'preflight' as const, contextVersion: 1 as const,
   subjectVersion: 1, pool: 'work' as const, limits: { maxInputTokens: adviserId === 'dev' ? 200000 : 1047576,
@@ -88,7 +89,7 @@ test('refusal, truncation, tool requests, model substitution and quota never bec
 });
 
 test('connection verification is earned by explicit metered preflight and invalidated by credential replacement', async t => {
-  const { app, store, project, meeting } = providerSetup(t, async () => streamResponse(openaiEvents('{"ok":true}')));
+  const { app, store, project, meeting } = providerSetup(t, async (_url, init) => echoSynthetic(init));
   await app.setRouteCredential('po', 'KEY_ONE', store);
   assert.equal(app.getRoute('po').verification, 'unverified');
   const tested = await app.preflight(project.id, meeting.id, 'po', store);

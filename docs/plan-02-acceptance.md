@@ -2,6 +2,15 @@
 
 **Status: not accepted.** The ten implementation increments deliver the deterministic CLI/terminal workflow. The mandatory complete meeting with three real models from two real providers has not been run. No real credential or paid API request was used in this work. [The original acceptance criteria](../boardroom-plans/02-PREMIERE-DECISION-REELLE.md) remain authoritative.
 
+## Review of 2026-10-04
+
+A two-axis review of the stack found four blockers, now fixed (see [increment 11](plan-02-progress.md)): the rate window judged against the wall clock; Anthropic-incompatible schemas and a preflight too weak to notice; reserves fixed at 10% of the ceiling instead of computed from the team's calls; and an integration with `main` never tested on its final base. It also leaves explicit reservations for acceptance, none of which is hidden:
+
+- **Increment 9 was not test-first for every behavior.** Ctrl+C/Escape in flight, conclusion and missing views are recorded as "additionally covered", not as observed red cycles. This cannot be reconstructed afterwards and stays a written reservation.
+- **The reference `validUntil` of the catalog is 2026-10-14.** Past it the product refuses every provider call. The real campaign must run before then, or after a refreshed review of the providers' documentation (see [refreshing the catalog](provider-preflight.md#refreshing-the-catalog)).
+- **Provider acceptance of the schemas is documented, not observed.** Only the real preflight proves it, and the preflight now exercises every schema.
+- **A reference that exists is not a reference that supports its claim.** The validators check identity, revision, hash and lines. The real meeting must be read for the relevance of the objection and the improvement it brings to the plan, and include a source holding a hostile instruction, a valid but off-topic citation, and contradictory sources.
+
 ## Deterministic campaign
 
 Public-service integration uses real domain SQLite, immutable source files, separate identity-only LangGraph checkpoints, schemas and exports. Spawned CLI/real OS PTY tests replace HTTP externally. Budget tests also inject monotonic time; they do not replace internal control or graphs. [Red/green evidence](plan-02-progress.md) and each dependent PR retain observed failures and final checks.
@@ -31,8 +40,10 @@ The Linux offline image has no desktop vault; it proves explicit session injecti
 
 The [implementation plan](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md) explicitly separates billable qualification from document requirements. To execute it, supply authorized accounts, accessible exact model IDs, an approved envelope for preflight/cancellation tests and a separate meeting envelope, plus distributable selected source content. [The quickstart](live-quickstart.md) prepares the reviewable configuration; its default zero ceiling sends no request.
 
-For each of the three routes, explicitly run metered preflight and verify account/model identity, schema/stream behavior and dated rates. On a disposable meeting, interrupt an in-flight request and compare local receipts with provider-reported usage/billing; unknown usage must stay committed. A local abort cannot certify remote zero billing. Resolve incompatible pricing/metering before promising an operational monetary ceiling.
+The meeting envelope must reach the smallest funded ceiling, 6.37 USD for the quickstart team (see [call control](controlling-calls.md)); the charge actually incurred is far lower, because every call reserves its whole context window and releases the unused part. The preflight and cancellation tests run on separate disposable meetings, each with its own ceiling and the same floor.
 
-Then run the whole installed terminal journey with the authorized context, approve the actual framing yourself, inspect all three independent inputs, a useful source-linked revision, exact-version views, your human decision and both exports. Preserve an expurgated transcript/terminal capture, identity/rate dates, analysis payloads, source version/hash, objection/change chain and metering. Review for unrelated source secrets before any publication. Update this record and the README's concrete example only from those observed results.
+For each of the three routes, explicitly run metered preflight (it sends every schema that adviser will receive, with synthetic data only) and verify account/model identity, schema/stream behavior and dated rates. On a disposable meeting, interrupt an in-flight request and compare local receipts with provider-reported usage/billing; unknown usage must stay committed. A local abort cannot certify remote zero billing. Resolve incompatible pricing/metering before promising an operational monetary ceiling.
+
+Run the real meeting with [the request recorder](live-quickstart.md#recording-the-real-inputs) enabled, so the three initial inputs are inspected from what was actually sent, not from a hash. Then run the whole installed terminal journey with the authorized context, approve the actual framing yourself, inspect all three independent inputs, a useful source-linked revision, exact-version views, your human decision and both exports. Preserve an expurgated transcript/terminal capture, identity/rate dates, analysis payloads, source version/hash, objection/change chain and metering. Review for unrelated source secrets before any publication. Update this record and the README's concrete example only from those observed results.
 
 Until then, real route availability, full-provider usage/cancellation qualification, a distributable real example and milestone acceptance remain open. No release, signing, beta, merge or paid campaign is inferred from publishing these PRs.

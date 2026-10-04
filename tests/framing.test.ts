@@ -6,6 +6,7 @@ import { once } from 'node:events';
 import { unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { providerSetup, streamResponse, openaiEvents } from './support/providers.ts';
+import { catalogInstant } from './support/clock.ts';
 
 test('a question without a plan runs a real checkpointed PO framing and reopens human waiting without another call', async t => {
   let response: string, sent: any, calls = 0;
@@ -103,11 +104,11 @@ test('an interrupted real graph/call reopens as uncertain and cannot be started 
   const { app, store, project, meeting, root } = providerSetup(t, async () => { throw new Error('No replay.'); });
   const program = `import {Boardroom} from ${JSON.stringify(new URL('../src/application.ts', import.meta.url).href)};
     import {SessionSecretStore} from ${JSON.stringify(new URL('../src/secrets.ts', import.meta.url).href)};
-    const app = new Boardroom(process.env.TEST_ROOT, {fetch: async () => {process.send('in-flight'); return new Promise(() => {});}});
+    const app = new Boardroom(process.env.TEST_ROOT, {now: () => new Date(process.env.TEST_UTC_NOW), fetch: async () => {process.send('in-flight'); return new Promise(() => {});}});
     const store = new SessionSecretStore(); await app.setRouteCredential('po','DUMMY_KEY',store);
     setInterval(() => {},1000); await app.startMeeting(process.env.TEST_PROJECT,process.env.TEST_MEETING,store);`;
   child = spawn(process.execPath, ['--input-type=module', '-e', program], { stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
-    env: { ...process.env, TEST_ROOT: root, TEST_PROJECT: project.id, TEST_MEETING: meeting.id } });
+    env: { ...process.env, TEST_ROOT: root, TEST_PROJECT: project.id, TEST_MEETING: meeting.id, TEST_UTC_NOW: catalogInstant() } });
   let stderr = ''; child.stderr!.on('data', chunk => { stderr += chunk; });
   await Promise.race([once(child, 'message'), once(child, 'exit').then(() => { throw new Error(stderr); })]);
   const exited = once(child, 'exit'); child.kill('SIGKILL'); await exited;
@@ -133,7 +134,7 @@ test('invalid/out-of-context JSON fails after one correction; stopping waiting p
   assert.ok(receipts.every(receipt => receipt.reason === 'invalid-output'));
   const next = app.prepareTeamMeeting({ projectId: project.id, teamId: 'team', question: 'Second?', durationTargetSeconds: 600,
     costCeiling: { amount: 10, currency: 'USD' }, passages: meeting.context.passages.map(({ evidenceId, firstLine, lastLine }) => ({ evidenceId, firstLine, lastLine })) });
-  app.configureExecution(project.id, next.id, { revisionMicros: 1000000, conclusionMicros: 1000000, revisionMs: 10000, conclusionMs: 10000 });
+  app.configureExecution(project.id, next.id);
   response = JSON.stringify({ ...body, references: next.context.passages });
   await app.startMeeting(project.id, next.id, store); app.stopExecution(project.id, next.id);
   const stopped = await app.inspectMeeting(project.id, next.id);
@@ -182,7 +183,7 @@ test('two real processes cannot start two PO framings for one meeting', { timeou
   const program = `import {Boardroom} from ${JSON.stringify(new URL('../src/application.ts', import.meta.url).href)};
     import {SessionSecretStore} from ${JSON.stringify(new URL('../src/secrets.ts', import.meta.url).href)};
     const text=process.env.TEST_FRAME; let requests=0;
-    const app=new Boardroom(process.env.TEST_ROOT,{fetch:async()=>{requests++;return new Response([
+    const app=new Boardroom(process.env.TEST_ROOT,{now:()=>new Date(process.env.TEST_UTC_NOW),fetch:async()=>{requests++;return new Response([
       {type:'response.output_text.delta',delta:text},{type:'response.completed',response:{status:'completed',model:'gpt-4.1-mini-2025-04-14',
       usage:{input_tokens:100,output_tokens:10},output:[{type:'message',content:[{type:'output_text',text}]}]}}
       ].map(e=>'data: '+JSON.stringify(e)+'\\n\\n').join(''),{headers:{'Content-Type':'text/event-stream'}});}});
@@ -190,7 +191,7 @@ test('two real processes cannot start two PO framings for one meeting', { timeou
     process.once('message',async()=>{try{const result=await app.startMeeting(process.env.TEST_PROJECT,process.env.TEST_MEETING,store);
       process.send({status:result.status,requests});}catch(error){process.send({error:error.message,requests});}});`;
   for (let i = 0; i < 2; i++) children.push(spawn(process.execPath, ['--input-type=module', '-e', program], {
-    stdio: ['ignore', 'ignore', 'pipe', 'ipc'], env: { ...process.env, TEST_ROOT: root,
+    stdio: ['ignore', 'ignore', 'pipe', 'ipc'], env: { ...process.env, TEST_ROOT: root, TEST_UTC_NOW: catalogInstant(),
       TEST_PROJECT: project.id, TEST_MEETING: meeting.id, TEST_FRAME: JSON.stringify(body) },
   }));
   const reply = (child: typeof children[number]) => {

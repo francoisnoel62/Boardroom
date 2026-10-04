@@ -9,7 +9,7 @@ import { PublicError } from './privacy.ts';
 import { ProposalBodySchema, ProposalVersionSchema, ConfrontationBodySchema, ConfrontationSchema, RevisionBodySchema, DebateStateSchema,
   validProposal, type ProposalVersion } from './deliberation-domain.ts';
 import { validFramingReferences } from './framing-domain.ts';
-import { supportedModel } from './providers/catalog.ts';
+import { phaseLimits } from './reserves.ts';
 import type { Boardroom } from './application.ts';
 import type { SecretStore } from './secrets.ts';
 import type { EventInput } from './domain.ts';
@@ -61,7 +61,7 @@ export class LiveDebate {
     const input = (adviserId: string, phase: 'revision' | 'confrontation', subjectVersion: number) => {
       const route = meeting.team!.routes.find(r => r.id === meeting.team!.advisers.find(a => a.id === adviserId)!.routeId)!;
       return { adviserId, phase, subjectVersion, framingVersion: version, contextVersion: 1 as const, pool: phase === 'revision' ? 'revision' as const : 'work' as const,
-        limits: { maxInputTokens: supportedModel(route.providerId, route.modelId).context, maxOutputTokens: 4096, maxDurationMs: 60000 } };
+        limits: phaseLimits(phase, route) };
     };
     const finish = (reason: ReturnType<typeof DebateStateSchema.parse>['stopReason'], partial = false) => this.db.transaction(() => {
       const state = DebateStateSchema.parse(this.load('debate-state', key));

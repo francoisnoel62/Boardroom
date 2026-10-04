@@ -49,7 +49,7 @@ Usage:
   boardroom meeting-decision --project <id> --id <meeting-id>  Inspect the live decision record
   boardroom meeting-export --project <id> --id <meeting-id> --output <directory> [--with-json] [--session]  New live exports
   boardroom live --project <id> (--id <meeting-id> | --team <id> --input <question-json>) --output <directory> --allow-provider [--session]  Interactive live terminal
-  boardroom execution-configure --project <id> --id <meeting-id> --input <json-file>  Freeze protected reserves
+  boardroom execution-configure --project <id> --id <meeting-id> [--input <json-file>]  Freeze protected reserves, computed for the team unless a file sets them
   boardroom calls --project <id> --id <meeting-id>  Inspect budgets, time and call receipts
   boardroom execution-stop --project <id> --id <meeting-id>  Stop pending and in-flight work
   boardroom execution-conclude --project <id> --id <meeting-id>  Protect early conclusion
@@ -133,7 +133,6 @@ try {
     if (command === 'meeting-prepare' && !values.input) throw new PublicError('Meeting preparation requires --input <json-file>.');
     if (['execution-configure', 'calls', 'execution-stop', 'execution-conclude'].includes(command)) {
       if (!values.project || !values.id) throw new PublicError('Execution commands require --project and --id.');
-      if (command === 'execution-configure' && !values.input) throw new PublicError('Execution configuration requires --input <json-file>.');
     }
     if ((command === 'meeting' || command === 'meeting-context') && !values.id) throw new PublicError('Meeting inspection requires --id <meeting-id>.');
     if (command === 'export' && !values.output) throw new PublicError('Export requires --output <directory>.');
@@ -256,7 +255,7 @@ try {
         } finally { if (store instanceof SessionSecretStore) store.clear(); }
       } else if (['execution-configure', 'calls', 'execution-stop', 'execution-conclude'].includes(command)) {
         const result = command === 'execution-configure'
-          ? app.configureExecution(values.project!, values.id!, JSON.parse(readFileSync(values.input!, 'utf8')))
+          ? app.configureExecution(values.project!, values.id!, values.input ? JSON.parse(readFileSync(values.input, 'utf8')) : undefined)
           : command === 'calls' ? app.callLedger(values.project!, values.id!)
           : command === 'execution-stop' ? app.stopExecution(values.project!, values.id!)
           : app.requestConclusion(values.project!, values.id!);

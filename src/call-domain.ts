@@ -23,13 +23,17 @@ export type Reserves = z.input<typeof ReservesSchema>;
 export const ExecutionSchema = ReservesSchema.extend({ schemaVersion: z.literal(1), id: z.uuid(), projectId: z.string(),
   status: z.enum(['active', 'concluding', 'stopped']), ceilingMicros: money,
   durationTargetMs: z.number().int().positive().max(3600000000), createdAt: z.iso.datetime() });
+/** Safe facts about a refused request. The response body itself is never kept. */
+export const DiagnosticSchema = z.strictObject({ httpStatus: z.number().int().min(100).max(599).optional(),
+  requestId: z.string().regex(/^[A-Za-z0-9_.:-]{1,128}$/).optional(), errorType: z.string().regex(/^[A-Za-z0-9_.-]{1,64}$/).optional() });
+export type Diagnostic = z.infer<typeof DiagnosticSchema>;
 export const UsageSchema = z.strictObject({ inputTokens: z.number().int().nonnegative(), outputTokens: z.number().int().nonnegative() });
 export const CallReceiptSchema = CallFieldsSchema.extend({ schemaVersion: z.literal(1), id: z.uuid(),
   projectId: z.string(), meetingId: z.uuid(), createdAt: z.iso.datetime(),
   route: z.strictObject({ id: z.string(), revision: z.number().int().positive(), providerId: z.string(), modelId: z.string() }),
   pricing: PricingSchema, reservedMicros: money,
   status: z.enum(['reserved', 'running', 'completed', 'failed', 'uncertain', 'cancelled']),
-  knownCostMicros: money.optional(), usage: UsageSchema.optional(),
+  knownCostMicros: money.optional(), usage: UsageSchema.optional(), diagnostic: DiagnosticSchema.optional(),
   clockId: z.uuid().optional(), startedMonoMs: z.number().nonnegative().optional(), finishedMonoMs: z.number().nonnegative().optional(),
   elapsedMs: z.number().nonnegative().optional(), finishedAt: z.iso.datetime().optional(),
   reason: z.enum(['success', 'provider-error', 'cancelled', 'timeout', 'invalid-output', 'invalid-usage', 'not-started', 'refusal', 'truncated', 'tool-blocked', 'authentication', 'quota', 'identity-mismatch']).optional(),
@@ -37,7 +41,7 @@ export const CallReceiptSchema = CallFieldsSchema.extend({ schemaVersion: z.lite
 }).refine(correctPool, 'Phase cannot spend this protected pool.');
 export type CallReceipt = z.infer<typeof CallReceiptSchema>;
 export interface CallRequest { text: string; jsonSchema?: Record<string, unknown> }
-export interface ProviderResult { text: string; usage?: { inputTokens: number; outputTokens: number };
+export interface ProviderResult { text: string; usage?: { inputTokens: number; outputTokens: number }; diagnostic?: Diagnostic;
   failure?: 'provider-error' | 'refusal' | 'truncated' | 'tool-blocked' | 'authentication' | 'quota' | 'identity-mismatch' | 'invalid-output' }
 export type ProviderBoundary = (request: CallRequest, signal: AbortSignal, emit: (text: string) => void) => Promise<ProviderResult>;
 

@@ -10,6 +10,10 @@ const entries = [
     inputRate: 1000000, outputRate: 5000000, source: 'https://platform.claude.com/docs/en/about-claude/pricing' },
 ] as const;
 
+/** Dated rates are usable from `asOf` through `validUntil` inclusive, judged against an explicit UTC day. */
+export function pricingIsCurrent(pricing: Pick<Pricing, 'asOf' | 'validUntil'>, utcDay: string) {
+  return pricing.asOf <= utcDay && utcDay <= pricing.validUntil;
+}
 export function supportedModel(providerId: string, modelId: string) {
   const entry = entries.find(item => item.providerId === providerId && item.modelId === modelId);
   if (!entry) throw new PublicError('Unsupported bounded provider/model route.');
