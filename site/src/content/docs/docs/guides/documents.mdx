@@ -1,0 +1,45 @@
+---
+title: Inspect evidence
+description: Open the recorded source behind a citation, then save and cite your own PDF and DOCX files.
+status: available
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## The recorded source
+
+The staffing objection cites line 4 of the fictional `context.md`. Open that saved revision:
+
+```sh doc-test
+node dist/cli.js evidence --line 4 --data-dir .boardroom/example
+```
+
+The output shows the saved revision, its location and its SHA-256.
+
+## Save a PDF or DOCX file
+
+Authorize the single file you want BOARDROOM to read with `--allow-source`:
+
+```sh doc-test
+node dist/cli.js document --source assets/validation/launch.pdf --allow-source --data-dir .boardroom/documents
+node dist/cli.js document --source assets/validation/launch.docx --allow-source --data-dir .boardroom/documents
+```
+
+Each command prints a saved evidence ID and the extracted chunks. Add `--json` for structured output.
+
+## Cite a page or block
+
+Use the evidence ID to reopen an exact physical PDF page or a saved DOCX block:
+
+```sh
+node dist/cli.js evidence --id <pdf-evidence-id> --page 2 --data-dir .boardroom/documents
+node dist/cli.js evidence --id <docx-evidence-id> --block 2 --data-dir .boardroom/documents
+```
+
+Exactly one of `--page` or `--block` is required with `--id`.
+
+<Aside type="caution" title="What extraction does not do">
+  Textual PDFs and DOCX text only: no OCR, and no preserved layout, images or formatting. DOCX blocks are saved extraction blocks, not Word page numbers. A failed extraction exits with code `2` and explains why; a partial one keeps its warnings.
+</Aside>
+
+On a packaged Windows candidate, replace `node dist/cli.js` with `.\boardroom.cmd`.

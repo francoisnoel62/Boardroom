@@ -1,0 +1,103 @@
+---
+import Site from '../layouts/Site.astro';
+
+const steps = [
+  { title: 'Read the recorded example', command: 'boardroom demo', text: 'A scripted, fictional launch discussion. No account, no model calls.' },
+  { title: 'Open the cited source', command: 'boardroom evidence --line 4', text: 'The exact saved line behind the staffing objection.' },
+  { title: 'Export the plan and memo', command: 'boardroom export --output ./exports', text: 'Two new Markdown files; nothing is overwritten.' },
+  { title: 'Check your installation', command: 'boardroom doctor --json', text: 'Local probes, and which optional capabilities are blocked and why.' },
+];
+---
+<Site title="Welcome — Boardroom" description="Your first commands after installing BOARDROOM, and what to do if the boardroom command is not found.">
+  <section class="intro" aria-labelledby="welcome-title">
+    <div class="container narrow">
+      <p class="eyebrow">Installed</p>
+      <h1 id="welcome-title" class="display">Welcome to the room.</h1>
+      <p class="lede">Four commands to see how an objection changes a plan, then where to go next.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container narrow">
+      <ol class="steps">
+        {steps.map((step, index) => (
+          <li>
+            <span class="mono-label">{String(index + 1).padStart(2, '0')}</span>
+            <h2>{step.title}</h2>
+            <pre tabindex="0" aria-label={step.title}><code>{step.command}</code></pre>
+            <p>{step.text}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="help">
+        <h2>“boardroom: command not found”?</h2>
+        <p>
+          Open a new terminal so your updated PATH is loaded. On macOS and Linux, the installer writes the command to
+          <code>~/.local/bin</code>; add it to your PATH if it is not there. On Windows, it adds
+          <code>%LOCALAPPDATA%\Programs\Boardroom\bin</code> to your user PATH.
+        </p>
+        <p><a href="/docs/quickstart/">Continue with the quickstart</a> · <a href="/docs/guides/troubleshooting/">Troubleshooting</a></p>
+      </div>
+    </div>
+  </section>
+</Site>
+
+<style>
+  .intro {
+    padding-block: var(--space-8) var(--space-6);
+    background: var(--glow);
+  }
+
+  .narrow {
+    display: grid;
+    gap: var(--space-5);
+    max-width: 52rem;
+  }
+
+  h1 {
+    font-size: var(--step-4);
+  }
+
+  .lede {
+    font-size: var(--step-1);
+  }
+
+  .section {
+    padding-block: var(--space-6) var(--space-9);
+  }
+
+  .steps {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .steps li,
+  .help {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  h2 {
+    font-size: var(--step-1);
+    font-weight: 600;
+  }
+
+  pre {
+    padding: var(--space-4);
+    border-radius: var(--radius-m);
+    background: var(--term-bg);
+    color: var(--term-text);
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+  }
+
+  .help a {
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>

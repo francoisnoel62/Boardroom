@@ -1,0 +1,66 @@
+---
+// Figures read from the repository at build time, never typed by hand.
+import { platforms, testCount } from '../data/repo.ts';
+---
+<dl class="stats">
+  <div class="stat" data-stat="tests">
+    <dt>Application tests</dt>
+    <dd><span class="value" data-value>{testCount}</span><span class="detail">deterministic integration and end-to-end tests, run on every change</span></dd>
+  </div>
+  <div class="stat" data-stat="platforms">
+    <dt>Qualified platforms</dt>
+    <dd><span class="value" data-value>{platforms.length}</span><span class="detail">{platforms.join(', ')}, each installed without Node in CI</span></dd>
+  </div>
+</dl>
+
+<style>
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin: 0 0 var(--space-6);
+  }
+
+  .stat {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-5) var(--space-6);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  dt {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+  }
+
+  .value {
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    line-height: 1;
+  }
+
+  .detail {
+    flex: 1 1 14rem;
+    color: var(--text);
+  }
+
+  @media (max-width: 44rem) {
+    .stats {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

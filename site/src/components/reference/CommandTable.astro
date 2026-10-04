@@ -1,0 +1,29 @@
+---
+// Rendered from the help text in src/cli.ts at build time.
+import { commands, help } from '../../data/repo.ts';
+---
+<table class="reference-table" tabindex="0" aria-label="BOARDROOM commands">
+  <thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+  <tbody>
+    {help.usage.map(entry => (
+      <tr data-command={entry.command}>
+        <td><code>{entry.synopsis}</code></td>
+        <td>
+          {entry.description}
+          {commands.withoutHandler.includes(entry.command) && (
+            <p class="caveat" data-caveat><strong>In this build</strong>, the CLI accepts <code>{entry.command}</code> but has no handler for it, so it prints the help text.</p>
+          )}
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+<p>Global options: {help.options.map((option, index) => <>{index > 0 && ', '}<code>{option}</code></>)}.</p>
+
+<style>
+  .caveat {
+    margin-top: 0.5rem;
+    color: var(--sl-color-orange-high);
+    font-size: var(--sl-text-sm);
+  }
+</style>

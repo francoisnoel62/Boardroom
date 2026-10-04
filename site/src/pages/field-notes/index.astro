@@ -1,0 +1,66 @@
+---
+import { getCollection } from 'astro:content';
+import Page from '../../layouts/Page.astro';
+
+const notes = (await getCollection('notes')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.data.title.localeCompare(b.data.title));
+const day = (date: Date) => date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+---
+<Page
+  title="Field notes — Boardroom"
+  description="Engineering notes from building BOARDROOM: the decisions, the tradeoffs and the tests behind them, each linked to its sources."
+  eyebrow="Field notes"
+  heading="Field notes"
+  lede="How Boardroom is built, one decision at a time. Every note links to the documents and tests it is based on."
+>
+  <section aria-label="Articles">
+    <ol class="notes">
+      {notes.map(note => (
+        <li class="note" data-note={note.id}>
+          <time datetime={note.data.date.toISOString().slice(0, 10)}>{day(note.data.date)}</time>
+          <h2 class="note-title"><a class="plain" href={`/field-notes/${note.id}/`}>{note.data.title}</a></h2>
+          <p>{note.data.description}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+</Page>
+
+<style>
+  .notes {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .note {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--surface-1);
+  }
+
+  .note-title {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 400;
+    line-height: 1.15;
+  }
+
+  .note-title a {
+    color: var(--text-strong);
+    text-decoration: none;
+  }
+
+  .note-title a:hover {
+    text-decoration: underline;
+  }
+
+  time {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+</style>

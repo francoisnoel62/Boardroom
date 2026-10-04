@@ -1,0 +1,99 @@
+---
+import { repository } from '../data/labels.ts';
+import { releaseInfo } from '../data/release-source.ts';
+import ThemeToggle from './ThemeToggle.astro';
+import Wordmark from './Wordmark.astro';
+
+// A Download link appears only once a release is actually published.
+const published = (await releaseInfo()).state === 'published';
+---
+<header class="site-header">
+  <div class="container bar">
+    <Wordmark />
+    <nav aria-label="Main">
+      <ul>
+        <li class="section-link"><a href="/#story">Story</a></li>
+        <li class="section-link"><a href="/#principles">Principles</a></li>
+        <li class="section-link"><a href="/roadmap/">Roadmap</a></li>
+        <li><a href="/engineering/">Engineering</a></li>
+        <li><a href="/docs/">Docs</a></li>
+        {published && <li><a href="/download/">Download</a></li>}
+        <li class="wide-link"><a href={repository} rel="noopener">GitHub</a></li>
+      </ul>
+    </nav>
+    <div class="actions">
+      <ThemeToggle />
+      <a class="button button--primary try" href="/docs/quickstart/">Try the example</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface-0) 82%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 4rem;
+  }
+
+  ul {
+    display: flex;
+    gap: var(--space-1);
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    display: inline-block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-pill);
+    color: var(--text);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--duration) var(--ease-out), background-color var(--duration) var(--ease-out);
+  }
+
+  nav a:hover {
+    background: var(--accent-soft);
+    color: var(--text-strong);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .try {
+    min-height: 2.5rem;
+  }
+
+  @media (max-width: 52rem) {
+    .section-link {
+      display: none;
+    }
+  }
+
+  @media (max-width: 34rem) {
+    .try,
+    .wide-link {
+      display: none;
+    }
+
+    nav a {
+      padding-inline: var(--space-2);
+    }
+  }
+</style>

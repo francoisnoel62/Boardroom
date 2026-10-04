@@ -1,0 +1,48 @@
+---
+import { getClaim } from '../data/claims.ts';
+import { sourceUrl } from '../data/labels.ts';
+import StatusPill from './StatusPill.astro';
+
+interface Props { id: string; showEvidence?: boolean }
+const { id, showEvidence = false } = Astro.props;
+const claim = getClaim(id);
+---
+<div class="claim" data-claim={claim.id}>
+  <p>{claim.text}</p>
+  <div class="meta">
+    <StatusPill status={claim.status} plan={claim.plan} />
+    {showEvidence && claim.status === 'available' && claim.evidence[0] && (
+      <a href={sourceUrl(claim.evidence[0])} rel="noopener">Evidence<span class="visually-hidden"> for “{claim.text}”</span> <span aria-hidden="true">↗</span></a>
+    )}
+  </div>
+</div>
+
+<style>
+  .claim {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  p {
+    color: var(--text-strong);
+    font-weight: 500;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  a {
+    color: var(--accent);
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>

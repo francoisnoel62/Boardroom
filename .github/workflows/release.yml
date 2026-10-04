@@ -1,0 +1,100 @@
+name: Release
+
+# Pushing a tag such as v0.1.0-dev.1 builds and qualifies a package on each target, then
+# creates a DRAFT prerelease. Nothing is public until a maintainer reviews and publishes it,
+# after the license and developer-preview decisions (website plan, D1–D2).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x64
+            platform: windows
+          - os: ubuntu-latest
+            arch: x64
+            platform: linux
+          - os: macos-14
+            arch: arm64
+            platform: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.12.0
+          architecture: ${{ matrix.arch }}
+          cache: npm
+      - name: Check that the tag matches the package version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          expected="$(node -p "require('./package.json').version")"
+          if [ "$version" != "$expected" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $expected." >&2
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run package -- --output "release/boardroom-${{ env.VERSION }}"
+      - name: Run the commands the documentation presents as runnable
+        run: node site/scripts/doc-commands.mjs --repo . --candidate "release/boardroom-${{ env.VERSION }}"
+      - name: Archive with native executable modes
+        run: tar -czf "release/boardroom-${{ env.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz" -C release "boardroom-${{ env.VERSION }}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: boardroom-release-${{ matrix.platform }}-${{ matrix.arch }}
+          path: release/boardroom-${{ env.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz
+          if-no-files-found: error
+
+  draft:
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: boardroom-release-*
+          merge-multiple: true
+          path: packages
+      - name: Write SHA256SUMS
+        working-directory: packages
+        run: |
+          sha256sum boardroom-*.tar.gz > SHA256SUMS
+          cat SHA256SUMS
+      # Version to confirm when the first release is cut; it could not be checked from the
+      # environment that wrote this workflow.
+      - uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: packages/boardroom-*.tar.gz
+      - name: Create the draft prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          cat > notes.md <<NOTES
+          Developer preview: the recorded example only. Live meetings arrive with Plan 02.
+
+          One-line installers for this tag: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/scripts/install.sh (macOS, Linux)
+          and https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/scripts/install.ps1 (Windows), or download a package below.
+          Packages are not code-signed yet. Verify a download with \`shasum -a 256 -c SHA256SUMS --ignore-missing\`
+          and \`gh attestation verify <package> --repo ${GITHUB_REPOSITORY}\`.
+          NOTES
+          gh release create "$GITHUB_REF_NAME" packages/boardroom-*.tar.gz packages/SHA256SUMS \
+            --repo "$GITHUB_REPOSITORY" --draft --prerelease --verify-tag \
+            --title "BOARDROOM $version — developer preview" --notes-file notes.md

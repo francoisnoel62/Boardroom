@@ -1,0 +1,10 @@
+---
+import { platforms } from '../../data/repo.ts';
+---
+<table>
+  <thead><tr><th scope="col">Platform</th><th scope="col">Status</th></tr></thead>
+  <tbody>
+    {platforms.map(platform => <tr data-platform={platform}><td>{platform}</td><td>Qualified: packaged and installed without Node in CI</td></tr>)}
+    {['macOS x64 (Intel)', 'Linux arm64', 'Windows arm64'].map(platform => <tr><td>{platform}</td><td>Not qualified; not implied by the targets above</td></tr>)}
+  </tbody>
+</table>

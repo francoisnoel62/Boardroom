@@ -1,0 +1,63 @@
+---
+// A role at the table and, when known, the model that holds the seat.
+interface Props { role: string; model?: string | undefined; initials?: string; accent?: boolean }
+const { role, model, accent = false } = Astro.props;
+const initials = Astro.props.initials ?? role.split(' ').map(word => word[0]).join('').slice(0, 2);
+---
+<span class="seat">
+  <span class:list={['avatar', { 'avatar--accent': accent }]} aria-hidden="true">{initials}</span>
+  <span class="names">
+    <span class="role" data-role>{role}</span>
+    {model && <span class="model">{model}</span>}
+  </span>
+</span>
+
+<style>
+  .seat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .avatar {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: var(--surface-3);
+    color: var(--text-strong);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
+  .avatar--accent {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--surface-0);
+  }
+
+  .names {
+    display: grid;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  .role {
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+
+  .model {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>

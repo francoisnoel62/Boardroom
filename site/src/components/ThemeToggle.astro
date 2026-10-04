@@ -1,0 +1,61 @@
+---
+// Shares Starlight's storage key so the marketing pages and the docs keep one theme.
+---
+<button class="theme-toggle" type="button" aria-label="Switch theme" data-theme-toggle>
+  <svg class="icon icon--sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+    <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6" />
+    <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+  </svg>
+  <svg class="icon icon--moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+    <path d="M19.5 14.6A7.8 7.8 0 0 1 9.4 4.5a7.8 7.8 0 1 0 10.1 10.1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+  </svg>
+</button>
+
+<script>
+  const label = (theme: string) => `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`;
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')) {
+    button.setAttribute('aria-label', label(document.documentElement.dataset.theme ?? 'dark'));
+    button.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try {
+        localStorage.setItem('starlight-theme', next);
+      } catch {
+        // Storage can be unavailable (private mode); the theme still applies to this page.
+      }
+      button.setAttribute('aria-label', label(next));
+    });
+  }
+</script>
+
+<style>
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-strong);
+    cursor: pointer;
+    transition: border-color var(--duration) var(--ease-out), background-color var(--duration) var(--ease-out);
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--line-strong);
+    background: var(--accent-soft);
+  }
+
+  .icon--moon {
+    display: none;
+  }
+
+  :global([data-theme='light']) .icon--sun {
+    display: none;
+  }
+
+  :global([data-theme='light']) .icon--moon {
+    display: block;
+  }
+</style>

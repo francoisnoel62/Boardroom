@@ -1,0 +1,49 @@
+---
+import type { ClaimStatus } from '../data/claims.ts';
+import { statusLabel } from '../data/labels.ts';
+
+interface Props { status: ClaimStatus; plan?: string | undefined }
+const { status, plan } = Astro.props;
+---
+<span class="pill" data-status data-kind={status}>{statusLabel(status, plan)}</span>
+
+<style>
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    padding: 0.2em 0.7em;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+
+  .pill::before {
+    content: '';
+    width: 0.45em;
+    height: 0.45em;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  [data-kind='available'] {
+    border-color: color-mix(in srgb, var(--approved) 45%, transparent);
+    color: var(--approved);
+  }
+
+  [data-kind='preview'] {
+    border-color: color-mix(in srgb, var(--insufficient) 45%, transparent);
+    color: var(--insufficient);
+  }
+
+  [data-kind='vision']::before {
+    background: transparent;
+    border: 1px solid currentColor;
+  }
+</style>

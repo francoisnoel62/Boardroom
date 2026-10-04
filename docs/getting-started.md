@@ -150,13 +150,13 @@ npm test
 
 Tests exercise public service behavior, real SQLite and files, process restarts, the CLI, Ink rendering, and the candidate with its bundled runtime. Development follows small red → green slices; the [evidence log](plan-01-progress.md) records the observed failures and passing behaviors.
 
-A GitHub Actions workflow runs the deterministic integration/E2E suite and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) and [Plan 02 qualification](plan-02-acceptance.md) record observed results and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
+A GitHub Actions workflow runs the deterministic integration/E2E suite, including the installers against a local release, and packages candidates on Windows x64, Linux x64, and macOS arm64. Distinct jobs download those archives and run the installed journey without application Node preinstalled. [Plan 01 acceptance evidence](plan-01-acceptance.md) and [Plan 02 qualification](plan-02-acceptance.md) record observed results and limits. Process interruption, concurrent readers and real OS PTYs are covered; comprehensive recovery and tool isolation remain later milestones.
 
 ## Next milestones
 
 Plan 02's [ten-PR implementation](../boardroom-plans/02-PLAN-IMPLEMENTATION-EN-10-PR.md) delivers the deterministic full workflow; its actual three-model/two-provider campaign still needs authorized accounts and a budget. Later milestones add free phase participation, guided incident recovery, retrieval, protected tools and onboarding. Optional embeddings are not attempted; cloud traces remain unavailable. [All nine plans](../boardroom-plans/00-ORDRE-ET-DEPENDANCES.md) retain their own acceptance gates.
 
-The project is currently a development checkout, not a public release. Its project license and release/signing arrangements await a decision. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
+The project is currently a development checkout, not a public release. BOARDROOM is licensed under the [Apache License 2.0](../LICENSE); release and signing arrangements await later decisions. Node's license and dependency licenses accompany the local candidate; they do not select a license for BOARDROOM itself.
 
 To contribute during development, use the approved spec and milestone acceptance criteria, reproduce changes through public interfaces, and start each behavior change with a failing test. Include the relevant validation and update the documentation. See the [small dependent PR workflow](contributing.md) used on the [public repository](https://github.com/francoisnoel62/Boardroom).
 

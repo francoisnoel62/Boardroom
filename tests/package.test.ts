@@ -68,6 +68,8 @@ test('the local candidate runs its own Node and native SQLite from a Unicode pat
   assert.equal(manifest.platform, process.platform);
   assert.match(readFileSync(join(candidate, 'README.md'), 'utf8'), /Try the local example/);
   assert.match(readFileSync(join(candidate, 'docs', 'architecture.md'), 'utf8'), /Public boundaries/);
+  assert.match(readFileSync(join(candidate, 'LICENSE'), 'utf8'), /Apache License\s+Version 2\.0/);
+  assert.match(readFileSync(join(candidate, 'NOTICE'), 'utf8'), /BOARDROOM/);
   // This must be an independent runner: an inherited child-v8 context makes
   // Node skip --test files as recursive execution while returning exit code 0.
   const installedEnv: NodeJS.ProcessEnv = { ...env };

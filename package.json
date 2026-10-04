@@ -2,6 +2,7 @@
   "name": "boardroom",
   "version": "0.1.0-dev.1",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "description": "A local decision workspace for a human and three AI advisers.",
   "engines": {
